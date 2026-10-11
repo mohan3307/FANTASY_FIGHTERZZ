@@ -793,12 +793,42 @@ export const ThreeBattleArena = ({
       if (heroGroupRef.current) {
         const hGroup = heroGroupRef.current;
         const hAnim = heroAnimRef.current;
+        const heroId = selectedHero?.id;
+        const isWeb = heroId === 'spiderman' || heroId === 'web-ninja';
+        const isTech = heroId === 'ironman' || heroId === 'plasma-ranger';
+        const isMage = heroId === 'doctor-strange' || heroId === 'dr-strange' || heroId === 'arcane-sorcerer';
+        const isThunder = heroId === 'thor' || heroId === 'storm-guardian';
 
-        if (hAnim.state === 'idle') {
-          hGroup.position.y = Math.sin(elapsed * 2.2) * 0.025;
-          hGroup.rotation.z = Math.sin(elapsed * 1.8) * 0.01;
-          hGroup.position.x = -2.2;
-          hGroup.position.z = 0.5;
+        if (isVictory) {
+          hAnim.state = 'victory';
+          if (isTech) {
+            hGroup.position.set(-2.2, 0.45 + Math.sin(elapsed * 2.5) * 0.05, 0.5);
+          } else if (isMage) {
+            hGroup.position.set(-2.2, 0.35 + Math.sin(elapsed * 1.8) * 0.04, 0.5);
+          } else {
+            hGroup.position.set(-2.2, 0, 0.5);
+          }
+          hGroup.rotation.set(0, Math.PI / 3.4, 0);
+        } else if (isDefeated) {
+          hAnim.state = 'defeat';
+          hGroup.position.set(-2.2, 0, 0.5);
+        } else if (hAnim.state === 'idle') {
+          if (isTech) {
+            hGroup.position.y = 0.08 + Math.sin(elapsed * 3.8) * 0.025;
+            hGroup.position.x = -2.2;
+            hGroup.position.z = 0.5;
+            hGroup.rotation.z = Math.sin(elapsed * 1.8) * 0.01;
+          } else if (isMage) {
+            hGroup.position.y = 0.14 + Math.sin(elapsed * 2.0) * 0.03;
+            hGroup.position.x = -2.2;
+            hGroup.position.z = 0.5;
+            hGroup.rotation.z = 0;
+          } else {
+            hGroup.position.y = Math.sin(elapsed * 2.2) * 0.025;
+            hGroup.rotation.z = Math.sin(elapsed * 1.8) * 0.01;
+            hGroup.position.x = -2.2;
+            hGroup.position.z = 0.5;
+          }
         } else if (hAnim.state === 'punch') {
           hAnim.time += delta;
           const p = hAnim.time / 0.44;
@@ -806,17 +836,17 @@ export const ThreeBattleArena = ({
           if (p < 0.38) {
             const f = Math.sin((p / 0.38) * (Math.PI / 2));
             hGroup.position.x = -2.2 + f * 1.5;
-            hGroup.position.y = Math.sin((p / 0.38) * Math.PI) * 0.12;
+            hGroup.position.y = isWeb ? f * 0.65 : isTech ? 0.25 : Math.sin((p / 0.38) * Math.PI) * 0.12;
             hGroup.rotation.z = -0.06 * f;
           } else if (p < 0.56) {
             hGroup.position.x = -0.7;
-            hGroup.position.y = 0;
+            hGroup.position.y = isWeb ? 0.65 : isTech ? 0.25 : 0;
             hGroup.rotation.z = -0.06;
           } else if (p < 1.0) {
             const f = (p - 0.56) / 0.44;
             const easeBack = Math.sin(f * (Math.PI / 2));
             hGroup.position.x = -0.7 - easeBack * 1.5;
-            hGroup.position.y = 0;
+            hGroup.position.y = isWeb ? (1.0 - easeBack) * 0.65 : isTech ? (1.0 - easeBack) * 0.25 : 0;
             hGroup.rotation.z = -0.06 * (1.0 - easeBack);
           } else {
             hGroup.position.set(-2.2, 0, 0.5);
@@ -854,13 +884,26 @@ export const ThreeBattleArena = ({
             const f = Math.sin((p / 0.5) * (Math.PI / 2));
             hGroup.position.x = -2.2 - f * 0.9;
             hGroup.position.z = 0.5 - f * 1.0;
+            if (isWeb) {
+              hGroup.position.y = Math.sin(f * Math.PI) * 0.75;
+              hGroup.rotation.x = -f * Math.PI;
+            } else if (isTech) {
+              hGroup.position.y = 0.35 * f;
+            }
           } else if (p < 1.0) {
             const f = (p - 0.5) / 0.5;
             const easeBack = Math.sin(f * (Math.PI / 2));
             hGroup.position.x = -3.1 + easeBack * 0.9;
             hGroup.position.z = -0.5 + easeBack * 1.0;
+            if (isWeb) {
+              hGroup.position.y = (1.0 - easeBack) * 0.75;
+              hGroup.rotation.x = -(1.0 + easeBack) * Math.PI;
+            } else if (isTech) {
+              hGroup.position.y = (1.0 - easeBack) * 0.35;
+            }
           } else {
             hGroup.position.set(-2.2, 0, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
           }
         }
@@ -1073,12 +1116,23 @@ export const ThreeBattleArena = ({
       // ============================================================
       // --- VOID TITAN & VILLAIN INTELLIGENT AI FINITE STATE MACHINE (FSM) ---
       // ============================================================
-      if (villainGroupRef.current && introPhase === 'active' && !isVictory && bossHp > 0) {
+      if (villainGroupRef.current) {
         const vGroup = villainGroupRef.current;
         const vAnim = villainAnimRef.current;
         const villainId = selectedVillain?.id || 'void-titan';
 
-        aiAttackTimerRef.current += delta;
+        if (isVictory) {
+          aiFsmStateRef.current = 'DEFEATED';
+          vAnim.state = 'defeat';
+          vGroup.position.set(2.2, 0, 0.5);
+          if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+        } else if (isDefeated) {
+          aiFsmStateRef.current = 'VICTORIOUS';
+          vAnim.state = 'victory';
+          vGroup.position.set(2.2, 0, 0.5);
+          if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+        } else if (introPhase === 'active' && bossHp > 0) {
+          aiAttackTimerRef.current += delta;
 
         // Dynamic Attack Cycle Timing based on Boss Phase
         const isEnraged = bossPhase >= 2;
@@ -1323,14 +1377,13 @@ export const ThreeBattleArena = ({
             vGroup.position.x = 2.2;
             vGroup.rotation.z = 0;
           }
+          }
         }
 
-        // Real 3D skeletal kinematic articulation for Villain
+        // Real 3D skeletal kinematic articulation for Villain (always runs!)
         if (villainRigRef.current) {
           animateArticulated3DFighter(villainRigRef.current, vAnim.state, vAnim.time, delta, elapsed, false, '');
         }
-      } else if (isVictory) {
-        aiFsmStateRef.current = 'DEFEATED';
       }
 
       // --- 3D SHIELD OPACITY & ROTATION ---
