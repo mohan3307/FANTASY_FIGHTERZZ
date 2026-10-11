@@ -8,14 +8,18 @@ import {
   ArrowLeft,
   Swords,
   Check,
-  ShieldAlert
+  ShieldAlert,
+  Radio,
+  Activity,
+  AlertTriangle
 } from 'lucide-react';
 import { MARVEL_VILLAINS } from '../data/marvelVillains';
 import { sound } from '../utils/audio';
+import { Character3DPreview } from './Character3DPreview';
 import confetti from 'canvas-confetti';
 
 export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStartBattle }) => {
-  const [selectedVillainId, setSelectedVillainId] = useState('green-goblin');
+  const [selectedVillainId, setSelectedVillainId] = useState('void-titan');
   const [battleStarting, setBattleStarting] = useState(false);
 
   const selectedVillain = MARVEL_VILLAINS.find((v) => v.id === selectedVillainId) || MARVEL_VILLAINS[0];
@@ -50,17 +54,17 @@ export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStart
   const getBadgeIcon = (type) => {
     switch (type) {
       case 'bomb':
-        return <Flame size={15} />;
+        return <Flame size={14} />;
       case 'gauntlet':
-        return <Sparkles size={15} />;
+        return <Sparkles size={14} />;
       case 'magnet':
-        return <Zap size={15} />;
+        return <Zap size={14} />;
       case 'crown':
-        return <Crown size={15} />;
+        return <Crown size={14} />;
       case 'horns':
-        return <Skull size={15} />;
+        return <Skull size={14} />;
       default:
-        return <Skull size={15} />;
+        return <Skull size={14} />;
     }
   };
 
@@ -83,10 +87,16 @@ export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStart
               <span className="rs-select-logo-main">REALITY SHIFT</span>
               <span className="rs-select-logo-sub">GESTURE ARENA</span>
             </div>
-            <h2 className="rs-select-page-title villain-title">SELECT YOUR OPPONENT</h2>
+            <div>
+              <h2 className="rs-select-page-title villain-title">SELECT YOUR OPPONENT</h2>
+              <div className="rs-select-sub-banner villain-sub-banner">
+                <Radio size={12} className="rs-pulse-dot red" />
+                <span>REAL-TIME 3D BOSS CHAMBER • THREAT MATRIX LEVEL: S-RANK</span>
+              </div>
+            </div>
           </div>
 
-          {/* Current Player's Selected Hero Pill */}
+          {/* Current Player's Selected Hero Challenger Pill */}
           {selectedHero && (
             <div className="rs-challenger-hero-pill">
               <span className="rs-challenger-label">CHALLENGER</span>
@@ -105,56 +115,150 @@ export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStart
           )}
         </header>
 
-        {/* 5 Marvel Villain Cards Row */}
-        <div className="rs-heroes-cards-row">
-          {MARVEL_VILLAINS.map((villain, index) => {
-            const isSelected = villain.id === selectedVillainId;
-            return (
-              <div
-                key={villain.id}
-                className={`rs-marvel-hero-card rs-villain-card ${isSelected ? 'selected' : ''}`}
-                style={{
-                  '--hero-accent': villain.accentColor,
-                  '--hero-glow': villain.glowColor,
-                  '--hero-border': villain.borderColor,
-                  animationDelay: `${0.08 + index * 0.08}s`
-                }}
-                onClick={() => handleSelectVillain(villain)}
-                onMouseEnter={() => sound.playHover()}
-              >
-                {/* Glowing Selected Halo */}
-                {isSelected && <div className="rs-hero-card-halo villain-halo"></div>}
+        {/* Main 3-Column Showcase Stage: Left Boss Roster | Center 3D Boss Preview | Right Threat Dossier */}
+        <div className="rs-character-select-body">
+          {/* Left Column: Villain Roster List */}
+          <div className="rs-select-roster-column">
+            <div className="rs-roster-header villain-roster-header">
+              <span>NEXUS THREAT ROSTER</span>
+              <span className="rs-roster-count">{MARVEL_VILLAINS.length} BOSSES</span>
+            </div>
+            <div className="rs-roster-list">
+              {MARVEL_VILLAINS.map((villain) => {
+                const isSelected = villain.id === selectedVillainId;
+                return (
+                  <div
+                    key={villain.id}
+                    className={`rs-roster-item-card rs-villain-roster-card ${isSelected ? 'selected' : ''}`}
+                    style={{
+                      '--hero-accent': villain.accentColor,
+                      '--hero-glow': villain.glowColor,
+                      '--hero-border': villain.borderColor
+                    }}
+                    onClick={() => handleSelectVillain(villain)}
+                    onMouseEnter={() => sound.playHover()}
+                  >
+                    <div className="rs-roster-item-avatar-wrap">
+                      <img src={villain.image} alt={villain.name} className="rs-roster-item-avatar" />
+                      <div className="rs-roster-item-badge" style={{ color: villain.accentColor }}>
+                        {getBadgeIcon(villain.badgeType)}
+                      </div>
+                    </div>
+                    <div className="rs-roster-item-info">
+                      <div className="rs-roster-item-title">{villain.name}</div>
+                      <div className="rs-roster-item-role">{villain.role}</div>
+                      <div className="rs-roster-item-weapon">{villain.weaponName}</div>
+                    </div>
+                    {isSelected && <div className="rs-roster-active-indicator villain-indicator" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-                {/* Character Image Window */}
-                <div className="rs-hero-image-wrap">
-                  <img
-                    src={villain.image}
-                    alt={villain.name}
-                    className="rs-hero-portrait-img"
-                  />
-                  <div className="rs-hero-image-overlay villain-overlay"></div>
+          {/* Center Column: Full-Body 3D Boss Hologram Preview */}
+          <div className="rs-select-3d-stage">
+            <div className="rs-3d-hologram-wrap villain-stage-wrap">
+              <Character3DPreview character={selectedVillain} isVillain={true} />
+            </div>
+
+            <div className="rs-3d-hero-meta-badge villain-meta-badge" style={{ borderColor: selectedVillain.accentColor }}>
+              <div className="rs-3d-hero-name" style={{ color: selectedVillain.accentColor }}>
+                {selectedVillain.name}
+              </div>
+              <div className="rs-3d-hero-tagline">{selectedVillain.tagline}</div>
+              <div className="rs-3d-hero-weapon-tag">
+                <Skull size={13} />
+                <span>{selectedVillain.weaponName}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Threat Assessment Dossier */}
+          <div className="rs-select-dossier-column">
+            <div className="rs-dossier-panel villain-dossier-panel">
+              <div className="rs-dossier-header villain-dossier-header">
+                <AlertTriangle size={14} style={{ color: selectedVillain.accentColor }} />
+                <span>THREAT ASSESSMENT DOSSIER</span>
+              </div>
+
+              {/* Bio & Lore */}
+              <div className="rs-dossier-bio">
+                <p>{selectedVillain.description}</p>
+              </div>
+
+              {/* Boss Armament */}
+              <div className="rs-dossier-weapon-box" style={{ borderColor: selectedVillain.accentColor }}>
+                <div className="rs-dossier-label villain-label">ARMAMENT</div>
+                <div className="rs-dossier-weapon-name">{selectedVillain.weaponName}</div>
+                <p className="rs-dossier-weapon-desc">
+                  High-yield destructive capabilities requiring parrying (Open Palm) or evasive maneuvers (Swipe/Dodge).
+                </p>
+              </div>
+
+              {/* Animated Stat Meters */}
+              <div className="rs-dossier-stats-group">
+                <div className="rs-dossier-stat-row">
+                  <div className="rs-dossier-stat-header">
+                    <span>ANNIHILATION POWER</span>
+                    <span className="rs-dossier-stat-val">{selectedVillain.stats.power}%</span>
+                  </div>
+                  <div className="rs-dossier-stat-track">
+                    <div
+                      className="rs-dossier-stat-bar power"
+                      style={{ width: `${selectedVillain.stats.power}%`, background: selectedVillain.accentColor }}
+                    />
+                  </div>
                 </div>
 
-                {/* Card Meta & Details */}
-                <div className="rs-hero-card-meta">
-                  <h3 className="rs-hero-card-name villain-name">{villain.name}</h3>
-                  <p className="rs-hero-card-tagline">{villain.tagline}</p>
+                <div className="rs-dossier-stat-row">
+                  <div className="rs-dossier-stat-header">
+                    <span>ARMOR REINFORCEMENT</span>
+                    <span className="rs-dossier-stat-val">{selectedVillain.stats.defense}%</span>
+                  </div>
+                  <div className="rs-dossier-stat-track">
+                    <div
+                      className="rs-dossier-stat-bar defense"
+                      style={{ width: `${selectedVillain.stats.defense}%` }}
+                    />
+                  </div>
+                </div>
 
-                  <div
-                    className="rs-hero-badge-circle"
-                    style={{ borderColor: villain.accentColor, color: villain.accentColor }}
-                  >
-                    {getBadgeIcon(villain.badgeType)}
+                <div className="rs-dossier-stat-row">
+                  <div className="rs-dossier-stat-header">
+                    <span>AGGRESSION & SPEED</span>
+                    <span className="rs-dossier-stat-val">{selectedVillain.stats.speed}%</span>
+                  </div>
+                  <div className="rs-dossier-stat-track">
+                    <div
+                      className="rs-dossier-stat-bar speed"
+                      style={{ width: `${selectedVillain.stats.speed}%` }}
+                    />
                   </div>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Boss Cataclysm Attack */}
+              <div className="rs-dossier-special-box villain-special-box">
+                <div className="rs-dossier-special-label villain-special-label">CATACLYSMIC ATTACK</div>
+                <div className="rs-dossier-special-name" style={{ color: selectedVillain.accentColor }}>
+                  {selectedVillain.special}
+                </div>
+              </div>
+
+              {/* Tactical Warning */}
+              <div className="rs-dossier-controls-box villain-warning-box">
+                <div className="rs-dossier-controls-title villain-warning-title">TACTICAL BRIEFING</div>
+                <p className="rs-villain-briefing-text">
+                  Red ground indicators telegraph incoming seismic slams. Execute timed Parry (Key 1 / Open Palm) to deflect and build Super Energy!
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Bottom Bar: Back Button, Title Ticker, Start Battle Button */}
         <footer className="rs-select-bottom-bar">
-          {/* Back to Hero Select Button */}
           <button
             className="rs-btn-back-home villain-back-btn"
             onClick={() => {
@@ -166,14 +270,12 @@ export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStart
             <span>BACK TO HEROES</span>
           </button>
 
-          {/* Central Ticker */}
           <div className="rs-select-footer-center villain-ticker">
             <span>»»</span>
-            <span>REALITY SHIFT: ARENA CLASH</span>
+            <span>REALITY SHIFT: ARENA CLASH • DIMENSIONAL GATEWAY ACTIVE</span>
             <span>««</span>
           </div>
 
-          {/* Start Battle Button */}
           <button
             className={`rs-btn-select-confirm villain-battle-btn ${battleStarting ? 'confirmed' : ''}`}
             onClick={handleStartBattle}
@@ -209,3 +311,4 @@ export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStart
     </div>
   );
 };
+

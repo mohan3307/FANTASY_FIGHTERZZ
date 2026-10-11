@@ -868,6 +868,498 @@ html, body {
 }
 
 /* ============================================================
+   3D CHARACTER SELECTION SHOWCASE (3-COLUMN LAYOUT)
+   ============================================================ */
+.rs-select-sub-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+  margin-top: 4px;
+}
+
+.rs-select-sub-banner.villain-sub-banner {
+  color: #c084fc;
+  text-shadow: 0 0 8px rgba(192, 132, 252, 0.6);
+}
+
+.rs-pulse-dot {
+  color: #00f3ff;
+  animation: pulseGlow 1.5s infinite alternate;
+}
+
+.rs-pulse-dot.red {
+  color: #ef4444;
+}
+
+.rs-character-select-body {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 260px 1fr 280px;
+  gap: 16px;
+  width: 100%;
+  height: 72%;
+  min-height: 0;
+  align-items: stretch;
+}
+
+/* Left Roster Column */
+.rs-select-roster-column {
+  display: flex;
+  flex-direction: column;
+  background: rgba(8, 14, 28, 0.75);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  border-radius: 12px;
+  padding: 10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.rs-roster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+  margin-bottom: 8px;
+}
+
+.rs-roster-header.villain-roster-header {
+  color: #cbd5e1;
+  border-bottom-color: rgba(168, 85, 247, 0.25);
+}
+
+.rs-roster-count {
+  font-family: var(--font-hud);
+  font-size: 0.7rem;
+  color: var(--neon-cyan);
+}
+
+.rs-roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 4px;
+  flex: 1;
+}
+
+.rs-roster-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.rs-roster-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 243, 255, 0.3);
+  border-radius: 4px;
+}
+
+.rs-roster-item-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(12, 20, 36, 0.85);
+  border: 1.2px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.rs-roster-item-card:hover {
+  border-color: var(--hero-accent, #00f3ff);
+  background: rgba(20, 32, 58, 0.95);
+  transform: translateX(4px);
+  box-shadow: 0 0 12px var(--hero-glow, rgba(0, 243, 255, 0.4));
+}
+
+.rs-roster-item-card.selected {
+  border-color: var(--hero-accent, #00f3ff);
+  background: rgba(15, 30, 60, 0.98);
+  box-shadow: 0 0 18px var(--hero-glow, rgba(0, 243, 255, 0.5)), inset 0 0 10px var(--hero-glow, rgba(0, 243, 255, 0.2));
+}
+
+.rs-roster-item-avatar-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.rs-roster-item-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.rs-roster-item-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 50%;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rs-roster-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.rs-roster-item-title {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.5px;
+}
+
+.rs-roster-item-role {
+  font-family: var(--font-hud);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rs-roster-item-weapon {
+  font-size: 0.64rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rs-roster-active-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--hero-accent, #00f3ff);
+  box-shadow: 0 0 8px var(--hero-accent, #00f3ff);
+}
+
+.rs-roster-active-indicator.villain-indicator {
+  background: var(--hero-accent, #a855f7);
+  box-shadow: 0 0 8px var(--hero-accent, #a855f7);
+}
+
+/* Center 3D Showcase Stage */
+.rs-select-3d-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 60%, rgba(0, 243, 255, 0.08) 0%, rgba(4, 9, 20, 0.65) 60%, transparent 100%);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  padding: 10px;
+  overflow: hidden;
+}
+
+.rs-select-3d-stage:has(.villain-stage-wrap) {
+  background: radial-gradient(circle at 50% 60%, rgba(168, 85, 247, 0.12) 0%, rgba(15, 6, 25, 0.7) 60%, transparent 100%);
+  border-color: rgba(168, 85, 247, 0.25);
+}
+
+.rs-3d-hologram-wrap {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.rs-3d-character-preview-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: grab;
+}
+
+.rs-3d-character-preview-container:active {
+  cursor: grabbing;
+}
+
+.rs-preview-drag-hint {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-hud);
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.rs-3d-hero-meta-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: rgba(4, 12, 28, 0.88);
+  border: 1.5px solid var(--neon-cyan);
+  border-radius: 8px;
+  padding: 6px 18px;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10;
+  width: 80%;
+  max-width: 320px;
+  text-align: center;
+}
+
+.rs-3d-hero-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px currentColor;
+}
+
+.rs-3d-hero-tagline {
+  font-family: var(--font-hud);
+  font-size: 0.7rem;
+  color: #cbd5e1;
+}
+
+.rs-3d-hero-weapon-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  margin-top: 2px;
+}
+
+/* Right Dossier Column */
+.rs-select-dossier-column {
+  display: flex;
+  flex-direction: column;
+  background: rgba(8, 14, 28, 0.85);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  border-radius: 12px;
+  padding: 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow-y: auto;
+}
+
+.rs-select-dossier-column::-webkit-scrollbar {
+  width: 4px;
+}
+
+.rs-select-dossier-column::-webkit-scrollbar-thumb {
+  background: rgba(0, 243, 255, 0.3);
+  border-radius: 4px;
+}
+
+.rs-dossier-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rs-dossier-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.15);
+  padding-bottom: 6px;
+}
+
+.rs-dossier-header.villain-dossier-header {
+  border-bottom-color: rgba(168, 85, 247, 0.25);
+}
+
+.rs-dossier-bio {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #94a3b8;
+}
+
+.rs-dossier-weapon-box {
+  background: rgba(15, 25, 45, 0.75);
+  border-left: 3px solid var(--neon-cyan);
+  padding: 6px 10px;
+  border-radius: 0 6px 6px 0;
+}
+
+.rs-dossier-label {
+  font-family: var(--font-hud);
+  font-size: 0.62rem;
+  letter-spacing: 1.2px;
+  color: var(--neon-cyan);
+  font-weight: 700;
+}
+
+.rs-dossier-label.villain-label {
+  color: #c084fc;
+}
+
+.rs-dossier-weapon-name {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+.rs-dossier-weapon-desc {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.rs-dossier-stats-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rs-dossier-stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rs-dossier-stat-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-hud);
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+.rs-dossier-stat-val {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.rs-dossier-stat-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rs-dossier-stat-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rs-dossier-stat-bar.power {
+  background: linear-gradient(90deg, #f43f5e, #fb7185);
+  box-shadow: 0 0 6px #f43f5e;
+}
+
+.rs-dossier-stat-bar.defense {
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  box-shadow: 0 0 6px #0284c7;
+}
+
+.rs-dossier-stat-bar.speed {
+  background: linear-gradient(90deg, #10b981, #34d399);
+  box-shadow: 0 0 6px #10b981;
+}
+
+.rs-dossier-special-box {
+  background: rgba(25, 15, 35, 0.75);
+  border: 1px dashed rgba(168, 85, 247, 0.5);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.rs-dossier-special-label {
+  font-family: var(--font-hud);
+  font-size: 0.62rem;
+  letter-spacing: 1.2px;
+  color: #a855f7;
+  font-weight: 700;
+}
+
+.rs-dossier-special-name {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.rs-dossier-controls-box {
+  background: rgba(10, 16, 28, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.rs-dossier-controls-title {
+  font-family: var(--font-hud);
+  font-size: 0.62rem;
+  letter-spacing: 1.2px;
+  color: #cbd5e1;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.rs-dossier-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 6px;
+  font-size: 0.64rem;
+  color: #94a3b8;
+}
+
+.rs-villain-briefing-text {
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: #fca5a5;
+}
+
+/* ============================================================
    MODALS & OVERLAYS
    ============================================================ */
 .rs-modal-overlay {
