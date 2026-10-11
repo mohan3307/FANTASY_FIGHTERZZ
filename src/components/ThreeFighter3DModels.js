@@ -810,7 +810,7 @@ export function createArticulated3DFighter(character, isVillain = false) {
 // ============================================================
 // FULL COMBAT KINEMATIC SKELETAL ANIMATIONS (AUTHENTIC MARTIAL ARTS!)
 // ============================================================
-export function animateArticulated3DFighter(rig, state, time, delta, elapsed, isHero, activeGesture) {
+export function animateArticulated3DFighter(rig, state, time, delta, elapsed, isHero, activeGesture, comboIndex = 0) {
   if (!rig) return;
 
   const {
@@ -1049,125 +1049,315 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
   // ============================================================
   else if (state === 'punch') {
     const p = Math.min(1.0, time / 0.44);
+    const cIdx = (comboIndex || 0) % 3;
 
     if (isTech) {
-      // ARMORED TECH HERO: Dual Repulsor Cannon Shot!
-      if (p < 0.35) {
-        const f = Math.sin((p / 0.35) * (Math.PI / 2));
-        pelvisJoint.position.y = basePelvisY;
-        chestJoint.rotation.y = isHero ? f * 0.35 : -f * 0.35;
-        rightShoulder.rotation.x = -f * 1.57;
-        rightShoulder.rotation.z = -0.1;
-        rightElbow.rotation.x = 0;
-        if (rightWrist) rightWrist.rotation.x = -f * 1.35;
-        leftShoulder.rotation.x = 0.4;
-        leftElbow.rotation.x = -1.0;
-        headJoint.rotation.y = isHero ? -f * 0.1 : f * 0.1;
-      } else if (p < 0.55) {
-        const kickback = Math.sin(((p - 0.35) / 0.2) * Math.PI) * 0.2;
-        chestJoint.rotation.x = -kickback;
-        rightShoulder.rotation.x = -1.57 + kickback * 0.5;
-        if (rightWrist) rightWrist.rotation.x = -1.35;
+      if (cIdx === 0) {
+        // TECH COMBO 1: Lead Repulsor Snap Jab
+        if (p < 0.35) {
+          const f = Math.sin((p / 0.35) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? f * 0.25 : -f * 0.25;
+          chestJoint.rotation.y = isHero ? f * 0.4 : -f * 0.4;
+          rightShoulder.rotation.x = -f * 1.57;
+          rightElbow.rotation.x = 0;
+          if (rightWrist) rightWrist.rotation.x = -f * 1.4;
+          leftShoulder.rotation.x = 0.5;
+          leftElbow.rotation.x = -1.2;
+        } else if (p < 0.55) {
+          const kickback = Math.sin(((p - 0.35) / 0.2) * Math.PI) * 0.2;
+          chestJoint.rotation.x = -kickback;
+          rightShoulder.rotation.x = -1.57 + kickback * 0.5;
+          if (rightWrist) rightWrist.rotation.x = -1.4;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
+          chestJoint.rotation.y = isHero ? ease * 0.4 : -ease * 0.4;
+          rightShoulder.rotation.x = -ease * 1.57 + (1 - ease) * 0.28;
+          rightElbow.rotation.x = (1 - ease) * -0.55;
+          if (rightWrist) rightWrist.rotation.x = -ease * 1.4;
+        }
+      } else if (cIdx === 1) {
+        // TECH COMBO 2: Heavy Armored Kinetic Cross & Torso Drive
+        if (p < 0.38) {
+          const f = Math.sin((p / 0.38) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? f * 0.55 : -f * 0.55;
+          chestJoint.rotation.y = isHero ? f * 0.75 : -f * 0.75;
+          rightShoulder.rotation.x = -f * 1.65;
+          rightShoulder.rotation.z = isHero ? -f * 0.2 : f * 0.2;
+          rightElbow.rotation.x = 0;
+          leftShoulder.rotation.x = 0.6;
+          leftElbow.rotation.x = -1.4;
+          rightLegJoint.rotation.x = -f * 0.3;
+          rightKnee.rotation.x = f * 0.35;
+        } else if (p < 0.58) {
+          pelvisJoint.rotation.y = isHero ? 0.55 : -0.55;
+          chestJoint.rotation.y = isHero ? 0.75 : -0.75;
+          rightShoulder.rotation.x = -1.65;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.58) / 0.42) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? ease * 0.55 : -ease * 0.55;
+          chestJoint.rotation.y = isHero ? ease * 0.75 : -ease * 0.75;
+          rightShoulder.rotation.x = -ease * 1.65 + (1 - ease) * 0.28;
+          rightElbow.rotation.x = (1 - ease) * -0.55;
+        }
       } else {
-        const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
-        chestJoint.rotation.y = isHero ? ease * 0.35 : -ease * 0.35;
-        rightShoulder.rotation.x = -ease * 1.57 + (1 - ease) * 0.28;
-        rightElbow.rotation.x = (1 - ease) * -0.55;
-        if (rightWrist) rightWrist.rotation.x = -ease * 1.35;
+        // TECH COMBO 3: Dual-Thruster Airborne Supersonic Dropkick
+        if (p < 0.42) {
+          const f = Math.sin((p / 0.42) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + f * 0.5;
+          chestJoint.rotation.x = -f * 0.45;
+          leftLegJoint.rotation.x = -f * 1.6;
+          rightLegJoint.rotation.x = -f * 1.5;
+          leftShoulder.rotation.x = f * 0.7;
+          rightShoulder.rotation.x = f * 0.7;
+        } else if (p < 0.62) {
+          pelvisJoint.position.y = basePelvisY + 0.5;
+          leftLegJoint.rotation.x = -1.6;
+          rightLegJoint.rotation.x = -1.5;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.62) / 0.38) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + ease * 0.5;
+          leftLegJoint.rotation.x = -ease * 1.6;
+          rightLegJoint.rotation.x = -ease * 1.5;
+          leftKnee.rotation.x = (1 - ease) * 0.7;
+          rightKnee.rotation.x = (1 - ease) * 0.7;
+        }
       }
     } else if (isThunder) {
-      // THUNDER WARRIOR: 2-Handed Centrifugal Mjolnir Hammer Swing!
-      if (p < 0.32) {
-        const f = Math.sin((p / 0.32) * (Math.PI / 2));
-        pelvisJoint.rotation.y = isHero ? -f * 0.55 : f * 0.55;
-        chestJoint.rotation.y = isHero ? -f * 0.75 : f * 0.75;
-        rightShoulder.rotation.x = f * 1.1;
-        rightShoulder.rotation.z = -0.5;
-        rightElbow.rotation.x = -0.3;
-        leftShoulder.rotation.x = -f * 0.4;
-        leftElbow.rotation.x = -0.2;
-        leftKnee.rotation.x = f * 0.3;
-      } else if (p < 0.52) {
-        const f = (p - 0.32) / 0.20;
-        const swing = Math.sin(f * (Math.PI / 2));
-        pelvisJoint.rotation.y = isHero ? (-0.55 + swing * 1.25) : (0.55 - swing * 1.25);
-        chestJoint.rotation.y = isHero ? (-0.75 + swing * 1.55) : (0.75 - swing * 1.55);
-        rightShoulder.rotation.x = 1.1 - swing * 2.7;
-        rightShoulder.rotation.z = 0.3;
-        rightElbow.rotation.x = -swing * 0.2;
-        leftShoulder.rotation.x = 0.6;
+      if (cIdx === 0) {
+        // THUNDER COMBO 1: Mjolnir Chin Uppercut
+        if (p < 0.36) {
+          const f = Math.sin((p / 0.36) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + f * 0.15;
+          spineJoint.rotation.x = -f * 0.25;
+          rightShoulder.rotation.x = 0.8 - f * 2.8;
+          rightElbow.rotation.x = -f * 0.5;
+          leftShoulder.rotation.x = 0.4;
+          leftElbow.rotation.x = -0.8;
+        } else if (p < 0.56) {
+          rightShoulder.rotation.x = -2.0;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.56) / 0.44) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + ease * 0.15;
+          rightShoulder.rotation.x = -ease * 2.0 + (1 - ease) * 0.22;
+        }
+      } else if (cIdx === 1) {
+        // THUNDER COMBO 2: Centrifugal Horizontal Ribcage Mjolnir Bash
+        if (p < 0.32) {
+          const f = Math.sin((p / 0.32) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? -f * 0.65 : f * 0.65;
+          chestJoint.rotation.y = isHero ? -f * 0.85 : f * 0.85;
+          rightShoulder.rotation.x = f * 1.1;
+          rightShoulder.rotation.z = -0.5;
+        } else if (p < 0.52) {
+          const f = (p - 0.32) / 0.20;
+          const swing = Math.sin(f * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? (-0.65 + swing * 1.45) : (0.65 - swing * 1.45);
+          chestJoint.rotation.y = isHero ? (-0.85 + swing * 1.75) : (0.85 - swing * 1.75);
+          rightShoulder.rotation.x = 1.1 - swing * 2.8;
+          rightShoulder.rotation.z = 0.4;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.52) / 0.48) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? ease * 0.8 : -ease * 0.8;
+          chestJoint.rotation.y = isHero ? ease * 0.9 : -ease * 0.9;
+          rightShoulder.rotation.x = -1.7 * ease + (1 - ease) * 0.22;
+        }
       } else {
-        const ease = 1.0 - Math.sin(((p - 0.52) / 0.48) * (Math.PI / 2));
-        pelvisJoint.rotation.y = isHero ? ease * 0.7 : -ease * 0.7;
-        chestJoint.rotation.y = isHero ? ease * 0.8 : -ease * 0.8;
-        rightShoulder.rotation.x = -1.6 * ease + (1 - ease) * 0.22;
-        rightElbow.rotation.x = -0.5 * (1 - ease);
+        // THUNDER COMBO 3: Leaping 2-Handed Skyward Mjolnir Meteor Slam
+        if (p < 0.40) {
+          const f = Math.sin((p / 0.40) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + f * 0.55;
+          spineJoint.rotation.x = -f * 0.35;
+          leftShoulder.rotation.x = -f * 2.8;
+          rightShoulder.rotation.x = -f * 2.8;
+        } else if (p < 0.60) {
+          const f = (p - 0.40) / 0.20;
+          const smash = Math.sin(f * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + 0.55 - smash * 0.7;
+          spineJoint.rotation.x = -0.35 + smash * 0.65;
+          leftShoulder.rotation.x = -2.8 + smash * 3.4;
+          rightShoulder.rotation.x = -2.8 + smash * 3.4;
+          leftKnee.rotation.x = smash * 0.85;
+          rightKnee.rotation.x = smash * 0.85;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.60) / 0.40) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY - ease * 0.15;
+          leftShoulder.rotation.x = ease * 0.6 + (1 - ease) * 0.22;
+          rightShoulder.rotation.x = ease * 0.6 + (1 - ease) * 0.22;
+          leftKnee.rotation.x = ease * 0.85;
+          rightKnee.rotation.x = ease * 0.85;
+        }
       }
     } else if (isShield) {
-      // SHIELD DEFENDER: Shield Charge Slam & Jab!
-      if (p < 0.38) {
-        const f = Math.sin((p / 0.38) * (Math.PI / 2));
-        pelvisJoint.rotation.y = isHero ? f * 0.4 : -f * 0.4;
-        chestJoint.rotation.y = isHero ? f * 0.5 : -f * 0.5;
-        leftShoulder.rotation.x = -f * 1.35;
-        leftElbow.rotation.x = -f * 0.4;
-        rightShoulder.rotation.x = 0.5;
-        rightElbow.rotation.x = -1.2;
-      } else if (p < 0.56) {
-        leftShoulder.rotation.x = -1.35;
-        rightShoulder.rotation.x = -1.2;
-        rightElbow.rotation.x = 0.1;
+      if (cIdx === 0) {
+        // SHIELD COMBO 1: Lead Vibranium Shield Edge Thrust
+        if (p < 0.35) {
+          const f = Math.sin((p / 0.35) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? f * 0.4 : -f * 0.4;
+          chestJoint.rotation.y = isHero ? f * 0.5 : -f * 0.5;
+          leftShoulder.rotation.x = -f * 1.5;
+          leftElbow.rotation.x = -f * 0.2;
+          rightShoulder.rotation.x = 0.4;
+          rightElbow.rotation.x = -1.2;
+        } else if (p < 0.55) {
+          leftShoulder.rotation.x = -1.5;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
+          leftShoulder.rotation.x = -ease * 1.5 + (1 - ease) * 0.65;
+          chestJoint.rotation.y = isHero ? ease * 0.5 : -ease * 0.5;
+        }
+      } else if (cIdx === 1) {
+        // SHIELD COMBO 2: Spinning Overhand Cross Hook
+        if (p < 0.38) {
+          const f = Math.sin((p / 0.38) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? f * 0.65 : -f * 0.65;
+          chestJoint.rotation.y = isHero ? f * 0.8 : -f * 0.8;
+          rightShoulder.rotation.x = -f * 1.45;
+          rightShoulder.rotation.z = -f * 0.5;
+          rightElbow.rotation.x = -f * 0.8;
+          leftShoulder.rotation.x = 0.2;
+          leftElbow.rotation.x = -1.4;
+        } else if (p < 0.58) {
+          rightShoulder.rotation.x = -1.45;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.58) / 0.42) * (Math.PI / 2));
+          rightShoulder.rotation.x = -ease * 1.45 + (1 - ease) * 0.35;
+          chestJoint.rotation.y = isHero ? ease * 0.8 : -ease * 0.8;
+        }
       } else {
-        const ease = 1.0 - Math.sin(((p - 0.56) / 0.44) * (Math.PI / 2));
-        leftShoulder.rotation.x = -ease * 1.35 + (1 - ease) * 0.65;
-        rightShoulder.rotation.x = -ease * 1.2 + (1 - ease) * 0.35;
-        chestJoint.rotation.y = isHero ? ease * 0.5 : -ease * 0.5;
+        // SHIELD COMBO 3: Flying Spartan Knee & Heavy Shield Drive
+        if (p < 0.40) {
+          const f = Math.sin((p / 0.40) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + f * 0.4;
+          rightLegJoint.rotation.x = -f * 1.4;
+          rightKnee.rotation.x = f * 1.5;
+          leftShoulder.rotation.x = -f * 1.35;
+          rightShoulder.rotation.x = -f * 1.1;
+        } else if (p < 0.60) {
+          pelvisJoint.position.y = basePelvisY + 0.4;
+          leftShoulder.rotation.x = -1.35;
+          rightShoulder.rotation.x = -1.1;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.60) / 0.40) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + ease * 0.4;
+          rightLegJoint.rotation.x = -ease * 1.4;
+          rightKnee.rotation.x = ease * 1.5;
+          leftShoulder.rotation.x = -ease * 1.35 + (1 - ease) * 0.65;
+          rightShoulder.rotation.x = -ease * 1.1 + (1 - ease) * 0.35;
+        }
       }
     } else if (isWeb) {
-      // AGILE WEB HERO: Acrobatic Flying Web-Zip Double Kick!
-      if (p < 0.42) {
-        const f = Math.sin((p / 0.42) * (Math.PI / 2));
-        pelvisJoint.position.y = basePelvisY + f * 0.45;
-        chestJoint.rotation.x = -f * 0.45;
-        leftLegJoint.rotation.x = -f * 1.6;
-        rightLegJoint.rotation.x = -f * 1.5;
-        leftKnee.rotation.x = 0.05;
-        rightKnee.rotation.x = 0.05;
-        leftShoulder.rotation.x = 0.6;
-        rightShoulder.rotation.x = 0.6;
-      } else if (p < 0.6) {
-        pelvisJoint.position.y = basePelvisY + 0.45;
-        leftLegJoint.rotation.x = -1.6;
-        rightLegJoint.rotation.x = -1.5;
+      if (cIdx === 0) {
+        // WEB COMBO 1: Low Ducking Snap Jab & Web Flick
+        if (p < 0.35) {
+          const f = Math.sin((p / 0.35) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY - f * 0.22;
+          leftKnee.rotation.x = f * 0.8;
+          rightKnee.rotation.x = f * 0.8;
+          rightShoulder.rotation.x = -f * 1.55;
+          rightElbow.rotation.x = 0;
+        } else if (p < 0.55) {
+          rightShoulder.rotation.x = -1.55;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY - ease * 0.22;
+          rightShoulder.rotation.x = -ease * 1.55;
+          leftKnee.rotation.x = ease * 0.8;
+          rightKnee.rotation.x = ease * 0.8;
+        }
+      } else if (cIdx === 1) {
+        // WEB COMBO 2: Spinning 360 Crescent High Kick
+        if (p < 0.38) {
+          const f = Math.sin((p / 0.38) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? f * 1.4 : -f * 1.4;
+          rightLegJoint.rotation.x = -f * 1.6;
+          rightLegJoint.rotation.z = f * 1.2;
+          chestJoint.rotation.x = f * 0.35;
+        } else if (p < 0.58) {
+          rightLegJoint.rotation.x = -1.6;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.58) / 0.42) * (Math.PI / 2));
+          pelvisJoint.rotation.y = isHero ? ease * 1.4 : -ease * 1.4;
+          rightLegJoint.rotation.x = -ease * 1.6;
+          rightLegJoint.rotation.z = ease * 1.2;
+        }
       } else {
-        const ease = 1.0 - Math.sin(((p - 0.6) / 0.4) * (Math.PI / 2));
-        pelvisJoint.position.y = basePelvisY + ease * 0.45 - (1 - ease) * 0.16;
-        leftLegJoint.rotation.x = -ease * 1.6 + (1 - ease) * -0.2;
-        rightLegJoint.rotation.x = -ease * 1.5 + (1 - ease) * 0.25;
-        leftKnee.rotation.x = (1 - ease) * 0.75;
-        rightKnee.rotation.x = (1 - ease) * 0.85;
+        // WEB COMBO 3: Acrobatic Flying Web-Zip Double Dropkick
+        if (p < 0.42) {
+          const f = Math.sin((p / 0.42) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + f * 0.55;
+          chestJoint.rotation.x = -f * 0.45;
+          leftLegJoint.rotation.x = -f * 1.6;
+          rightLegJoint.rotation.x = -f * 1.5;
+          leftShoulder.rotation.x = 0.6;
+          rightShoulder.rotation.x = 0.6;
+        } else if (p < 0.6) {
+          pelvisJoint.position.y = basePelvisY + 0.55;
+          leftLegJoint.rotation.x = -1.6;
+          rightLegJoint.rotation.x = -1.5;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.6) / 0.4) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + ease * 0.55;
+          leftLegJoint.rotation.x = -ease * 1.6;
+          rightLegJoint.rotation.x = -ease * 1.5;
+          leftKnee.rotation.x = (1 - ease) * 0.75;
+          rightKnee.rotation.x = (1 - ease) * 0.85;
+        }
       }
     } else if (isMage) {
-      // MYSTIC MAGE: Dual Concentric Mandala Energy Thrust!
-      if (p < 0.35) {
-        const f = Math.sin((p / 0.35) * (Math.PI / 2));
-        leftShoulder.rotation.x = -f * 1.5;
-        rightShoulder.rotation.x = -f * 1.5;
-        leftShoulder.rotation.z = -f * 0.2;
-        rightShoulder.rotation.z = f * 0.2;
-        leftElbow.rotation.x = 0;
-        rightElbow.rotation.x = 0;
-        if (leftWrist) leftWrist.rotation.x = -f * 1.2;
-        if (rightWrist) rightWrist.rotation.x = -f * 1.2;
-      } else if (p < 0.55) {
-        chestJoint.rotation.x = -0.15;
-        leftShoulder.rotation.x = -1.5;
-        rightShoulder.rotation.x = -1.5;
+      if (cIdx === 0) {
+        // MAGE COMBO 1: Eldritch Mandala Palm Thrust
+        if (p < 0.35) {
+          const f = Math.sin((p / 0.35) * (Math.PI / 2));
+          rightShoulder.rotation.x = -f * 1.5;
+          rightElbow.rotation.x = 0;
+          if (rightWrist) rightWrist.rotation.x = -f * 1.2;
+          leftShoulder.rotation.x = -f * 0.6;
+          leftElbow.rotation.x = -1.1;
+        } else if (p < 0.55) {
+          rightShoulder.rotation.x = -1.5;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
+          rightShoulder.rotation.x = -ease * 1.5 + (1 - ease) * 0.3;
+        }
+      } else if (cIdx === 1) {
+        // MAGE COMBO 2: Dual Concentric Arcane Blades X-Slash
+        if (p < 0.35) {
+          const f = Math.sin((p / 0.35) * (Math.PI / 2));
+          leftShoulder.rotation.x = -f * 1.4;
+          rightShoulder.rotation.x = -f * 1.4;
+          leftShoulder.rotation.z = -f * 0.4;
+          rightShoulder.rotation.z = f * 0.4;
+          leftElbow.rotation.x = -f * 0.3;
+          rightElbow.rotation.x = -f * 0.3;
+        } else if (p < 0.55) {
+          leftShoulder.rotation.x = -1.4;
+          rightShoulder.rotation.x = -1.4;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
+          leftShoulder.rotation.x = -ease * 1.4 + (1 - ease) * 0.3;
+          rightShoulder.rotation.x = -ease * 1.4 + (1 - ease) * 0.3;
+        }
       } else {
-        const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
-        leftShoulder.rotation.x = -ease * 1.5 + (1 - ease) * 0.3;
-        rightShoulder.rotation.x = -ease * 1.5 + (1 - ease) * 0.3;
-        chestJoint.rotation.x = -ease * 0.15;
+        // MAGE COMBO 3: Mystic Levitation Telekinetic Force Burst
+        if (p < 0.38) {
+          const f = Math.sin((p / 0.38) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + f * 0.4;
+          leftShoulder.rotation.x = -f * 1.55;
+          rightShoulder.rotation.x = -f * 1.55;
+          leftShoulder.rotation.z = -f * 0.2;
+          rightShoulder.rotation.z = f * 0.2;
+          if (leftWrist) leftWrist.rotation.x = -f * 1.2;
+          if (rightWrist) rightWrist.rotation.x = -f * 1.2;
+        } else if (p < 0.58) {
+          pelvisJoint.position.y = basePelvisY + 0.4;
+          leftShoulder.rotation.x = -1.55;
+          rightShoulder.rotation.x = -1.55;
+        } else {
+          const ease = 1.0 - Math.sin(((p - 0.58) / 0.42) * (Math.PI / 2));
+          pelvisJoint.position.y = basePelvisY + ease * 0.4;
+          leftShoulder.rotation.x = -ease * 1.55 + (1 - ease) * 0.3;
+          rightShoulder.rotation.x = -ease * 1.55 + (1 - ease) * 0.3;
+        }
       }
     } else if (isVoid || !isHero) {
       // VOID OVERLORD / BOSS: Overhead Cataclysmic Seismic Smash!
@@ -1323,20 +1513,50 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
   // 6. REALISTIC MULTI-STAGE HIT REACTION & STAGGER
   // ============================================================
   else if (state === 'staggered') {
-    const dizzy = Math.sin(elapsed * 6.0);
-    pelvisJoint.position.y = basePelvisY - 0.06;
-    spineJoint.rotation.x = -0.32;
-    chestJoint.rotation.x = -0.28;
-    headJoint.rotation.x = 0.45 + dizzy * 0.25;
-    headJoint.rotation.y = dizzy * 0.3;
-
-    leftShoulder.rotation.x = 0.15;
-    leftShoulder.rotation.z = 0.35;
-    rightShoulder.rotation.x = 0.15;
-    rightShoulder.rotation.z = -0.35;
-
-    leftKnee.rotation.x = 0.42;
-    rightKnee.rotation.x = 0.42;
+    const sP = Math.min(1.0, time / 0.45);
+    if (sP < 0.33) {
+      // Phase 1: High-Velocity Kinetic Whiplash (Head snaps back, spine arches, knees buckle)
+      const f = Math.sin((sP / 0.33) * (Math.PI / 2));
+      pelvisJoint.position.y = basePelvisY - 0.08 * f;
+      spineJoint.rotation.x = -0.42 * f;
+      chestJoint.rotation.x = -0.48 * f;
+      headJoint.rotation.x = 0.65 * f;
+      headJoint.rotation.y = (isHero ? -0.3 : 0.3) * f;
+      leftShoulder.rotation.x = 0.35 * f;
+      leftShoulder.rotation.z = 0.55 * f;
+      rightShoulder.rotation.x = 0.25 * f;
+      rightShoulder.rotation.z = -0.55 * f;
+      leftKnee.rotation.x = 0.45 * f;
+      rightKnee.rotation.x = 0.45 * f;
+    } else if (sP < 0.72) {
+      // Phase 2: High-Frequency Shudder Vibration & Defensive Clutch
+      const shudder = Math.sin((sP - 0.33) * 35) * 0.04;
+      pelvisJoint.position.y = basePelvisY - 0.08 + shudder;
+      spineJoint.rotation.x = -0.3 + shudder;
+      chestJoint.rotation.x = -0.32 + shudder;
+      headJoint.rotation.x = 0.45 + shudder * 0.5;
+      headJoint.rotation.y = (isHero ? -0.2 : 0.2);
+      leftShoulder.rotation.x = 0.4;
+      leftElbow.rotation.x = -1.1;
+      rightShoulder.rotation.x = -0.6;
+      rightElbow.rotation.x = -1.3;
+      leftKnee.rotation.x = 0.4;
+      rightKnee.rotation.x = 0.4;
+    } else {
+      // Phase 3: Smooth Elastic Return to Guard Stance
+      const ease = 1.0 - Math.sin(((sP - 0.72) / 0.28) * (Math.PI / 2));
+      pelvisJoint.position.y = basePelvisY - 0.08 * ease;
+      spineJoint.rotation.x = -0.3 * ease;
+      chestJoint.rotation.x = -0.32 * ease;
+      headJoint.rotation.x = 0.45 * ease;
+      headJoint.rotation.y = (isHero ? -0.2 : 0.2) * ease;
+      leftShoulder.rotation.x = 0.4 * ease + (1 - ease) * 0.28;
+      leftElbow.rotation.x = -1.1 * ease + (1 - ease) * -0.55;
+      rightShoulder.rotation.x = -0.6 * ease + (1 - ease) * 0.28;
+      rightElbow.rotation.x = -1.3 * ease + (1 - ease) * -0.55;
+      leftKnee.rotation.x = 0.4 * ease;
+      rightKnee.rotation.x = 0.4 * ease;
+    }
   }
 
   // ============================================================

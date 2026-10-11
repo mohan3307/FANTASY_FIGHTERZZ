@@ -82,8 +82,10 @@ export const ThreeBattleArena = ({
   });
 
   // Combat Animation States & FSM State
-  const heroAnimRef = useRef({ state: 'idle', time: 0, recoiling: false, recoilTime: 0 });
+  const heroAnimRef = useRef({ state: 'idle', time: 0, recoiling: false, recoilTime: 0, comboIndex: 0 });
   const villainAnimRef = useRef({ state: 'idle', time: 0, recoiling: false, recoilTime: 0, hasDamaged: false });
+  const comboStepRef = useRef(0);
+  const lastComboTimeRef = useRef(0);
   const cameraShakeRef = useRef(0);
   const aiAttackTimerRef = useRef(-2.0); // Grace period on start
   const introAnimRef = useRef({ emergeProgress: 0, heroEntranceProgress: 0 });
@@ -306,7 +308,7 @@ export const ThreeBattleArena = ({
     // ============================================================
     const heroResult = createArticulated3DFighter(selectedHero, false);
     const heroGroup = heroResult.group;
-    heroGroup.position.set(-2.2, 0, 0.5);
+    heroGroup.position.set(-1.8, 0, 0.5);
     heroGroup.rotation.y = Math.PI / 3.4;
     scene.add(heroGroup);
     heroGroupRef.current = heroGroup;
@@ -321,7 +323,7 @@ export const ThreeBattleArena = ({
       villainGroup.position.set(0, 0.5, -4.5);
       villainGroup.scale.set(0.1, 0.1, 0.1);
     } else {
-      villainGroup.position.set(2.2, 0, 0.5);
+      villainGroup.position.set(1.8, 0, 0.5);
       villainGroup.scale.set(1, 1, 1);
     }
     villainGroup.rotation.y = -Math.PI / 3.4;
@@ -459,7 +461,7 @@ export const ThreeBattleArena = ({
       new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide })
     );
     webTrap.rotation.x = -Math.PI / 2;
-    webTrap.position.set(2.2, 0.04, 0.5);
+    webTrap.position.set(1.8, 0.04, 0.5);
     heroVfxGroup.add(webTrap);
     spideyWebTrapRef.current = webTrap;
 
@@ -723,7 +725,7 @@ export const ThreeBattleArena = ({
           onTelemetryUpdate({
             fps: currentFps,
             aiState: aiFsmStateRef.current,
-            distance: villainGroupRef.current ? Math.abs(villainGroupRef.current.position.x - (-2.2)).toFixed(1) : '3.8'
+            distance: villainGroupRef.current ? Math.abs(villainGroupRef.current.position.x - (-1.8)).toFixed(1) : '3.6'
           });
         }
       }
@@ -772,7 +774,7 @@ export const ThreeBattleArena = ({
           const v = villainGroupRef.current;
           introAnimRef.current.emergeProgress = Math.min(1, introAnimRef.current.emergeProgress + delta * 0.7);
           const p = introAnimRef.current.emergeProgress;
-          v.position.x = THREE.MathUtils.lerp(0, 2.2, p);
+          v.position.x = THREE.MathUtils.lerp(0, 1.8, p);
           v.position.z = THREE.MathUtils.lerp(-4.5, 0.5, p);
           v.position.y = Math.sin(p * Math.PI) * 0.4;
           const targetScale = THREE.MathUtils.lerp(0.2, 1, p);
@@ -784,7 +786,7 @@ export const ThreeBattleArena = ({
       } else if (introPhase === 'active') {
         if (villainGroupRef.current && introAnimRef.current.emergeProgress < 1) {
           introAnimRef.current.emergeProgress = 1;
-          villainGroupRef.current.position.set(2.2, 0, 0.5);
+          villainGroupRef.current.position.set(1.8, 0, 0.5);
           villainGroupRef.current.scale.set(1, 1, 1);
         }
       }
@@ -802,56 +804,71 @@ export const ThreeBattleArena = ({
         if (isVictory) {
           hAnim.state = 'victory';
           if (isTech) {
-            hGroup.position.set(-2.2, 0.45 + Math.sin(elapsed * 2.5) * 0.05, 0.5);
+            hGroup.position.set(-1.8, 0.45 + Math.sin(elapsed * 2.5) * 0.05, 0.5);
           } else if (isMage) {
-            hGroup.position.set(-2.2, 0.35 + Math.sin(elapsed * 1.8) * 0.04, 0.5);
+            hGroup.position.set(-1.8, 0.35 + Math.sin(elapsed * 1.8) * 0.04, 0.5);
           } else {
-            hGroup.position.set(-2.2, 0, 0.5);
+            hGroup.position.set(-1.8, 0, 0.5);
           }
           hGroup.rotation.set(0, Math.PI / 3.4, 0);
         } else if (isDefeated) {
           hAnim.state = 'defeat';
-          hGroup.position.set(-2.2, 0, 0.5);
+          hGroup.position.set(-1.8, 0, 0.5);
         } else if (hAnim.state === 'idle') {
           if (isTech) {
             hGroup.position.y = 0.08 + Math.sin(elapsed * 3.8) * 0.025;
-            hGroup.position.x = -2.2;
+            hGroup.position.x = -1.8;
             hGroup.position.z = 0.5;
             hGroup.rotation.z = Math.sin(elapsed * 1.8) * 0.01;
           } else if (isMage) {
             hGroup.position.y = 0.14 + Math.sin(elapsed * 2.0) * 0.03;
-            hGroup.position.x = -2.2;
+            hGroup.position.x = -1.8;
             hGroup.position.z = 0.5;
             hGroup.rotation.z = 0;
           } else {
             hGroup.position.y = Math.sin(elapsed * 2.2) * 0.025;
             hGroup.rotation.z = Math.sin(elapsed * 1.8) * 0.01;
-            hGroup.position.x = -2.2;
+            hGroup.position.x = -1.8;
             hGroup.position.z = 0.5;
           }
         } else if (hAnim.state === 'punch') {
           hAnim.time += delta;
           const p = hAnim.time / 0.44;
+          const cIdx = hAnim.comboIndex || 0;
+          const targetX = cIdx === 2 ? 0.7 : cIdx === 1 ? 0.5 : 0.2;
+          const jumpY = cIdx === 2 ? 0.5 : (isWeb ? 0.65 : isTech ? 0.25 : 0);
 
           if (p < 0.38) {
             const f = Math.sin((p / 0.38) * (Math.PI / 2));
-            hGroup.position.x = -2.2 + f * 1.5;
-            hGroup.position.y = isWeb ? f * 0.65 : isTech ? 0.25 : Math.sin((p / 0.38) * Math.PI) * 0.12;
+            hGroup.position.x = -1.8 + f * (targetX - (-1.8));
+            hGroup.position.y = jumpY * f;
             hGroup.rotation.z = -0.06 * f;
           } else if (p < 0.56) {
-            hGroup.position.x = -0.7;
-            hGroup.position.y = isWeb ? 0.65 : isTech ? 0.25 : 0;
+            hGroup.position.x = targetX;
+            hGroup.position.y = jumpY;
             hGroup.rotation.z = -0.06;
           } else if (p < 1.0) {
             const f = (p - 0.56) / 0.44;
             const easeBack = Math.sin(f * (Math.PI / 2));
-            hGroup.position.x = -0.7 - easeBack * 1.5;
-            hGroup.position.y = isWeb ? (1.0 - easeBack) * 0.65 : isTech ? (1.0 - easeBack) * 0.25 : 0;
+            hGroup.position.x = targetX - easeBack * (targetX - (-1.8));
+            hGroup.position.y = jumpY * (1.0 - easeBack);
             hGroup.rotation.z = -0.06 * (1.0 - easeBack);
           } else {
-            hGroup.position.set(-2.2, 0, 0.5);
-            hGroup.rotation.z = 0;
+            hGroup.position.set(-1.8, 0, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
+          }
+        } else if (hAnim.state === 'staggered') {
+          hAnim.time += delta;
+          const sP = Math.min(1.0, hAnim.time / 0.45);
+          hGroup.position.x = -1.8 - Math.sin(sP * Math.PI) * 0.45;
+          hGroup.position.y = 0;
+          hGroup.rotation.z = -Math.sin(sP * Math.PI) * 0.12;
+          if (hAnim.time >= 0.45) {
+            hAnim.state = 'idle';
+            hAnim.time = 0;
+            hGroup.position.set(-1.8, 0, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
           }
         } else if (hAnim.state === 'ultimate') {
           hAnim.time += delta;
@@ -860,21 +877,21 @@ export const ThreeBattleArena = ({
           if (p < 0.45) {
             const f = Math.sin((p / 0.45) * (Math.PI / 2));
             hGroup.position.y = f * 2.8;
-            hGroup.position.x = -2.2 + f * 1.5;
+            hGroup.position.x = -1.8 + f * 2.4;
             hGroup.rotation.z = f * Math.PI * 2;
           } else if (p < 0.65) {
             const f = (p - 0.45) / 0.2;
             hGroup.position.y = (1.0 - f) * 2.8;
-            hGroup.position.x = -0.7;
+            hGroup.position.x = 0.6;
             hGroup.rotation.z = 0;
           } else if (p < 1.0) {
             const f = (p - 0.65) / 0.35;
             const easeBack = Math.sin(f * (Math.PI / 2));
-            hGroup.position.x = -0.7 - easeBack * 1.5;
+            hGroup.position.x = 0.6 - easeBack * 2.4;
             hGroup.position.y = 0;
           } else {
-            hGroup.position.set(-2.2, 0, 0.5);
-            hGroup.rotation.z = 0;
+            hGroup.position.set(-1.8, 0, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
           }
         } else if (hAnim.state === 'dodge') {
@@ -882,7 +899,7 @@ export const ThreeBattleArena = ({
           const p = hAnim.time / 0.38;
           if (p < 0.5) {
             const f = Math.sin((p / 0.5) * (Math.PI / 2));
-            hGroup.position.x = -2.2 - f * 0.9;
+            hGroup.position.x = -1.8 - f * 0.9;
             hGroup.position.z = 0.5 - f * 1.0;
             if (isWeb) {
               hGroup.position.y = Math.sin(f * Math.PI) * 0.75;
@@ -893,7 +910,7 @@ export const ThreeBattleArena = ({
           } else if (p < 1.0) {
             const f = (p - 0.5) / 0.5;
             const easeBack = Math.sin(f * (Math.PI / 2));
-            hGroup.position.x = -3.1 + easeBack * 0.9;
+            hGroup.position.x = -2.7 + easeBack * 0.9;
             hGroup.position.z = -0.5 + easeBack * 1.0;
             if (isWeb) {
               hGroup.position.y = (1.0 - easeBack) * 0.75;
@@ -902,7 +919,7 @@ export const ThreeBattleArena = ({
               hGroup.position.y = (1.0 - easeBack) * 0.35;
             }
           } else {
-            hGroup.position.set(-2.2, 0, 0.5);
+            hGroup.position.set(-1.8, 0, 0.5);
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
           }
@@ -912,19 +929,19 @@ export const ThreeBattleArena = ({
         if (hAnim.recoiling) {
           hAnim.recoilTime = (hAnim.recoilTime || 0) + delta;
           const rP = Math.min(1.0, hAnim.recoilTime / 0.28);
-          hGroup.position.x = -2.2 - Math.sin(rP * Math.PI) * 0.48;
+          hGroup.position.x = -1.8 - Math.sin(rP * Math.PI) * 0.48;
           hGroup.rotation.z = -Math.sin(rP * Math.PI) * 0.12;
           if (rP >= 1.0) {
             hAnim.recoiling = false;
             hAnim.recoilTime = 0;
-            hGroup.position.x = -2.2;
+            hGroup.position.x = -1.8;
             hGroup.rotation.z = 0;
           }
         }
 
         // 3D skeletal kinematic articulation for Hero
         if (heroRigRef.current) {
-          animateArticulated3DFighter(heroRigRef.current, hAnim.state, hAnim.time, delta, elapsed, true, activeGesture);
+          animateArticulated3DFighter(heroRigRef.current, hAnim.state, hAnim.time, delta, elapsed, true, activeGesture, hAnim.comboIndex || 0);
         }
       }
 
@@ -1124,12 +1141,12 @@ export const ThreeBattleArena = ({
         if (isVictory) {
           aiFsmStateRef.current = 'DEFEATED';
           vAnim.state = 'defeat';
-          vGroup.position.set(2.2, 0, 0.5);
+          vGroup.position.set(1.8, 0, 0.5);
           if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
         } else if (isDefeated) {
           aiFsmStateRef.current = 'VICTORIOUS';
           vAnim.state = 'victory';
-          vGroup.position.set(2.2, 0, 0.5);
+          vGroup.position.set(1.8, 0, 0.5);
           if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
         } else if (introPhase === 'active' && bossHp > 0) {
           aiAttackTimerRef.current += delta;
@@ -1147,7 +1164,7 @@ export const ThreeBattleArena = ({
           if (setIncomingAttackWarning) setIncomingAttackWarning(false);
           if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
           vAnim.state = 'staggered';
-          vGroup.position.set(2.2, 0, 0.5);
+          vGroup.position.set(1.8, 0, 0.5);
           vGroup.rotation.z = 0;
         } else {
           // If in Warning window -> APPROACH & TELEGRAPH
@@ -1160,7 +1177,7 @@ export const ThreeBattleArena = ({
               dangerZoneMeshRef.current.material.opacity = 0.65 + Math.sin(elapsed * 16) * 0.35;
               dangerZoneMeshRef.current.scale.set(1 + Math.sin(elapsed * 12) * 0.14, 1 + Math.sin(elapsed * 12) * 0.14, 1);
             }
-            vGroup.position.x = 2.2 + (Math.random() - 0.5) * 0.08;
+            vGroup.position.x = 1.8 + (Math.random() - 0.5) * 0.08;
           } else if (aiAttackTimerRef.current < warningStart) {
             aiFsmStateRef.current = isEnraged ? 'ENRAGED' : 'IDLE';
             if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
@@ -1209,19 +1226,31 @@ export const ThreeBattleArena = ({
 
         if (vAnim.state === 'idle') {
           vGroup.position.y = Math.sin(elapsed * 2.0 + 1.2) * 0.04;
-          vGroup.position.x = 2.2;
+          vGroup.position.x = 1.8;
           vGroup.position.z = 0.5;
+        } else if (vAnim.state === 'staggered') {
+          vAnim.time += delta;
+          const sP = Math.min(1.0, vAnim.time / 0.45);
+          vGroup.position.x = 1.8 + Math.sin(sP * Math.PI) * 0.45;
+          vGroup.position.y = 0;
+          vGroup.rotation.z = Math.sin(sP * Math.PI) * 0.1;
+          if (vAnim.time >= 0.45 && !isBossStaggered) {
+            vAnim.state = 'idle';
+            vAnim.time = 0;
+            vGroup.position.set(1.8, 0, 0.5);
+            vGroup.rotation.set(0, -Math.PI / 3.4, 0);
+          }
         } else if (vAnim.state === 'attack') {
           vAnim.time += delta;
           const p = vAnim.time / 0.48;
 
           if (p < 0.38) {
             const f = Math.sin((p / 0.38) * (Math.PI / 2));
-            vGroup.position.x = 2.2 - f * 2.0;
+            vGroup.position.x = 1.8 - f * 2.4;
             vGroup.position.y = Math.sin((p / 0.38) * Math.PI) * 0.12;
             vGroup.rotation.z = -0.07 * f;
           } else if (p < 0.54) {
-            vGroup.position.x = 0.2;
+            vGroup.position.x = -0.6;
             vGroup.position.y = 0;
             vGroup.rotation.z = -0.07;
 
@@ -1234,17 +1263,22 @@ export const ThreeBattleArena = ({
                 sound.playShieldBlock();
               } else {
                 sound.playPunch();
-                if (heroAnimRef.current) heroAnimRef.current.recoiling = true;
+                if (heroAnimRef.current) {
+                  heroAnimRef.current.state = 'staggered';
+                  heroAnimRef.current.time = 0;
+                  heroAnimRef.current.recoiling = true;
+                  heroAnimRef.current.recoilTime = 0;
+                }
               }
             }
           } else if (p < 1.0) {
             const f = (p - 0.54) / 0.46;
             const easeBack = Math.sin(f * (Math.PI / 2));
-            vGroup.position.x = 0.2 + easeBack * 2.0;
+            vGroup.position.x = -0.6 + easeBack * 2.4;
             vGroup.position.y = 0;
             vGroup.rotation.z = -0.07 * (1.0 - easeBack);
           } else {
-            vGroup.position.set(2.2, 0, 0.5);
+            vGroup.position.set(1.8, 0, 0.5);
             vGroup.rotation.z = 0;
             vAnim.state = 'idle';
             vAnim.hasDamaged = false;
@@ -1369,15 +1403,15 @@ export const ThreeBattleArena = ({
         if (vAnim.recoiling) {
           vAnim.recoilTime = (vAnim.recoilTime || 0) + delta;
           const rP = Math.min(1.0, vAnim.recoilTime / 0.28);
-          vGroup.position.x = 2.2 + Math.sin(rP * Math.PI) * 0.48;
+          vGroup.position.x = 1.8 + Math.sin(rP * Math.PI) * 0.48;
           vGroup.rotation.z = Math.sin(rP * Math.PI) * 0.1;
           if (rP >= 1.0) {
             vAnim.recoiling = false;
             vAnim.recoilTime = 0;
-            vGroup.position.x = 2.2;
+            vGroup.position.x = 1.8;
             vGroup.rotation.z = 0;
           }
-          }
+        }
         }
 
         // Real 3D skeletal kinematic articulation for Villain (always runs!)
@@ -1421,18 +1455,28 @@ export const ThreeBattleArena = ({
     const heroId = selectedHero?.id;
 
     if (heroActionTrigger.type === 'fist' || heroActionTrigger.type === 'forward') {
-      heroAnimRef.current = { state: 'punch', time: 0, recoiling: false, recoilTime: 0 };
+      const now = performance.now();
+      let nextCombo = 0;
+      if (now - lastComboTimeRef.current < 1100) {
+        nextCombo = (comboStepRef.current + 1) % 3;
+      }
+      comboStepRef.current = nextCombo;
+      lastComboTimeRef.current = now;
+
+      heroAnimRef.current = { state: 'punch', time: 0, recoiling: false, recoilTime: 0, comboIndex: nextCombo };
       activeVfxRef.current.heroAttackType = 'fist';
       activeVfxRef.current.heroVfxTime = 0;
-      cameraShakeRef.current = 0.16;
+      cameraShakeRef.current = 0.16 + nextCombo * 0.08;
       if (villainAnimRef.current) {
+        villainAnimRef.current.state = 'staggered';
+        villainAnimRef.current.time = 0;
         villainAnimRef.current.recoiling = true;
         villainAnimRef.current.recoilTime = 0;
       }
 
-      // Hero Primary Strike Audio
+      // Hero Strike Audio based on Combo step
       if (heroId === 'ironman') {
-        sound.playLaserBeam(false);
+        sound.playLaserBeam(nextCombo === 2);
       } else if (heroId === 'thor') {
         sound.playThunder();
       } else if (heroId === 'spiderman') {
@@ -1448,8 +1492,10 @@ export const ThreeBattleArena = ({
       heroAnimRef.current = { state: 'ultimate', time: 0, recoiling: false, recoilTime: 0 };
       activeVfxRef.current.heroAttackType = 'vsign';
       activeVfxRef.current.heroVfxTime = 0;
-      cameraShakeRef.current = 0.35;
+      cameraShakeRef.current = 0.38;
       if (villainAnimRef.current) {
+        villainAnimRef.current.state = 'staggered';
+        villainAnimRef.current.time = 0;
         villainAnimRef.current.recoiling = true;
         villainAnimRef.current.recoilTime = 0;
       }
