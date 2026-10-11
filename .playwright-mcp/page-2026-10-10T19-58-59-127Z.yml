@@ -1,0 +1,48 @@
+- generic [ref=f2e80]:
+  - img "Villain Selection Arena"
+  - banner [ref=f2e81]:
+    - generic [ref=f2e82]:
+      - generic [ref=f2e83] [cursor=pointer]:
+        - generic [ref=f2e84]: REALITY SHIFT
+        - generic [ref=f2e85]: GESTURE ARENA
+      - heading "SELECT YOUR OPPONENT" [level=2] [ref=f2e86]
+    - generic [ref=f2e87]:
+      - generic [ref=f2e88]: CHALLENGER
+      - generic [ref=f2e89]:
+        - img "SPIDER-MAN" [ref=f2e90]
+        - generic [ref=f2e91]:
+          - generic [ref=f2e92]: SPIDER-MAN
+          - generic [ref=f2e93]: Acrobatic Combatant
+  - generic [ref=f2e94]:
+    - generic [ref=f2e95] [cursor=pointer]:
+      - img "GREEN GOBLIN" [ref=f2e97]
+      - generic [ref=f2e98]:
+        - heading "GREEN GOBLIN" [level=3] [ref=f2e99]
+        - paragraph [ref=f2e100]: Glider • Bombs • Chaos
+    - generic [ref=f2e104] [cursor=pointer]:
+      - img "THANOS" [ref=f2e106]
+      - generic [ref=f2e107]:
+        - heading "THANOS" [level=3] [ref=f2e108]
+        - paragraph [ref=f2e109]: Gauntlet • Power • Inevitable
+    - generic [ref=f2e113] [cursor=pointer]:
+      - img "MAGNETO" [ref=f2e115]
+      - generic [ref=f2e116]:
+        - heading "MAGNETO" [level=3] [ref=f2e117]
+        - paragraph [ref=f2e118]: Magnetic • Metallic • Dominance
+    - generic [ref=f2e122] [cursor=pointer]:
+      - img "DOCTOR DOOM" [ref=f2e124]
+      - generic [ref=f2e125]:
+        - heading "DOCTOR DOOM" [level=3] [ref=f2e126]
+        - paragraph [ref=f2e127]: Sorcery • Tech • Absolute
+    - generic [ref=f2e131] [cursor=pointer]:
+      - img "LOKI" [ref=f2e133]
+      - generic [ref=f2e134]:
+        - heading "LOKI" [level=3] [ref=f2e135]
+        - paragraph [ref=f2e136]: Illusions • Trickery • Temporal
+  - contentinfo [ref=f2e143]:
+    - button "BACK TO HEROES" [ref=f2e144] [cursor=pointer]
+    - generic [ref=f2e148]:
+      - generic [ref=f2e149]: »»
+      - generic [ref=f2e150]: "REALITY SHIFT: ARENA CLASH"
+      - generic [ref=f2e151]: ««
+    - button "START BATTLE" [ref=f2e152] [cursor=pointer]

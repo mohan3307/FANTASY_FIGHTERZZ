@@ -1,0 +1,37 @@
+- generic [ref=f9e354]:
+  - banner [ref=f9e356]:
+    - button "EXIT GATE" [ref=f9e357] [cursor=pointer]
+    - generic [ref=f9e361]:
+      - generic [ref=f9e364]: "SOLO LEVELING: RED GATE CLASH"
+      - generic [ref=f9e365]: "RANK: S-ANOMALY"
+    - generic [ref=f9e366]:
+      - generic [ref=f9e367]:
+        - generic [ref=f9e371]: VIRTUAL GESTURE
+        - generic [ref=f9e372]: Keys 1, 2, 3, 4
+      - generic [ref=f9e373]: HOTKEYS ACTIVE
+  - generic [ref=f9e379]:
+    - strong [ref=f9e380]: "⚠️ WARNING: THANOS IS CHARGING A DEADLY STRIKE!"
+    - generic [ref=f9e381]: HOLD OPEN PALM (OR PRESS 1) TO PARRY & DEFLECT!
+  - generic [ref=f9e382]:
+    - generic [ref=f9e384]:
+      - generic [ref=f9e385]: S-RANK OPPONENTTHANOS
+      - generic [ref=f9e386]: 100,000 / 100,000 HP
+    - generic [ref=f9e390]:
+      - img "THOR" [ref=f9e391]
+      - generic [ref=f9e392]:
+        - generic [ref=f9e393]: THOR
+        - generic [ref=f9e394]: 630 / 1000 HP
+    - generic [ref=f9e403]:
+      - text: "GESTURE TRACKER:"
+      - strong [ref=f9e404]: Standby (Show Hand)
+    - generic [ref=f9e405]:
+      - button "SHIELD (OPEN PALM) [1]" [ref=f9e406] [cursor=pointer]
+      - button "STRIKE (CLOSED FIST) [2]" [ref=f9e413] [cursor=pointer]
+      - button "ULTIMATE (V-SIGN) [3]" [ref=f9e417] [cursor=pointer]
+      - button "DODGE (SIDE SWIPE) [4]" [ref=f9e421] [cursor=pointer]
+    - generic [ref=f9e425]:
+      - generic [ref=f9e426]: 💥 HEAVY BLOW! THANOS struck THOR for 69 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f9e427]: 💥 HEAVY BLOW! THANOS struck THOR for 76 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f9e428]: 💥 HEAVY BLOW! THANOS struck THOR for 73 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f9e429]: 💥 HEAVY BLOW! THANOS struck THOR for 73 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f9e430]: 💥 HEAVY BLOW! THANOS struck THOR for 79 DMG! Raise Open Palm [1] to block!

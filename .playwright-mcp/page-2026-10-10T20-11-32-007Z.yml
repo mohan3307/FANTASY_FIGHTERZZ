@@ -1,0 +1,44 @@
+- generic [ref=f4e69]:
+  - img "Choose Your Hero Arena"
+  - banner [ref=f4e70]:
+    - generic [ref=f4e71]:
+      - generic [ref=f4e72] [cursor=pointer]:
+        - generic [ref=f4e73]: REALITY SHIFT
+        - generic [ref=f4e74]: GESTURE ARENA
+      - heading "CHOOSE YOUR HERO" [level=2] [ref=f4e75]
+  - generic [ref=f4e76]:
+    - generic [ref=f4e77] [cursor=pointer]:
+      - img "SPIDER-MAN" [ref=f4e79]
+      - generic [ref=f4e80]:
+        - heading "SPIDER-MAN" [level=3] [ref=f4e81]
+        - paragraph [ref=f4e82]: Agile • Fast • Precise
+    - generic [ref=f4e86] [cursor=pointer]:
+      - img "THOR" [ref=f4e88]
+      - generic [ref=f4e89]:
+        - heading "THOR" [level=3] [ref=f4e90]
+        - paragraph [ref=f4e91]: Thunder • Power • Control
+    - generic [ref=f4e95] [cursor=pointer]:
+      - img "CAPTAIN AMERICA" [ref=f4e97]
+      - generic [ref=f4e98]:
+        - heading "CAPTAIN AMERICA" [level=3] [ref=f4e99]
+        - paragraph [ref=f4e100]: Shield • Defense • Counter
+    - generic [ref=f4e104] [cursor=pointer]:
+      - img "IRON MAN" [ref=f4e106]
+      - generic [ref=f4e107]:
+        - heading "IRON MAN" [level=3] [ref=f4e108]
+        - paragraph [ref=f4e109]: Laser • Armor • Assault
+    - generic [ref=f4e113] [cursor=pointer]:
+      - img "DOCTOR STRANGE" [ref=f4e115]
+      - generic [ref=f4e116]:
+        - heading "DOCTOR STRANGE" [level=3] [ref=f4e117]
+        - paragraph [ref=f4e118]: Magic • Summon • Portals
+  - contentinfo [ref=f4e122]:
+    - button "BACK TO HOME" [ref=f4e123] [cursor=pointer]
+    - generic [ref=f4e127]:
+      - generic [ref=f4e128]: »»
+      - generic [ref=f4e129]: "REALITY SHIFT: GESTURE ARENA"
+      - generic [ref=f4e130]: ««
+    - button "IRON MAN SELECTED!" [active] [ref=f4e137] [cursor=pointer]
+  - generic [ref=f4e140]:
+    - generic [ref=f4e141]: IRON MAN READY!
+    - generic [ref=f4e142]: Arc Reactor Unibeam Overdrive ACTIVATED

@@ -1,0 +1,44 @@
+- generic [ref=e69]:
+  - img "Choose Your Hero Arena"
+  - banner [ref=e70]:
+    - generic [ref=e71]:
+      - generic [ref=e72] [cursor=pointer]:
+        - generic [ref=e73]: REALITY SHIFT
+        - generic [ref=e74]: GESTURE ARENA
+      - heading "CHOOSE YOUR HERO" [level=2] [ref=e75]
+  - generic [ref=e76]:
+    - generic [ref=e77] [cursor=pointer]:
+      - img "SPIDER-MAN" [ref=e79]
+      - generic [ref=e80]:
+        - heading "SPIDER-MAN" [level=3] [ref=e81]
+        - paragraph [ref=e82]: Agile • Fast • Precise
+    - generic [ref=e86] [cursor=pointer]:
+      - img "THOR" [ref=e88]
+      - generic [ref=e89]:
+        - heading "THOR" [level=3] [ref=e90]
+        - paragraph [ref=e91]: Thunder • Power • Control
+    - generic [ref=e95] [cursor=pointer]:
+      - img "CAPTAIN AMERICA" [ref=e97]
+      - generic [ref=e98]:
+        - heading "CAPTAIN AMERICA" [level=3] [ref=e99]
+        - paragraph [ref=e100]: Shield • Defense • Counter
+    - generic [ref=e104] [cursor=pointer]:
+      - img "IRON MAN" [ref=e106]
+      - generic [ref=e107]:
+        - heading "IRON MAN" [level=3] [ref=e108]
+        - paragraph [ref=e109]: Laser • Armor • Assault
+    - generic [ref=e113] [cursor=pointer]:
+      - img "DOCTOR STRANGE" [ref=e115]
+      - generic [ref=e116]:
+        - heading "DOCTOR STRANGE" [level=3] [ref=e117]
+        - paragraph [ref=e118]: Magic • Summon • Portals
+  - contentinfo [ref=e122]:
+    - button "BACK TO HOME" [ref=e123] [cursor=pointer]
+    - generic [ref=e127]:
+      - generic [ref=e128]: »»
+      - generic [ref=e129]: "REALITY SHIFT: GESTURE ARENA"
+      - generic [ref=e130]: ««
+    - button "SPIDER-MAN SELECTED!" [active] [ref=e137] [cursor=pointer]
+  - generic [ref=e140]:
+    - generic [ref=e141]: SPIDER-MAN READY!
+    - generic [ref=e142]: Quantum Nano-Web Burst ACTIVATED

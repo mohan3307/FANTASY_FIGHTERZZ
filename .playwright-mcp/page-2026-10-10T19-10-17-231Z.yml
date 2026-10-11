@@ -1,0 +1,52 @@
+- generic [ref=e144]:
+  - img "Villain Selection Arena"
+  - banner [ref=e145]:
+    - generic [ref=e146]:
+      - generic [ref=e147] [cursor=pointer]:
+        - generic [ref=e148]: REALITY SHIFT
+        - generic [ref=e149]: GESTURE ARENA
+      - heading "SELECT YOUR OPPONENT" [level=2] [ref=e150]
+    - generic [ref=e151]:
+      - generic [ref=e152]: CHALLENGER
+      - generic [ref=e153]:
+        - img "SPIDER-MAN" [ref=e154]
+        - generic [ref=e155]:
+          - generic [ref=e156]: SPIDER-MAN
+          - generic [ref=e157]: Acrobatic Combatant
+  - generic [ref=e158]:
+    - generic [ref=e159] [cursor=pointer]:
+      - img "GREEN GOBLIN" [ref=e161]
+      - generic [ref=e162]:
+        - heading "GREEN GOBLIN" [level=3] [ref=e163]
+        - paragraph [ref=e164]: Glider • Bombs • Chaos
+    - generic [ref=e168] [cursor=pointer]:
+      - img "THANOS" [ref=e170]
+      - generic [ref=e171]:
+        - heading "THANOS" [level=3] [ref=e172]
+        - paragraph [ref=e173]: Gauntlet • Power • Inevitable
+    - generic [ref=e177] [cursor=pointer]:
+      - img "MAGNETO" [ref=e179]
+      - generic [ref=e180]:
+        - heading "MAGNETO" [level=3] [ref=e181]
+        - paragraph [ref=e182]: Magnetic • Metallic • Dominance
+    - generic [ref=e186] [cursor=pointer]:
+      - img "DOCTOR DOOM" [ref=e188]
+      - generic [ref=e189]:
+        - heading "DOCTOR DOOM" [level=3] [ref=e190]
+        - paragraph [ref=e191]: Sorcery • Tech • Absolute
+    - generic [ref=e195] [cursor=pointer]:
+      - img "LOKI" [ref=e197]
+      - generic [ref=e198]:
+        - heading "LOKI" [level=3] [ref=e199]
+        - paragraph [ref=e200]: Illusions • Trickery • Temporal
+  - contentinfo [ref=e207]:
+    - button "BACK TO HEROES" [ref=e208] [cursor=pointer]
+    - generic [ref=e212]:
+      - generic [ref=e213]: »»
+      - generic [ref=e214]: "REALITY SHIFT: ARENA CLASH"
+      - generic [ref=e215]: ««
+    - button "BATTLE STARTING!" [active] [ref=e227] [cursor=pointer]
+  - generic [ref=e230]:
+    - generic [ref=e231]: ARENA DUEL INITIATED
+    - generic [ref=e235]: SPIDER-MAN VS THANOS
+    - generic [ref=e236]: Infinity Stones Cosmic Cataclysm INCOMING!

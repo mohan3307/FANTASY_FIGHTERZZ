@@ -1,0 +1,32 @@
+- generic [ref=f3e344]:
+  - banner [ref=f3e346]:
+    - button "EXIT GATE" [ref=f3e347] [cursor=pointer]
+    - generic [ref=f3e351]:
+      - generic [ref=f3e354]: "SOLO LEVELING: RED GATE CLASH"
+      - generic [ref=f3e355]: "RANK: S-ANOMALY"
+    - generic [ref=f3e356]:
+      - generic [ref=f3e357]:
+        - generic [ref=f3e361]: VIRTUAL GESTURE
+        - generic [ref=f3e362]: Keys 1, 2, 3, 4
+      - generic [ref=f3e363]: HOTKEYS ACTIVE
+  - generic [ref=f3e366]:
+    - generic [ref=f3e368]:
+      - generic [ref=f3e369]: S-RANK OPPONENTGREEN GOBLIN
+      - generic [ref=f3e370]: 100,000 / 100,000 HP
+    - generic [ref=f3e374]:
+      - img "IRON MAN" [ref=f3e375]
+      - generic [ref=f3e376]:
+        - generic [ref=f3e377]: IRON MAN
+        - generic [ref=f3e378]: 912 / 1000 HP
+    - generic [ref=f3e387]:
+      - text: "GESTURE TRACKER:"
+      - strong [ref=f3e388]: Standby (Show Hand)
+    - generic [ref=f3e389]:
+      - button "SHIELD (OPEN PALM) [1]" [ref=f3e390] [cursor=pointer]
+      - button "STRIKE (CLOSED FIST) [2]" [ref=f3e397] [cursor=pointer]
+      - button "ULTIMATE (V-SIGN) [3]" [ref=f3e401] [cursor=pointer]
+      - button "DODGE (SIDE SWIPE) [4]" [ref=f3e405] [cursor=pointer]
+    - generic [ref=f3e409]:
+      - generic [ref=f3e410]: 💥 HEAVY BLOW! GREEN GOBLIN struck IRON MAN for 88 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f3e411]: "[VISION] Computer Vision sensor tracking hand. Show gestures or press 1, 2, 3, 4!"
+      - generic [ref=f3e412]: "[SYSTEM] S-Rank Boss GREEN GOBLIN emerged in 3D through the Red Gate!"

@@ -1,0 +1,34 @@
+- generic [ref=f1e452]:
+  - banner [ref=f1e454]:
+    - button "EXIT GATE" [ref=f1e455] [cursor=pointer]
+    - generic [ref=f1e459]:
+      - generic [ref=f1e462]: "SOLO LEVELING: RED GATE CLASH"
+      - generic [ref=f1e463]: "RANK: S-ANOMALY"
+    - generic [ref=f1e464]:
+      - generic [ref=f1e465]:
+        - generic [ref=f1e469]: VIRTUAL GESTURE
+        - generic [ref=f1e470]: Keys 1, 2, 3, 4
+      - generic [ref=f1e471]: HOTKEYS ACTIVE
+  - generic [ref=f1e474]:
+    - generic [ref=f1e476]:
+      - generic [ref=f1e477]: S-RANK OPPONENTTHANOS
+      - generic [ref=f1e478]: 100,000 / 100,000 HP
+    - generic [ref=f1e482]:
+      - img "SPIDER-MAN" [ref=f1e483]
+      - generic [ref=f1e484]:
+        - generic [ref=f1e485]: SPIDER-MAN
+        - generic [ref=f1e486]: 1000 / 1000 HP
+    - generic [ref=f1e495]:
+      - text: "GESTURE TRACKER:"
+      - strong [ref=f1e496]: Standby (Show Hand)
+    - generic [ref=f1e497]:
+      - button "SHIELD (OPEN PALM) [1]" [ref=f1e498] [cursor=pointer]
+      - button "STRIKE (CLOSED FIST) [2]" [ref=f1e505] [cursor=pointer]
+      - button "ULTIMATE (V-SIGN) [3]" [ref=f1e509] [cursor=pointer]
+      - button "DODGE (SIDE SWIPE) [4]" [ref=f1e513] [cursor=pointer]
+    - generic [ref=f1e517]:
+      - generic [ref=f1e518]: 🔄 COMBAT RESTARTED! Stand tall and defeat THANOS!
+      - generic [ref=f1e519]: ☠️ DEFEATED! SPIDER-MAN has fallen to S-Rank Boss THANOS!
+      - generic [ref=f1e520]: ☠️ DEFEATED! SPIDER-MAN has fallen to S-Rank Boss THANOS!
+      - generic [ref=f1e521]: 💥 HEAVY BLOW! THANOS struck SPIDER-MAN for 123 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f1e522]: ☠️ DEFEATED! SPIDER-MAN has fallen to S-Rank Boss THANOS!

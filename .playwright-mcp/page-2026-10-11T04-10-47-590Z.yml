@@ -1,0 +1,88 @@
+- generic [ref=f6e3]:
+  - generic [ref=f6e144]:
+    - img "Villain Selection Arena"
+    - banner [ref=f6e145]:
+      - generic [ref=f6e146]:
+        - generic [ref=f6e147] [cursor=pointer]:
+          - generic [ref=f6e148]: REALITY SHIFT
+          - generic [ref=f6e149]: GESTURE ARENA
+        - heading "SELECT YOUR OPPONENT" [level=2] [ref=f6e150]
+      - generic [ref=f6e151]:
+        - generic [ref=f6e152]: CHALLENGER
+        - generic [ref=f6e153]:
+          - img "CAPTAIN AMERICA" [ref=f6e154]
+          - generic [ref=f6e155]:
+            - generic [ref=f6e156]: CAPTAIN AMERICA
+            - generic [ref=f6e157]: Titan Defender
+    - generic [ref=f6e158]:
+      - generic [ref=f6e159] [cursor=pointer]:
+        - img "GREEN GOBLIN" [ref=f6e161]
+        - generic [ref=f6e162]:
+          - heading "GREEN GOBLIN" [level=3] [ref=f6e163]
+          - paragraph [ref=f6e164]: Glider • Bombs • Chaos
+      - generic [ref=f6e168] [cursor=pointer]:
+        - img "THANOS" [ref=f6e170]
+        - generic [ref=f6e171]:
+          - heading "THANOS" [level=3] [ref=f6e172]
+          - paragraph [ref=f6e173]: Gauntlet • Power • Inevitable
+      - generic [ref=f6e177] [cursor=pointer]:
+        - img "MAGNETO" [ref=f6e179]
+        - generic [ref=f6e180]:
+          - heading "MAGNETO" [level=3] [ref=f6e181]
+          - paragraph [ref=f6e182]: Magnetic • Metallic • Dominance
+      - generic [ref=f6e186] [cursor=pointer]:
+        - img "DOCTOR DOOM" [ref=f6e188]
+        - generic [ref=f6e189]:
+          - heading "DOCTOR DOOM" [level=3] [ref=f6e190]
+          - paragraph [ref=f6e191]: Sorcery • Tech • Absolute
+      - generic [ref=f6e195] [cursor=pointer]:
+        - img "LOKI" [ref=f6e197]
+        - generic [ref=f6e198]:
+          - heading "LOKI" [level=3] [ref=f6e199]
+          - paragraph [ref=f6e200]: Illusions • Trickery • Temporal
+    - contentinfo [ref=f6e207]:
+      - button "BACK TO HEROES" [ref=f6e208] [cursor=pointer]
+      - generic [ref=f6e212]:
+        - generic [ref=f6e213]: »»
+        - generic [ref=f6e214]: "REALITY SHIFT: ARENA CLASH"
+        - generic [ref=f6e215]: ««
+      - button "START BATTLE" [ref=f6e237] [cursor=pointer]
+  - generic [ref=f6e276]:
+    - generic [ref=f6e277]: "SYSTEM ALERT: S-RANK RED GATE ANOMALY DETECTED"
+    - generic [ref=f6e281]:
+      - heading "RED GATE BATTLE CONDITIONS" [level=2] [ref=f6e282]
+      - paragraph [ref=f6e283]: The dimensional boundary has solidified. You cannot leave until the Dungeon Boss falls.
+    - generic [ref=f6e284]:
+      - generic [ref=f6e285]:
+        - img "CAPTAIN AMERICA" [ref=f6e286]
+        - generic [ref=f6e287]:
+          - generic [ref=f6e288]: CHALLENGER
+          - text: CAPTAIN AMERICA
+      - generic [ref=f6e289]: VS
+      - generic [ref=f6e300]:
+        - img "DOCTOR DOOM" [ref=f6e301]
+        - generic [ref=f6e302]:
+          - generic [ref=f6e303]: DUNGEON BOSS
+          - text: DOCTOR DOOM
+    - generic [ref=f6e304]:
+      - generic [ref=f6e312]:
+        - generic [ref=f6e313]: OPEN PALM
+        - generic [ref=f6e314]: ENERGY DEFENSE BARRIER
+        - paragraph [ref=f6e315]: Raise your flat palm to deploy an invulnerable energy shield and counter incoming strikes.
+      - generic [ref=f6e320]:
+        - generic [ref=f6e321]: CLOSED FIST
+        - generic [ref=f6e322]: HEAVY KINETIC STRIKE
+        - paragraph [ref=f6e323]: Clench your fist towards the camera to unleash a crushing 250% critical physical blow.
+      - generic [ref=f6e328]:
+        - generic [ref=f6e329]: V-SIGN / TWO FINGERS
+        - generic [ref=f6e330]: ELEMENTAL ULTIMATE
+        - paragraph [ref=f6e331]: Cast two fingers forward to trigger your hero's signature dimensional ultimate power.
+      - generic [ref=f6e336]:
+        - generic [ref=f6e337]: SIDE SWIPE
+        - generic [ref=f6e338]: QUANTUM REALITY DODGE
+        - paragraph [ref=f6e339]: Swipe your hand rapidly left or right to warp out of lethal boss area-of-effect attacks.
+    - generic [ref=f6e340]:
+      - generic [ref=f6e341]: 01.Real-time optical gestures translate immediately into hero battle abilities.
+      - generic [ref=f6e342]: 02.Maintain clear hand visibility within your camera frame for minimum latency.
+      - generic [ref=f6e343]: 03.Defeat the S-Rank Dungeon Boss to break the Red Gate and claim victory!
+    - button "ENTER THE RED GATE" [ref=f6e345] [cursor=pointer]

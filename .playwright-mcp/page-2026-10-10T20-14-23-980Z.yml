@@ -1,0 +1,52 @@
+- generic [ref=f4e553]:
+  - img "Villain Selection Arena"
+  - banner [ref=f4e554]:
+    - generic [ref=f4e555]:
+      - generic [ref=f4e556] [cursor=pointer]:
+        - generic [ref=f4e557]: REALITY SHIFT
+        - generic [ref=f4e558]: GESTURE ARENA
+      - heading "SELECT YOUR OPPONENT" [level=2] [ref=f4e559]
+    - generic [ref=f4e560]:
+      - generic [ref=f4e561]: CHALLENGER
+      - generic [ref=f4e562]:
+        - img "THOR" [ref=f4e563]
+        - generic [ref=f4e564]:
+          - generic [ref=f4e565]: THOR
+          - generic [ref=f4e566]: Thunder Vanguard
+  - generic [ref=f4e567]:
+    - generic [ref=f4e568] [cursor=pointer]:
+      - img "GREEN GOBLIN" [ref=f4e570]
+      - generic [ref=f4e571]:
+        - heading "GREEN GOBLIN" [level=3] [ref=f4e572]
+        - paragraph [ref=f4e573]: Glider • Bombs • Chaos
+    - generic [ref=f4e577] [cursor=pointer]:
+      - img "THANOS" [ref=f4e579]
+      - generic [ref=f4e580]:
+        - heading "THANOS" [level=3] [ref=f4e581]
+        - paragraph [ref=f4e582]: Gauntlet • Power • Inevitable
+    - generic [ref=f4e586] [cursor=pointer]:
+      - img "MAGNETO" [ref=f4e588]
+      - generic [ref=f4e589]:
+        - heading "MAGNETO" [level=3] [ref=f4e590]
+        - paragraph [ref=f4e591]: Magnetic • Metallic • Dominance
+    - generic [ref=f4e595] [cursor=pointer]:
+      - img "DOCTOR DOOM" [ref=f4e597]
+      - generic [ref=f4e598]:
+        - heading "DOCTOR DOOM" [level=3] [ref=f4e599]
+        - paragraph [ref=f4e600]: Sorcery • Tech • Absolute
+    - generic [ref=f4e604] [cursor=pointer]:
+      - img "LOKI" [ref=f4e606]
+      - generic [ref=f4e607]:
+        - heading "LOKI" [level=3] [ref=f4e608]
+        - paragraph [ref=f4e609]: Illusions • Trickery • Temporal
+  - contentinfo [ref=f4e616]:
+    - button "BACK TO HEROES" [ref=f4e617] [cursor=pointer]
+    - generic [ref=f4e621]:
+      - generic [ref=f4e622]: »»
+      - generic [ref=f4e623]: "REALITY SHIFT: ARENA CLASH"
+      - generic [ref=f4e624]: ««
+    - button "BATTLE STARTING!" [active] [ref=f4e636] [cursor=pointer]
+  - generic [ref=f4e639]:
+    - generic [ref=f4e640]: ARENA DUEL INITIATED
+    - generic [ref=f4e644]: THOR VS MAGNETO
+    - generic [ref=f4e645]: Electromagnetic Polar Storm INCOMING!

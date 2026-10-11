@@ -1,0 +1,62 @@
+- generic [ref=f5e3]:
+  - generic [ref=f5e80]:
+    - img "Villain Selection Arena"
+    - banner [ref=f5e81]:
+      - generic [ref=f5e82]:
+        - generic [ref=f5e83] [cursor=pointer]:
+          - generic [ref=f5e84]: REALITY SHIFT
+          - generic [ref=f5e85]: GESTURE ARENA
+        - heading "SELECT YOUR OPPONENT" [level=2] [ref=f5e86]
+      - generic [ref=f5e87]:
+        - generic [ref=f5e88]: CHALLENGER
+        - generic [ref=f5e89]:
+          - img "THOR" [ref=f5e90]
+          - generic [ref=f5e91]:
+            - generic [ref=f5e92]: THOR
+            - generic [ref=f5e93]: Thunder Vanguard
+    - generic [ref=f5e94]:
+      - generic [ref=f5e95] [cursor=pointer]:
+        - img "GREEN GOBLIN" [ref=f5e97]
+        - generic [ref=f5e98]:
+          - heading "GREEN GOBLIN" [level=3] [ref=f5e99]
+          - paragraph [ref=f5e100]: Glider • Bombs • Chaos
+      - generic [ref=f5e104] [cursor=pointer]:
+        - img "THANOS" [ref=f5e106]
+        - generic [ref=f5e107]:
+          - heading "THANOS" [level=3] [ref=f5e108]
+          - paragraph [ref=f5e109]: Gauntlet • Power • Inevitable
+      - generic [ref=f5e113] [cursor=pointer]:
+        - img "MAGNETO" [ref=f5e115]
+        - generic [ref=f5e116]:
+          - heading "MAGNETO" [level=3] [ref=f5e117]
+          - paragraph [ref=f5e118]: Magnetic • Metallic • Dominance
+      - generic [ref=f5e122] [cursor=pointer]:
+        - img "DOCTOR DOOM" [ref=f5e124]
+        - generic [ref=f5e125]:
+          - heading "DOCTOR DOOM" [level=3] [ref=f5e126]
+          - paragraph [ref=f5e127]: Sorcery • Tech • Absolute
+      - generic [ref=f5e131] [cursor=pointer]:
+        - img "LOKI" [ref=f5e133]
+        - generic [ref=f5e134]:
+          - heading "LOKI" [level=3] [ref=f5e135]
+          - paragraph [ref=f5e136]: Illusions • Trickery • Temporal
+    - contentinfo [ref=f5e143]:
+      - button "BACK TO HEROES" [ref=f5e144] [cursor=pointer]
+      - generic [ref=f5e148]:
+        - generic [ref=f5e149]: »»
+        - generic [ref=f5e150]: "REALITY SHIFT: ARENA CLASH"
+        - generic [ref=f5e151]: ««
+      - button "START BATTLE" [ref=f5e173] [cursor=pointer]
+  - generic [ref=f5e184]:
+    - generic [ref=f5e185]:
+      - generic [ref=f5e186]: COMPUTER VISION GESTURE ENGINE
+      - heading "CALIBRATE GESTURE SENSOR" [level=2] [ref=f5e191]
+      - paragraph [ref=f5e192]: Allow camera access so the optical computer vision engine can track your hand combat moves in real-time.
+    - generic [ref=f5e193]:
+      - generic [ref=f5e194]:
+        - generic [ref=f5e198]: VIRTUAL GESTURE SENSOR READY
+        - paragraph [ref=f5e199]: Computer vision emulated via on-screen triggers & hotkeys.
+      - generic [ref=f5e200]: VIRTUAL SENSOR ACTIVE
+    - generic [ref=f5e204]:
+      - generic [ref=f5e205]: VISION ENGINE ONLINE
+      - button "PROCEED TO BATTLE CONDITIONS »" [active] [ref=f5e210] [cursor=pointer]

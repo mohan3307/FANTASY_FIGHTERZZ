@@ -1,0 +1,10 @@
+- banner [ref=f5e292]:
+  - button "EXIT GATE" [ref=f5e293] [cursor=pointer]
+  - generic [ref=f5e297]:
+    - generic [ref=f5e300]: "SOLO LEVELING: RED GATE CLASH"
+    - generic [ref=f5e301]: "RANK: S-ANOMALY"
+  - generic [ref=f5e302]:
+    - generic [ref=f5e303]:
+      - generic [ref=f5e307]: VIRTUAL GESTURE
+      - generic [ref=f5e308]: Keys 1, 2, 3, 4
+    - generic [ref=f5e309]: HOTKEYS ACTIVE

@@ -1,0 +1,34 @@
+- generic [ref=f10e354]:
+  - banner [ref=f10e356]:
+    - button "EXIT GATE" [ref=f10e357] [cursor=pointer]
+    - generic [ref=f10e361]:
+      - generic [ref=f10e364]: "SOLO LEVELING: RED GATE CLASH"
+      - generic [ref=f10e365]: "RANK: S-ANOMALY"
+    - generic [ref=f10e366]:
+      - generic [ref=f10e367]:
+        - generic [ref=f10e371]: VIRTUAL GESTURE
+        - generic [ref=f10e372]: Keys 1, 2, 3, 4
+      - generic [ref=f10e373]: HOTKEYS ACTIVE
+  - generic [ref=f10e376]:
+    - generic [ref=f10e378]:
+      - generic [ref=f10e379]: S-RANK OPPONENTTHANOS
+      - generic [ref=f10e380]: 100,000 / 100,000 HP
+    - generic [ref=f10e384]:
+      - img "THOR" [ref=f10e385]
+      - generic [ref=f10e386]:
+        - generic [ref=f10e387]: THOR
+        - generic [ref=f10e388]: 1000 / 1000 HP
+    - generic [ref=f10e397]:
+      - text: "GESTURE TRACKER:"
+      - strong [ref=f10e398]: Standby (Show Hand)
+    - generic [ref=f10e399]:
+      - button "SHIELD (OPEN PALM) [1]" [ref=f10e400] [cursor=pointer]
+      - button "STRIKE (CLOSED FIST) [2]" [ref=f10e407] [cursor=pointer]
+      - button "ULTIMATE (V-SIGN) [3]" [ref=f10e411] [cursor=pointer]
+      - button "DODGE (SIDE SWIPE) [4]" [ref=f10e415] [cursor=pointer]
+    - generic [ref=f10e419]:
+      - generic [ref=f10e420]: 🔄 COMBAT RESTARTED! Stand tall and defeat THANOS!
+      - generic [ref=f10e421]: ☠️ DEFEATED! THOR has fallen to S-Rank Boss THANOS!
+      - generic [ref=f10e422]: ☠️ DEFEATED! THOR has fallen to S-Rank Boss THANOS!
+      - generic [ref=f10e423]: 💥 HEAVY BLOW! THANOS struck THOR for 73 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f10e424]: ☠️ DEFEATED! THOR has fallen to S-Rank Boss THANOS!

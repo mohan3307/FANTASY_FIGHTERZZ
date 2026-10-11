@@ -1,0 +1,88 @@
+- generic [ref=f4e3]:
+  - generic [ref=f4e144]:
+    - img "Villain Selection Arena"
+    - banner [ref=f4e145]:
+      - generic [ref=f4e146]:
+        - generic [ref=f4e147] [cursor=pointer]:
+          - generic [ref=f4e148]: REALITY SHIFT
+          - generic [ref=f4e149]: GESTURE ARENA
+        - heading "SELECT YOUR OPPONENT" [level=2] [ref=f4e150]
+      - generic [ref=f4e151]:
+        - generic [ref=f4e152]: CHALLENGER
+        - generic [ref=f4e153]:
+          - img "IRON MAN" [ref=f4e154]
+          - generic [ref=f4e155]:
+            - generic [ref=f4e156]: IRON MAN
+            - generic [ref=f4e157]: Heavy Striker
+    - generic [ref=f4e158]:
+      - generic [ref=f4e159] [cursor=pointer]:
+        - img "GREEN GOBLIN" [ref=f4e161]
+        - generic [ref=f4e162]:
+          - heading "GREEN GOBLIN" [level=3] [ref=f4e163]
+          - paragraph [ref=f4e164]: Glider • Bombs • Chaos
+      - generic [ref=f4e168] [cursor=pointer]:
+        - img "THANOS" [ref=f4e170]
+        - generic [ref=f4e171]:
+          - heading "THANOS" [level=3] [ref=f4e172]
+          - paragraph [ref=f4e173]: Gauntlet • Power • Inevitable
+      - generic [ref=f4e177] [cursor=pointer]:
+        - img "MAGNETO" [ref=f4e179]
+        - generic [ref=f4e180]:
+          - heading "MAGNETO" [level=3] [ref=f4e181]
+          - paragraph [ref=f4e182]: Magnetic • Metallic • Dominance
+      - generic [ref=f4e186] [cursor=pointer]:
+        - img "DOCTOR DOOM" [ref=f4e188]
+        - generic [ref=f4e189]:
+          - heading "DOCTOR DOOM" [level=3] [ref=f4e190]
+          - paragraph [ref=f4e191]: Sorcery • Tech • Absolute
+      - generic [ref=f4e195] [cursor=pointer]:
+        - img "LOKI" [ref=f4e197]
+        - generic [ref=f4e198]:
+          - heading "LOKI" [level=3] [ref=f4e199]
+          - paragraph [ref=f4e200]: Illusions • Trickery • Temporal
+    - contentinfo [ref=f4e207]:
+      - button "BACK TO HEROES" [ref=f4e208] [cursor=pointer]
+      - generic [ref=f4e212]:
+        - generic [ref=f4e213]: »»
+        - generic [ref=f4e214]: "REALITY SHIFT: ARENA CLASH"
+        - generic [ref=f4e215]: ««
+      - button "START BATTLE" [ref=f4e227] [cursor=pointer]
+  - generic [ref=f4e266]:
+    - generic [ref=f4e267]: "SYSTEM ALERT: S-RANK RED GATE ANOMALY DETECTED"
+    - generic [ref=f4e271]:
+      - heading "RED GATE BATTLE CONDITIONS" [level=2] [ref=f4e272]
+      - paragraph [ref=f4e273]: The dimensional boundary has solidified. You cannot leave until the Dungeon Boss falls.
+    - generic [ref=f4e274]:
+      - generic [ref=f4e275]:
+        - img "IRON MAN" [ref=f4e276]
+        - generic [ref=f4e277]:
+          - generic [ref=f4e278]: CHALLENGER
+          - text: IRON MAN
+      - generic [ref=f4e279]: VS
+      - generic [ref=f4e290]:
+        - img "GREEN GOBLIN" [ref=f4e291]
+        - generic [ref=f4e292]:
+          - generic [ref=f4e293]: DUNGEON BOSS
+          - text: GREEN GOBLIN
+    - generic [ref=f4e294]:
+      - generic [ref=f4e302]:
+        - generic [ref=f4e303]: OPEN PALM
+        - generic [ref=f4e304]: ENERGY DEFENSE BARRIER
+        - paragraph [ref=f4e305]: Raise your flat palm to deploy an invulnerable energy shield and counter incoming strikes.
+      - generic [ref=f4e310]:
+        - generic [ref=f4e311]: CLOSED FIST
+        - generic [ref=f4e312]: HEAVY KINETIC STRIKE
+        - paragraph [ref=f4e313]: Clench your fist towards the camera to unleash a crushing 250% critical physical blow.
+      - generic [ref=f4e318]:
+        - generic [ref=f4e319]: V-SIGN / TWO FINGERS
+        - generic [ref=f4e320]: ELEMENTAL ULTIMATE
+        - paragraph [ref=f4e321]: Cast two fingers forward to trigger your hero's signature dimensional ultimate power.
+      - generic [ref=f4e326]:
+        - generic [ref=f4e327]: SIDE SWIPE
+        - generic [ref=f4e328]: QUANTUM REALITY DODGE
+        - paragraph [ref=f4e329]: Swipe your hand rapidly left or right to warp out of lethal boss area-of-effect attacks.
+    - generic [ref=f4e330]:
+      - generic [ref=f4e331]: 01.Real-time optical gestures translate immediately into hero battle abilities.
+      - generic [ref=f4e332]: 02.Maintain clear hand visibility within your camera frame for minimum latency.
+      - generic [ref=f4e333]: 03.Defeat the S-Rank Dungeon Boss to break the Red Gate and claim victory!
+    - button "ENTER THE RED GATE" [ref=f4e335] [cursor=pointer]

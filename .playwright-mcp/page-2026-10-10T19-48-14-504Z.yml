@@ -1,0 +1,88 @@
+- generic [ref=e3]:
+  - generic [ref=e144]:
+    - img "Villain Selection Arena"
+    - banner [ref=e145]:
+      - generic [ref=e146]:
+        - generic [ref=e147] [cursor=pointer]:
+          - generic [ref=e148]: REALITY SHIFT
+          - generic [ref=e149]: GESTURE ARENA
+        - heading "SELECT YOUR OPPONENT" [level=2] [ref=e150]
+      - generic [ref=e151]:
+        - generic [ref=e152]: CHALLENGER
+        - generic [ref=e153]:
+          - img "IRON MAN" [ref=e154]
+          - generic [ref=e155]:
+            - generic [ref=e156]: IRON MAN
+            - generic [ref=e157]: Heavy Striker
+    - generic [ref=e158]:
+      - generic [ref=e159] [cursor=pointer]:
+        - img "GREEN GOBLIN" [ref=e161]
+        - generic [ref=e162]:
+          - heading "GREEN GOBLIN" [level=3] [ref=e163]
+          - paragraph [ref=e164]: Glider • Bombs • Chaos
+      - generic [ref=e168] [cursor=pointer]:
+        - img "THANOS" [ref=e170]
+        - generic [ref=e171]:
+          - heading "THANOS" [level=3] [ref=e172]
+          - paragraph [ref=e173]: Gauntlet • Power • Inevitable
+      - generic [ref=e177] [cursor=pointer]:
+        - img "MAGNETO" [ref=e179]
+        - generic [ref=e180]:
+          - heading "MAGNETO" [level=3] [ref=e181]
+          - paragraph [ref=e182]: Magnetic • Metallic • Dominance
+      - generic [ref=e186] [cursor=pointer]:
+        - img "DOCTOR DOOM" [ref=e188]
+        - generic [ref=e189]:
+          - heading "DOCTOR DOOM" [level=3] [ref=e190]
+          - paragraph [ref=e191]: Sorcery • Tech • Absolute
+      - generic [ref=e195] [cursor=pointer]:
+        - img "LOKI" [ref=e197]
+        - generic [ref=e198]:
+          - heading "LOKI" [level=3] [ref=e199]
+          - paragraph [ref=e200]: Illusions • Trickery • Temporal
+    - contentinfo [ref=e207]:
+      - button "BACK TO HEROES" [ref=e208] [cursor=pointer]
+      - generic [ref=e212]:
+        - generic [ref=e213]: »»
+        - generic [ref=e214]: "REALITY SHIFT: ARENA CLASH"
+        - generic [ref=e215]: ««
+      - button "START BATTLE" [ref=e227] [cursor=pointer]
+  - generic [ref=e266]:
+    - generic [ref=e267]: "SYSTEM ALERT: S-RANK RED GATE ANOMALY DETECTED"
+    - generic [ref=e271]:
+      - heading "RED GATE BATTLE CONDITIONS" [level=2] [ref=e272]
+      - paragraph [ref=e273]: The dimensional boundary has solidified. You cannot leave until the Dungeon Boss falls.
+    - generic [ref=e274]:
+      - generic [ref=e275]:
+        - img "IRON MAN" [ref=e276]
+        - generic [ref=e277]:
+          - generic [ref=e278]: CHALLENGER
+          - text: IRON MAN
+      - generic [ref=e279]: VS
+      - generic [ref=e290]:
+        - img "GREEN GOBLIN" [ref=e291]
+        - generic [ref=e292]:
+          - generic [ref=e293]: DUNGEON BOSS
+          - text: GREEN GOBLIN
+    - generic [ref=e294]:
+      - generic [ref=e302]:
+        - generic [ref=e303]: OPEN PALM
+        - generic [ref=e304]: ENERGY DEFENSE BARRIER
+        - paragraph [ref=e305]: Raise your flat palm to deploy an invulnerable energy shield and counter incoming strikes.
+      - generic [ref=e310]:
+        - generic [ref=e311]: CLOSED FIST
+        - generic [ref=e312]: HEAVY KINETIC STRIKE
+        - paragraph [ref=e313]: Clench your fist towards the camera to unleash a crushing 250% critical physical blow.
+      - generic [ref=e318]:
+        - generic [ref=e319]: V-SIGN / TWO FINGERS
+        - generic [ref=e320]: ELEMENTAL ULTIMATE
+        - paragraph [ref=e321]: Cast two fingers forward to trigger your hero's signature dimensional ultimate power.
+      - generic [ref=e326]:
+        - generic [ref=e327]: SIDE SWIPE
+        - generic [ref=e328]: QUANTUM REALITY DODGE
+        - paragraph [ref=e329]: Swipe your hand rapidly left or right to warp out of lethal boss area-of-effect attacks.
+    - generic [ref=e330]:
+      - generic [ref=e331]: 01.Real-time optical gestures translate immediately into hero battle abilities.
+      - generic [ref=e332]: 02.Maintain clear hand visibility within your camera frame for minimum latency.
+      - generic [ref=e333]: 03.Defeat the S-Rank Dungeon Boss to break the Red Gate and claim victory!
+    - button "ENTER THE RED GATE" [ref=e335] [cursor=pointer]

@@ -1,0 +1,52 @@
+- generic [ref=f8e144]:
+  - img "Villain Selection Arena"
+  - banner [ref=f8e145]:
+    - generic [ref=f8e146]:
+      - generic [ref=f8e147] [cursor=pointer]:
+        - generic [ref=f8e148]: REALITY SHIFT
+        - generic [ref=f8e149]: GESTURE ARENA
+      - heading "SELECT YOUR OPPONENT" [level=2] [ref=f8e150]
+    - generic [ref=f8e151]:
+      - generic [ref=f8e152]: CHALLENGER
+      - generic [ref=f8e153]:
+        - img "IRON MAN" [ref=f8e154]
+        - generic [ref=f8e155]:
+          - generic [ref=f8e156]: IRON MAN
+          - generic [ref=f8e157]: Heavy Striker
+  - generic [ref=f8e158]:
+    - generic [ref=f8e159] [cursor=pointer]:
+      - img "GREEN GOBLIN" [ref=f8e161]
+      - generic [ref=f8e162]:
+        - heading "GREEN GOBLIN" [level=3] [ref=f8e163]
+        - paragraph [ref=f8e164]: Glider • Bombs • Chaos
+    - generic [ref=f8e168] [cursor=pointer]:
+      - img "THANOS" [ref=f8e170]
+      - generic [ref=f8e171]:
+        - heading "THANOS" [level=3] [ref=f8e172]
+        - paragraph [ref=f8e173]: Gauntlet • Power • Inevitable
+    - generic [ref=f8e177] [cursor=pointer]:
+      - img "MAGNETO" [ref=f8e179]
+      - generic [ref=f8e180]:
+        - heading "MAGNETO" [level=3] [ref=f8e181]
+        - paragraph [ref=f8e182]: Magnetic • Metallic • Dominance
+    - generic [ref=f8e186] [cursor=pointer]:
+      - img "DOCTOR DOOM" [ref=f8e188]
+      - generic [ref=f8e189]:
+        - heading "DOCTOR DOOM" [level=3] [ref=f8e190]
+        - paragraph [ref=f8e191]: Sorcery • Tech • Absolute
+    - generic [ref=f8e195] [cursor=pointer]:
+      - img "LOKI" [ref=f8e197]
+      - generic [ref=f8e198]:
+        - heading "LOKI" [level=3] [ref=f8e199]
+        - paragraph [ref=f8e200]: Illusions • Trickery • Temporal
+  - contentinfo [ref=f8e207]:
+    - button "BACK TO HEROES" [ref=f8e208] [cursor=pointer]
+    - generic [ref=f8e212]:
+      - generic [ref=f8e213]: »»
+      - generic [ref=f8e214]: "REALITY SHIFT: ARENA CLASH"
+      - generic [ref=f8e215]: ««
+    - button "BATTLE STARTING!" [active] [ref=f8e227] [cursor=pointer]
+  - generic [ref=f8e230]:
+    - generic [ref=f8e231]: ARENA DUEL INITIATED
+    - generic [ref=f8e235]: IRON MAN VS GREEN GOBLIN
+    - generic [ref=f8e236]: Cyber Pumpkin Bomb Barrage INCOMING!

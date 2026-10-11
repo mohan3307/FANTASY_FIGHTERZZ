@@ -1,0 +1,26 @@
+- generic [ref=f7e5]:
+  - img "Reality Shift Gesture Arena"
+  - generic [ref=f7e6] [cursor=pointer]:
+    - heading "REALITY SHIFT" [level=1] [ref=f7e7]
+    - generic [ref=f7e8]: GESTURE ARENA
+  - generic [ref=f7e10]:
+    - generic [ref=f7e16]:
+      - generic [ref=f7e17]: Hero_001
+      - generic [ref=f7e18]: Lv. 5
+    - generic "Click to recharge +50 Energy" [ref=f7e21] [cursor=pointer]:
+      - generic [ref=f7e24]: 1,250
+      - generic [ref=f7e25]: +
+    - generic "Click to add +10 Crystals" [ref=f7e26] [cursor=pointer]:
+      - generic [ref=f7e30]: "320"
+      - generic [ref=f7e31]: +
+    - button "Mute Sound" [ref=f7e32] [cursor=pointer]
+    - button "Toggle Fullscreen" [ref=f7e37] [cursor=pointer]
+  - generic [ref=f7e43]:
+    - button "PLAY" [ref=f7e44] [cursor=pointer]
+    - button "HOW TO PLAY" [ref=f7e49] [cursor=pointer]
+    - button "SETTINGS" [ref=f7e53] [cursor=pointer]
+    - button "QUIT" [ref=f7e58] [cursor=pointer]
+  - generic [ref=f7e64]:
+    - paragraph [ref=f7e65]: Step into the arena.
+    - paragraph [ref=f7e66]: Choose your hero.
+    - paragraph [ref=f7e67]: Face your destiny.

@@ -1,0 +1,33 @@
+- generic [ref=f6e354]:
+  - banner [ref=f6e356]:
+    - button "EXIT GATE" [ref=f6e357] [cursor=pointer]
+    - generic [ref=f6e361]:
+      - generic [ref=f6e364]: "SOLO LEVELING: RED GATE CLASH"
+      - generic [ref=f6e365]: "RANK: S-ANOMALY"
+    - generic [ref=f6e366]:
+      - generic [ref=f6e367]:
+        - generic [ref=f6e371]: VIRTUAL GESTURE
+        - generic [ref=f6e372]: Keys 1, 2, 3, 4
+      - generic [ref=f6e373]: HOTKEYS ACTIVE
+  - generic [ref=f6e376]:
+    - generic [ref=f6e378]:
+      - generic [ref=f6e379]: S-RANK OPPONENTDOCTOR DOOM
+      - generic [ref=f6e380]: 100,000 / 100,000 HP
+    - generic [ref=f6e384]:
+      - img "CAPTAIN AMERICA" [ref=f6e385]
+      - generic [ref=f6e386]:
+        - generic [ref=f6e387]: CAPTAIN AMERICA
+        - generic [ref=f6e388]: 840 / 1000 HP
+    - generic [ref=f6e397]:
+      - text: "GESTURE TRACKER:"
+      - strong [ref=f6e398]: Standby (Show Hand)
+    - generic [ref=f6e399]:
+      - button "SHIELD (OPEN PALM) [1]" [ref=f6e400] [cursor=pointer]
+      - button "STRIKE (CLOSED FIST) [2]" [ref=f6e407] [cursor=pointer]
+      - button "ULTIMATE (V-SIGN) [3]" [ref=f6e411] [cursor=pointer]
+      - button "DODGE (SIDE SWIPE) [4]" [ref=f6e415] [cursor=pointer]
+    - generic [ref=f6e419]:
+      - generic [ref=f6e420]: 💥 HEAVY BLOW! DOCTOR DOOM struck CAPTAIN AMERICA for 89 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f6e421]: 💥 HEAVY BLOW! DOCTOR DOOM struck CAPTAIN AMERICA for 71 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f6e422]: "[VISION] Computer Vision sensor tracking hand. Show gestures or press 1, 2, 3, 4!"
+      - generic [ref=f6e423]: "[SYSTEM] S-Rank Boss DOCTOR DOOM emerged in 3D through the Red Gate!"

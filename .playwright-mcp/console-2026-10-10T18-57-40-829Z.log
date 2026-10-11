@@ -1,0 +1,13 @@
+[    3382ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/chunk-PJEEZAML.js?v=e036a2d9:21550
+[   51937ms] [WARNING] Camera access failure: NotReadableError: Device in use @ http://localhost:3000/src/components/CameraPermissionModal.jsx?t=1791652617721:105
+[   60155ms] [WARNING] Camera access failure: NotReadableError: Device in use @ http://localhost:3000/src/components/CameraPermissionModal.jsx?t=1791652617721:105
+[  110679ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  111702ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  114207ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  116064ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  117896ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  210399ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  211005ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  213690ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  215376ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303
+[  217074ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/node_modules/.vite/deps/three.js?v=e036a2d9:303

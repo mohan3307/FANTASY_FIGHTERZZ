@@ -1,0 +1,52 @@
+- generic [ref=f10e144]:
+  - img "Villain Selection Arena"
+  - banner [ref=f10e145]:
+    - generic [ref=f10e146]:
+      - generic [ref=f10e147] [cursor=pointer]:
+        - generic [ref=f10e148]: REALITY SHIFT
+        - generic [ref=f10e149]: GESTURE ARENA
+      - heading "SELECT YOUR OPPONENT" [level=2] [ref=f10e150]
+    - generic [ref=f10e151]:
+      - generic [ref=f10e152]: CHALLENGER
+      - generic [ref=f10e153]:
+        - img "THOR" [ref=f10e154]
+        - generic [ref=f10e155]:
+          - generic [ref=f10e156]: THOR
+          - generic [ref=f10e157]: Thunder Vanguard
+  - generic [ref=f10e158]:
+    - generic [ref=f10e159] [cursor=pointer]:
+      - img "GREEN GOBLIN" [ref=f10e161]
+      - generic [ref=f10e162]:
+        - heading "GREEN GOBLIN" [level=3] [ref=f10e163]
+        - paragraph [ref=f10e164]: Glider • Bombs • Chaos
+    - generic [ref=f10e168] [cursor=pointer]:
+      - img "THANOS" [ref=f10e170]
+      - generic [ref=f10e171]:
+        - heading "THANOS" [level=3] [ref=f10e172]
+        - paragraph [ref=f10e173]: Gauntlet • Power • Inevitable
+    - generic [ref=f10e177] [cursor=pointer]:
+      - img "MAGNETO" [ref=f10e179]
+      - generic [ref=f10e180]:
+        - heading "MAGNETO" [level=3] [ref=f10e181]
+        - paragraph [ref=f10e182]: Magnetic • Metallic • Dominance
+    - generic [ref=f10e186] [cursor=pointer]:
+      - img "DOCTOR DOOM" [ref=f10e188]
+      - generic [ref=f10e189]:
+        - heading "DOCTOR DOOM" [level=3] [ref=f10e190]
+        - paragraph [ref=f10e191]: Sorcery • Tech • Absolute
+    - generic [ref=f10e195] [cursor=pointer]:
+      - img "LOKI" [ref=f10e197]
+      - generic [ref=f10e198]:
+        - heading "LOKI" [level=3] [ref=f10e199]
+        - paragraph [ref=f10e200]: Illusions • Trickery • Temporal
+  - contentinfo [ref=f10e207]:
+    - button "BACK TO HEROES" [ref=f10e208] [cursor=pointer]
+    - generic [ref=f10e212]:
+      - generic [ref=f10e213]: »»
+      - generic [ref=f10e214]: "REALITY SHIFT: ARENA CLASH"
+      - generic [ref=f10e215]: ««
+    - button "BATTLE STARTING!" [active] [ref=f10e227] [cursor=pointer]
+  - generic [ref=f10e230]:
+    - generic [ref=f10e231]: ARENA DUEL INITIATED
+    - generic [ref=f10e235]: THOR VS THANOS
+    - generic [ref=f10e236]: Infinity Stones Cosmic Cataclysm INCOMING!

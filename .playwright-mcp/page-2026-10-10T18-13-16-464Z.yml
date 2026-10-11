@@ -1,0 +1,41 @@
+- generic [ref=f1e366]:
+  - banner [ref=f1e368]:
+    - button "EXIT GATE" [ref=f1e369] [cursor=pointer]
+    - generic [ref=f1e373]:
+      - generic [ref=f1e376]: "SOLO LEVELING: RED GATE CLASH"
+      - generic [ref=f1e377]: "RANK: S-ANOMALY"
+    - generic [ref=f1e378]:
+      - generic [ref=f1e379]:
+        - generic [ref=f1e383]: VIRTUAL GESTURE
+        - generic [ref=f1e384]: Keys 1, 2, 3, 4
+      - generic [ref=f1e385]: HOTKEYS ACTIVE
+  - generic [ref=f1e388]:
+    - generic [ref=f1e390]:
+      - generic [ref=f1e391]: S-RANK OPPONENTTHANOS
+      - generic [ref=f1e392]: 100,000 / 100,000 HP
+    - generic [ref=f1e396]:
+      - img "SPIDER-MAN" [ref=f1e397]
+      - generic [ref=f1e398]:
+        - generic [ref=f1e399]: SPIDER-MAN
+        - generic [ref=f1e400]: 0 / 1000 HP
+    - generic [ref=f1e408]:
+      - text: "GESTURE TRACKER:"
+      - strong [ref=f1e409]: Standby (Show Hand)
+    - generic [ref=f1e410]:
+      - button "SHIELD (OPEN PALM) [1]" [ref=f1e411] [cursor=pointer]
+      - button "STRIKE (CLOSED FIST) [2]" [ref=f1e418] [cursor=pointer]
+      - button "ULTIMATE (V-SIGN) [3]" [ref=f1e422] [cursor=pointer]
+      - button "DODGE (SIDE SWIPE) [4]" [ref=f1e426] [cursor=pointer]
+    - generic [ref=f1e430]:
+      - generic [ref=f1e431]: ☠️ DEFEATED! SPIDER-MAN has fallen to S-Rank Boss THANOS!
+      - generic [ref=f1e432]: ☠️ DEFEATED! SPIDER-MAN has fallen to S-Rank Boss THANOS!
+      - generic [ref=f1e433]: 💥 HEAVY BLOW! THANOS struck SPIDER-MAN for 176 DMG! Raise Open Palm [1] to block!
+      - generic [ref=f1e434]: ☠️ DEFEATED! SPIDER-MAN has fallen to S-Rank Boss THANOS!
+      - generic [ref=f1e435]: ☠️ DEFEATED! SPIDER-MAN has fallen to S-Rank Boss THANOS!
+  - generic [ref=f1e437]:
+    - heading "HERO DEFEATED!" [level=2] [ref=f1e441]
+    - paragraph [ref=f1e442]: SPIDER-MAN was overwhelmed by THANOS's devastating power.
+    - generic [ref=f1e443]: "💡 TIP: Raise Open Palm (or press 1) immediately when the DANGER WARNING flashes to block 100% of damage!"
+    - generic [ref=f1e444]:
+      - button "RETRY COMBAT" [ref=f1e445] [cursor=pointer]
+      - button "RETREAT TO MENU" [ref=f1e450] [cursor=pointer]
