@@ -56,10 +56,12 @@ export const CameraPermissionModal = ({ isOpen, onAccessGranted, onClose }) => {
             videoRef.current,
             canvasRef.current,
             (res) => {
-              if (res.gesture === 'palm') setDetectedGesture('🖐️ OPEN PALM (SHIELD READY)');
-              else if (res.gesture === 'fist') setDetectedGesture('✊ CLOSED FIST (PUNCH READY)');
-              else if (res.gesture === 'vsign') setDetectedGesture('✌️ V-SIGN (ULTIMATE READY)');
-              else if (res.gesture === 'swipe') setDetectedGesture('👈👉 SWIPE (DODGE READY)');
+              if (res.gesture === 'palm') setDetectedGesture('🖐️ OPEN PALM (ENERGY SHIELD READY)');
+              else if (res.gesture === 'fist') setDetectedGesture('✊ CLOSED FIST (HEAVY STRIKE READY)');
+              else if (res.gesture === 'point') setDetectedGesture('☝️ POINTING (AIM BEAM READY)');
+              else if (res.gesture === 'forward') setDetectedGesture('🥊 FORWARD PUSH (COMBO STRIKE READY)');
+              else if (res.gesture === 'both_hands' || res.gesture === 'vsign') setDetectedGesture('🙌 BOTH HANDS (ULTIMATE READY)');
+              else if (res.gesture === 'swipe') setDetectedGesture('👈👉 SWIPE (WARP DODGE READY)');
             }
           );
           cvEngineRef.current.start();

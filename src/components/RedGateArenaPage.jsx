@@ -308,19 +308,62 @@ export const RedGateArenaPage = ({
       }, 2400);
     }
 
-    // 2. CLOSED FIST // WEAPON CHARGE
+    // 2. CLOSED FIST // HEAVY KINETIC COMBO STRIKE
     else if (gestureType === 'fist') {
-      setActiveGesture('✊ WEAPON ENERGY CHARGING');
-      setWeaponCharged(true);
-      sound.playLaserBeam(false);
-      setHeroSuperEnergy((prev) => Math.min(100, prev + 15));
-      showBanner('⚡ WEAPON CHARGED! (+15% ENERGY)', 'ready');
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ✊ Channeled kinetic plasma into weapon! Next strike empowered!`);
+      setActiveGesture('✊ HEAVY KINETIC STRIKE');
+
+      // Combo count handling
+      setComboCount((prev) => {
+        const next = prev + 1;
+        if (next > maxComboReached) setMaxComboReached(next);
+        if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+        comboTimerRef.current = setTimeout(() => setComboCount(0), 2800);
+        return next;
+      });
+
+      let baseDmg = Math.floor(Math.random() * 800) + 3800;
+      if (weaponCharged) {
+        baseDmg += 2600;
+        setWeaponCharged(false);
+      }
+      const comboMult = 1 + Math.min(0.35, comboCount * 0.035);
+      if (isBossStaggered) baseDmg *= 1.85;
+      const finalDmg = Math.round(baseDmg * comboMult);
+
+      setTotalDamageDealt((prev) => prev + finalDmg);
+
+      setBossHp((prev) => {
+        const next = Math.max(0, prev - finalDmg);
+        checkBossPhase(next);
+        if (next === 0) triggerVictory();
+        return next;
+      });
+
+      if (!isBossStaggered) {
+        setBossStaggerHp((prev) => {
+          const next = Math.max(0, prev - 4800);
+          if (next === 0) triggerStaggerBreak();
+          return next;
+        });
+      }
+
+      setHeroSuperEnergy((prev) => {
+        const gain = isBossStaggered ? 18 : 12;
+        const next = Math.min(100, prev + gain);
+        if (next === 100 && prev < 100) {
+          showBanner('⚡ SPECIAL ABILITY READY! (RAISE BOTH HANDS / 4)', 'ready');
+        }
+        return next;
+      });
+
+      triggerHitEffects(finalDmg, isBossStaggered);
+      setHeroActionTrigger({ type: 'fist', id: Date.now() });
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ✊ Heavy Strike struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
         setLastGestureType(null);
-      }, 1600);
+      }, 1200);
     }
 
     // 3. INDEX POINTING // TARGETED AIM BEAM
