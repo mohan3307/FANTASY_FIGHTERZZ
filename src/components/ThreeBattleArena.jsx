@@ -81,8 +81,24 @@ export const ThreeBattleArena = ({
     villainVfxTime: 0
   });
 
+  // Dynamic 3D Mid-Air Clash Burst State
+  const clashGroupRef = useRef(null);
+  const clashRingRef = useRef(null);
+  const clashSparksRef = useRef(null);
+  const clashStateRef = useRef({ active: false, time: 0, x: 0, y: 0, z: 0, color: 0xffea00 });
+
+  // 3D Comic Hit Star & Ground Impact Shockwave (Tekken / SF6 / DBFZ style)
+  const hitStarRef = useRef(null);
+  const hitStarStateRef = useRef({ active: false, time: 0, x: 0, y: 0, z: 0 });
+  const groundShockRef = useRef(null);
+  const groundShockStateRef = useRef({ active: false, time: 0 });
+
+  // Dynamic Camera Tracking & Hit-Stop Crunch
+  const cameraZoomTargetRef = useRef({ x: -0.35, y: 2.05, z: 7.1 });
+  const hitStopTimerRef = useRef(0);
+
   // Combat Animation States & FSM State
-  const heroAnimRef = useRef({ state: 'idle', time: 0, recoiling: false, recoilTime: 0, comboIndex: 0 });
+  const heroAnimRef = useRef({ state: 'idle', time: 0, recoiling: false, recoilTime: 0, comboIndex: 0, isCounterHit: false });
   const villainAnimRef = useRef({ state: 'idle', time: 0, recoiling: false, recoilTime: 0, hasDamaged: false });
   const comboStepRef = useRef(0);
   const lastComboTimeRef = useRef(0);
@@ -90,6 +106,11 @@ export const ThreeBattleArena = ({
   const aiAttackTimerRef = useRef(-2.0); // Grace period on start
   const introAnimRef = useRef({ emergeProgress: 0, heroEntranceProgress: 0 });
   const aiFsmStateRef = useRef('IDLE');
+
+  const introPhaseRef = useRef(introPhase);
+  useEffect(() => {
+    introPhaseRef.current = introPhase;
+  }, [introPhase]);
 
   // Reset timer on defeat/retry
   useEffect(() => {
@@ -112,42 +133,57 @@ export const ThreeBattleArena = ({
     scene.fog = new THREE.FogExp2(0x050818, 0.038);
     sceneRef.current = scene;
 
-    // 2. Cinematic Camera
-    const camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 1000);
-    camera.position.set(0, 2.3, 8.4);
-    camera.lookAt(0, 1.5, 0);
+    // 2. Cinematic Camera (Angled 3D Isometric View)
+    const camera = new THREE.PerspectiveCamera(44, width / height, 0.1, 1000);
+    camera.position.set(-0.35, 2.05, 7.1);
+    camera.lookAt(0, 1.45, 0.3);
     cameraRef.current = camera;
 
-    // 3. WebGL Renderer with High-End Tone Mapping
+    // 3. WebGL Renderer with High-Performance Tone Mapping
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.35;
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
 
-    // 4. Lighting Rig for Volumetric 3D Bodies & Arena
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.25);
+    // 4. Lighting Rig for Volumetric 3D Bodies & 4K Arena Clash
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
 
-    const cameraKeyLight = new THREE.DirectionalLight(0xffffff, 3.0);
+    const cameraKeyLight = new THREE.DirectionalLight(0xffffff, 3.2);
     cameraKeyLight.position.set(0, 3.2, 8.5);
     scene.add(cameraKeyLight);
 
-    const overheadLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    // Frontal direct fighter duel spotlight (illuminates hero and villain chests/faces directly)
+    const duelFrontalLight = new THREE.DirectionalLight(0xffffff, 3.0);
+    duelFrontalLight.position.set(0, 2.5, 6.0);
+    scene.add(duelFrontalLight);
+
+    const overheadLight = new THREE.DirectionalLight(0xffffff, 2.2);
     overheadLight.position.set(2, 6, 5);
     scene.add(overheadLight);
 
-    const heroKeyLight = new THREE.PointLight(0x00f3ff, 2.8, 15);
+    // Hero key & fill lights
+    const heroKeyLight = new THREE.PointLight(0x00f3ff, 3.5, 15);
     heroKeyLight.position.set(-3.5, 3.2, 3);
     scene.add(heroKeyLight);
 
-    const villainKeyLight = new THREE.PointLight(0xa855f7, 3.0, 15);
+    const heroFrontSpot = new THREE.PointLight(0x00f3ff, 3.2, 10);
+    heroFrontSpot.position.set(-1.0, 1.8, 2.8);
+    scene.add(heroFrontSpot);
+
+    // Villain key & fill lights
+    const villainKeyLight = new THREE.PointLight(0xa855f7, 3.8, 15);
     villainKeyLight.position.set(3.5, 3.2, 3);
     scene.add(villainKeyLight);
 
-    const portalCoreLight = new THREE.PointLight(0x8b5cf6, 5.0, 28);
+    const villainFrontSpot = new THREE.PointLight(0xa855f7, 3.2, 10);
+    villainFrontSpot.position.set(1.0, 1.8, 2.8);
+    scene.add(villainFrontSpot);
+
+    const portalCoreLight = new THREE.PointLight(0x8b5cf6, 5.5, 30);
     portalCoreLight.position.set(0, 2.5, -4.5);
     scene.add(portalCoreLight);
 
@@ -319,7 +355,7 @@ export const ThreeBattleArena = ({
     // ============================================================
     const villainResult = createArticulated3DFighter(selectedVillain, true);
     const villainGroup = villainResult.group;
-    if (introPhase === 'opening') {
+    if (introPhaseRef.current === 'opening' || introPhaseRef.current === 'city-pan') {
       villainGroup.position.set(0, 0.5, -4.5);
       villainGroup.scale.set(0.1, 0.1, 0.1);
     } else {
@@ -669,26 +705,162 @@ export const ThreeBattleArena = ({
     villainVfxGroup.add(lokiCloneGroup);
     lokiIllusionsRef.current = lokiCloneGroup;
 
-    // 13. Atmospheric Ambient Dimensional Sparks
-    const particleCount = 90;
+    // 13. Atmospheric Ambient Dimensional Sparks (4K Ultra-Density)
+    const particleCount = 220;
     const pGeo = new THREE.BufferGeometry();
     const pPos = new Float32Array(particleCount * 3);
     for (let i = 0; i < particleCount * 3; i += 3) {
-      pPos[i] = (Math.random() - 0.5) * 12;
-      pPos[i + 1] = Math.random() * 6;
-      pPos[i + 2] = (Math.random() - 0.5) * 10;
+      pPos[i] = (Math.random() - 0.5) * 14;
+      pPos[i + 1] = Math.random() * 7;
+      pPos[i + 2] = (Math.random() - 0.5) * 12;
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
     const pMat = new THREE.PointsMaterial({
-      color: 0xa855f7,
-      size: 0.09,
+      color: 0x38bdf8,
+      size: 0.11,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     const particles = new THREE.Points(pGeo, pMat);
     scene.add(particles);
     particlesRef.current = particles;
+
+    // ============================================================
+    // 13B. DYNAMIC 3D CLASH BURST & SHOCKWAVE VFX (4K HIGH-DEF COMBAT IMPACTS)
+    // ============================================================
+    const clashGroup = new THREE.Group();
+    scene.add(clashGroup);
+    clashGroupRef.current = clashGroup;
+
+    const cRingGeo = new THREE.RingGeometry(0.18, 0.48, 36);
+    const cRingMat = new THREE.MeshBasicMaterial({
+      color: 0xffea00,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending
+    });
+    const cRing = new THREE.Mesh(cRingGeo, cRingMat);
+    cRing.visible = false;
+    clashGroup.add(cRing);
+    clashRingRef.current = cRing;
+
+    const sparkCount = 110;
+    const sparkGeo = new THREE.BufferGeometry();
+    const sparkPos = new Float32Array(sparkCount * 3);
+    const sparkVels = [];
+    for (let i = 0; i < sparkCount; i++) {
+      sparkPos[i * 3] = 0;
+      sparkPos[i * 3 + 1] = 0;
+      sparkPos[i * 3 + 2] = 0;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI;
+      const spd = 3.0 + Math.random() * 5.5;
+      sparkVels.push({
+        x: Math.cos(theta) * Math.cos(phi) * spd,
+        y: Math.sin(phi) * spd,
+        z: Math.sin(theta) * Math.cos(phi) * spd
+      });
+    }
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+    const sparkMat = new THREE.PointsMaterial({
+      color: 0xffea00,
+      size: 0.18,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const cSparks = new THREE.Points(sparkGeo, sparkMat);
+    cSparks.userData = { vels: sparkVels };
+    cSparks.visible = false;
+    clashGroup.add(cSparks);
+    // 3D Stylized Comic Impact Star (Street Fighter / Tekken / DBFZ style)
+    const starGeo = new THREE.OctahedronGeometry(0.55, 0);
+    const starMat = new THREE.MeshBasicMaterial({
+      color: 0xffea00,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const hitStar = new THREE.Mesh(starGeo, starMat);
+    hitStar.visible = false;
+    scene.add(hitStar);
+    hitStarRef.current = hitStar;
+
+    // Ground Impact Expanding Shockwave Ring
+    const shockRingGeo = new THREE.RingGeometry(0.25, 0.6, 32);
+    const shockRingMat = new THREE.MeshBasicMaterial({
+      color: 0x00f3ff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const groundShock = new THREE.Mesh(shockRingGeo, shockRingMat);
+    groundShock.rotation.x = -Math.PI / 2;
+    groundShock.position.set(0, 0.02, 0);
+    groundShock.visible = false;
+    scene.add(groundShock);
+    groundShockRef.current = groundShock;
+
+    const triggerClash = (x = 1.0, y = 2.0, z = 0.5, color = 0xffea00, isHeavy = false, isCounter = false) => {
+      clashStateRef.current = { active: true, time: 0, x, y, z, color };
+
+      // Fighting Game Hit-Stop (tactile impact freeze)
+      hitStopTimerRef.current = isCounter ? 0.13 : isHeavy ? 0.08 : 0.05;
+
+      // Dynamic Camera Punch
+      cameraShakeRef.current = isCounter ? 0.45 : isHeavy ? 0.32 : 0.18;
+      if (cameraZoomTargetRef.current) {
+        cameraZoomTargetRef.current.z = isCounter ? 5.2 : isHeavy ? 5.8 : 6.4;
+      }
+
+      // 3D Comic Hit Star Burst
+      if (hitStarRef.current) {
+        hitStarRef.current.visible = true;
+        hitStarRef.current.position.set(x, y, z);
+        hitStarRef.current.scale.set(0.3, 0.3, 0.3);
+        hitStarRef.current.material.color.setHex(color);
+        hitStarRef.current.material.opacity = 1.0;
+        hitStarStateRef.current = { active: true, time: 0, x, y, z };
+      }
+
+      // Ground Impact Shockwave on Heavy Strikes / Finisher / Counter
+      if (isHeavy || isCounter) {
+        if (groundShockRef.current) {
+          groundShockRef.current.visible = true;
+          groundShockRef.current.position.set(x, 0.02, z);
+          groundShockRef.current.scale.set(0.3, 0.3, 1);
+          groundShockRef.current.material.color.setHex(color);
+          groundShockRef.current.material.opacity = 0.95;
+          groundShockStateRef.current = { active: true, time: 0 };
+        }
+      }
+
+      if (clashRingRef.current) {
+        clashRingRef.current.visible = true;
+        clashRingRef.current.material.color.setHex(color);
+        clashRingRef.current.position.set(x, y, z);
+        clashRingRef.current.scale.set(0.2, 0.2, 0.2);
+      }
+      if (clashSparksRef.current) {
+        clashSparksRef.current.visible = true;
+        clashSparksRef.current.material.color.setHex(color);
+        clashSparksRef.current.position.set(x, y, z);
+        const arr = clashSparksRef.current.geometry.attributes.position.array;
+        for (let i = 0; i < 40; i++) {
+          arr[i * 3] = 0;
+          arr[i * 3 + 1] = 0;
+          arr[i * 3 + 2] = 0;
+        }
+        clashSparksRef.current.geometry.attributes.position.needsUpdate = true;
+      }
+    };
 
     // Resize Handler
     const handleResize = () => {
@@ -711,8 +883,17 @@ export const ThreeBattleArena = ({
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const delta = Math.min(clock.getDelta(), 0.1);
+      const rawDelta = Math.min(clock.getDelta(), 0.1);
       const elapsed = clock.getElapsedTime();
+
+      // Fighting Game Hit-Stop (Micro-Impact Freeze on collisions)
+      let delta = rawDelta;
+      if (hitStopTimerRef.current > 0) {
+        hitStopTimerRef.current -= rawDelta;
+        delta = 0; // Freeze fighters in crunch impact pose!
+      } else if (isVictory) {
+        delta = rawDelta * 0.25; // Dramatic bullet-time slow motion on victory
+      }
 
       // FPS Telemetry calculation
       frameCount++;
@@ -748,14 +929,49 @@ export const ThreeBattleArena = ({
         });
       }
 
-      // Dynamic Camera Breathing & Trauma Shake
-      if (cameraShakeRef.current > 0.001) {
-        camera.position.x = (Math.random() - 0.5) * cameraShakeRef.current;
-        camera.position.y = 2.3 + (Math.random() - 0.5) * cameraShakeRef.current;
-        cameraShakeRef.current *= 0.86;
-      } else {
-        camera.position.x = Math.sin(elapsed * 0.8) * 0.05;
-        camera.position.y = 2.3 + Math.sin(elapsed * 1.2) * 0.03;
+      // ============================================================
+      // AAA FIGHTING GAME DYNAMIC COMBAT CAMERA CONTROLLER
+      // ============================================================
+      const cam = cameraRef.current;
+      if (cam) {
+        if (isVictory) {
+          // Epic 360-degree slow-motion cinematic orbit around Victor
+          const orbAngle = elapsed * 0.45;
+          cam.position.x = Math.sin(orbAngle) * 5.2 - 0.5;
+          cam.position.z = Math.cos(orbAngle) * 5.2 + 1.8;
+          cam.position.y = 1.95 + Math.sin(elapsed * 0.8) * 0.25;
+          cam.lookAt(-0.5, 1.55, 0.5);
+        } else if (introPhaseRef.current !== 'active') {
+          // Cinematic Intro Camera
+          cam.position.x = Math.sin(elapsed * 0.6) * 0.2;
+          cam.position.y = 2.2 + Math.sin(elapsed * 0.8) * 0.08;
+          cam.position.z = 8.2;
+          cam.lookAt(0, 1.5, 0);
+        } else {
+          // ACTIVE COMBAT ISOMETRIC CAMERA
+          const cZ = cameraZoomTargetRef.current;
+          // Smoothly decay zoom back to base distance (7.1)
+          cZ.z += (7.1 - cZ.z) * (rawDelta * 4.5);
+          cZ.x += (-0.35 - cZ.x) * (rawDelta * 4.5);
+          cZ.y += (2.05 - cZ.y) * (rawDelta * 4.5);
+
+          // Apply breathing sway + dynamic combat shake
+          const swayX = Math.sin(elapsed * 1.4) * 0.04;
+          const swayY = Math.cos(elapsed * 1.8) * 0.025;
+          const shakeX = cameraShakeRef.current > 0.001 ? (Math.random() - 0.5) * cameraShakeRef.current : 0;
+          const shakeY = cameraShakeRef.current > 0.001 ? (Math.random() - 0.5) * cameraShakeRef.current : 0;
+          if (cameraShakeRef.current > 0.001) cameraShakeRef.current *= 0.85;
+
+          cam.position.x = cZ.x + swayX + shakeX;
+          cam.position.y = cZ.y + swayY + shakeY;
+          cam.position.z = cZ.z;
+
+          // Dynamically track midpoint between hero and villain
+          const hX = heroGroupRef.current ? heroGroupRef.current.position.x : -1.8;
+          const vX = villainGroupRef.current ? villainGroupRef.current.position.x : 1.8;
+          const midX = (hX + vX) * 0.5;
+          cam.lookAt(midX * 0.4, 1.48, 0.3);
+        }
       }
 
       // Ambient spark animation
@@ -769,10 +985,11 @@ export const ThreeBattleArena = ({
       }
 
       // --- INTRO PORTAL EMERGENCE ---
-      if (introPhase === 'emerging' || introPhase === 'boss-title') {
+      const curPhase = introPhaseRef.current;
+      if (curPhase === 'emerging' || curPhase === 'boss-title' || curPhase === 'boss-entrance') {
         if (villainGroupRef.current) {
           const v = villainGroupRef.current;
-          introAnimRef.current.emergeProgress = Math.min(1, introAnimRef.current.emergeProgress + delta * 0.7);
+          introAnimRef.current.emergeProgress = Math.min(1, introAnimRef.current.emergeProgress + delta * 1.5);
           const p = introAnimRef.current.emergeProgress;
           v.position.x = THREE.MathUtils.lerp(0, 1.8, p);
           v.position.z = THREE.MathUtils.lerp(-4.5, 0.5, p);
@@ -783,7 +1000,7 @@ export const ThreeBattleArena = ({
         if (villainRigRef.current) {
           animateArticulated3DFighter(villainRigRef.current, 'idle', 0, delta, elapsed, false, '');
         }
-      } else if (introPhase === 'active') {
+      } else if (curPhase === 'active' || curPhase === 'countdown' || curPhase === 'cinematic-banner') {
         if (villainGroupRef.current && introAnimRef.current.emergeProgress < 1) {
           introAnimRef.current.emergeProgress = 1;
           villainGroupRef.current.position.set(1.8, 0, 0.5);
@@ -815,6 +1032,9 @@ export const ThreeBattleArena = ({
           hAnim.state = 'defeat';
           hGroup.position.set(-1.8, 0, 0.5);
         } else if (hAnim.state === 'idle') {
+          // Authentic Boxer / Martial Arts kinetic bouncing stance (Tekken / SF6 style)
+          const martialBounce = Math.abs(Math.sin(elapsed * 4.2)) * 0.055;
+          const martialSway = Math.sin(elapsed * 2.1) * 0.02;
           if (isTech) {
             hGroup.position.y = 0.08 + Math.sin(elapsed * 3.8) * 0.025;
             hGroup.position.x = -1.8;
@@ -826,45 +1046,66 @@ export const ThreeBattleArena = ({
             hGroup.position.z = 0.5;
             hGroup.rotation.z = 0;
           } else {
-            hGroup.position.y = Math.sin(elapsed * 2.2) * 0.025;
-            hGroup.rotation.z = Math.sin(elapsed * 1.8) * 0.01;
+            hGroup.position.y = martialBounce;
+            hGroup.rotation.z = martialSway;
             hGroup.position.x = -1.8;
             hGroup.position.z = 0.5;
           }
         } else if (hAnim.state === 'punch') {
           hAnim.time += delta;
-          const p = hAnim.time / 0.44;
           const cIdx = hAnim.comboIndex || 0;
-          const targetX = cIdx === 2 ? 0.7 : cIdx === 1 ? 0.5 : 0.2;
-          const jumpY = cIdx === 2 ? 0.5 : (isWeb ? 0.65 : isTech ? 0.25 : 0);
+          const isFinisher = cIdx === 2;
+          const punchDur = isFinisher ? 0.32 : 0.22; // Snappy martial combo timings
+          const p = hAnim.time / punchDur;
+          const targetX = cIdx === 2 ? 1.35 : cIdx === 1 ? 1.20 : 0.98;
+          const jumpY = cIdx === 2 ? 0.65 : (isWeb ? 0.55 : isTech ? 0.20 : 0);
 
-          if (p < 0.38) {
-            const f = Math.sin((p / 0.38) * (Math.PI / 2));
+          if (p < 0.36) {
+            const f = Math.sin((p / 0.36) * (Math.PI / 2));
             hGroup.position.x = -1.8 + f * (targetX - (-1.8));
             hGroup.position.y = jumpY * f;
-            hGroup.rotation.z = -0.06 * f;
-          } else if (p < 0.56) {
+            if (isFinisher) {
+              hGroup.rotation.x = -f * Math.PI * 1.5; // Airborne Dragon Somersault flip!
+            } else {
+              hGroup.rotation.z = -0.08 * f;
+            }
+          } else if (p < 0.55) {
             hGroup.position.x = targetX;
             hGroup.position.y = jumpY;
-            hGroup.rotation.z = -0.06;
+            if (isFinisher) {
+              hGroup.rotation.x = -Math.PI * 2.0;
+            } else {
+              hGroup.rotation.z = -0.08;
+            }
+            if (!hAnim.hasClashed) {
+              hAnim.hasClashed = true;
+              const clashColor = hAnim.isCounterHit ? 0xff0055 : isThunder ? 0x60a5fa : isTech ? 0x00f3ff : 0xf59e0b;
+              triggerClash(targetX + 0.15, 2.0 + jumpY * 0.5, 0.5, clashColor, isFinisher, hAnim.isCounterHit);
+            }
           } else if (p < 1.0) {
-            const f = (p - 0.56) / 0.44;
+            const f = (p - 0.55) / 0.45;
             const easeBack = Math.sin(f * (Math.PI / 2));
             hGroup.position.x = targetX - easeBack * (targetX - (-1.8));
             hGroup.position.y = jumpY * (1.0 - easeBack);
-            hGroup.rotation.z = -0.06 * (1.0 - easeBack);
+            if (isFinisher) {
+              hGroup.rotation.x = (1.0 - easeBack) * (-Math.PI * 2.0);
+            } else {
+              hGroup.rotation.z = -0.08 * (1.0 - easeBack);
+            }
           } else {
             hGroup.position.set(-1.8, 0, 0.5);
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
+            hAnim.hasClashed = false;
+            hAnim.isCounterHit = false;
           }
         } else if (hAnim.state === 'staggered') {
           hAnim.time += delta;
-          const sP = Math.min(1.0, hAnim.time / 0.45);
+          const sP = Math.min(1.0, hAnim.time / 0.20); // Fast 0.20s recoil recovery
           hGroup.position.x = -1.8 - Math.sin(sP * Math.PI) * 0.45;
           hGroup.position.y = 0;
           hGroup.rotation.z = -Math.sin(sP * Math.PI) * 0.12;
-          if (hAnim.time >= 0.45) {
+          if (hAnim.time >= 0.20) {
             hAnim.state = 'idle';
             hAnim.time = 0;
             hGroup.position.set(-1.8, 0, 0.5);
@@ -872,31 +1113,42 @@ export const ThreeBattleArena = ({
           }
         } else if (hAnim.state === 'ultimate') {
           hAnim.time += delta;
-          const p = hAnim.time / 0.55;
+          const p = hAnim.time / 0.42; // Fast cinematic ultimate leap
 
-          if (p < 0.45) {
-            const f = Math.sin((p / 0.45) * (Math.PI / 2));
-            hGroup.position.y = f * 2.8;
-            hGroup.position.x = -1.8 + f * 2.4;
+          if (p < 0.40) {
+            // Ascending charge leap into upper screen with dramatic camera punch
+            const f = Math.sin((p / 0.40) * (Math.PI / 2));
+            hGroup.position.y = f * 3.2;
+            hGroup.position.x = -1.8 + f * 3.1;
             hGroup.rotation.z = f * Math.PI * 2;
-          } else if (p < 0.65) {
-            const f = (p - 0.45) / 0.2;
-            hGroup.position.y = (1.0 - f) * 2.8;
-            hGroup.position.x = 0.6;
+            if (cameraZoomTargetRef.current) {
+              cameraZoomTargetRef.current.z = 5.6; // Dramatic cinematic zoom
+            }
+          } else if (p < 0.62) {
+            // Cataclysmic downward crash onto villain
+            const f = (p - 0.40) / 0.22;
+            hGroup.position.y = (1.0 - f) * 3.2;
+            hGroup.position.x = 1.3;
             hGroup.rotation.z = 0;
+            if (!hAnim.hasClashed) {
+              hAnim.hasClashed = true;
+              const clashColor = isThunder ? 0x93c5fd : isTech ? 0x00f3ff : 0xff3b00;
+              triggerClash(1.3, 1.8, 0.5, clashColor, true, false);
+            }
           } else if (p < 1.0) {
-            const f = (p - 0.65) / 0.35;
+            const f = (p - 0.62) / 0.38;
             const easeBack = Math.sin(f * (Math.PI / 2));
-            hGroup.position.x = 0.6 - easeBack * 2.4;
+            hGroup.position.x = 1.3 - easeBack * 3.1;
             hGroup.position.y = 0;
           } else {
             hGroup.position.set(-1.8, 0, 0.5);
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
+            hAnim.hasClashed = false;
           }
         } else if (hAnim.state === 'dodge') {
           hAnim.time += delta;
-          const p = hAnim.time / 0.38;
+          const p = hAnim.time / 0.22; // Snappy 0.22s warp phase dodge
           if (p < 0.5) {
             const f = Math.sin((p / 0.5) * (Math.PI / 2));
             hGroup.position.x = -1.8 - f * 0.9;
@@ -928,7 +1180,7 @@ export const ThreeBattleArena = ({
         // Natural Hit Recoil Elastic Spring Curve
         if (hAnim.recoiling) {
           hAnim.recoilTime = (hAnim.recoilTime || 0) + delta;
-          const rP = Math.min(1.0, hAnim.recoilTime / 0.28);
+          const rP = Math.min(1.0, hAnim.recoilTime / 0.20);
           hGroup.position.x = -1.8 - Math.sin(rP * Math.PI) * 0.48;
           hGroup.rotation.z = -Math.sin(rP * Math.PI) * 0.12;
           if (rP >= 1.0) {
@@ -1151,10 +1403,10 @@ export const ThreeBattleArena = ({
         } else if (introPhase === 'active' && bossHp > 0) {
           aiAttackTimerRef.current += delta;
 
-        // Dynamic Attack Cycle Timing based on Boss Phase
+        // Dynamic Snappy Attack Cycle Timing based on Boss Phase
         const isEnraged = bossPhase >= 2;
-        const attackInterval = bossPhase === 3 ? 2.4 : isEnraged ? 3.0 : 4.0;
-        const warningWindow = bossPhase === 3 ? 0.95 : isEnraged ? 1.1 : 1.2;
+        const attackInterval = bossPhase === 3 ? 1.6 : isEnraged ? 2.1 : 2.7;
+        const warningWindow = bossPhase === 3 ? 0.60 : isEnraged ? 0.70 : 0.80;
         const warningStart = attackInterval - warningWindow;
 
         // FSM State transitions
@@ -1174,8 +1426,8 @@ export const ThreeBattleArena = ({
             if (dangerZoneMeshRef.current) {
               const warningColor = isEnraged ? 0xa855f7 : 0xff0033;
               dangerZoneMeshRef.current.material.color.setHex(warningColor);
-              dangerZoneMeshRef.current.material.opacity = 0.65 + Math.sin(elapsed * 16) * 0.35;
-              dangerZoneMeshRef.current.scale.set(1 + Math.sin(elapsed * 12) * 0.14, 1 + Math.sin(elapsed * 12) * 0.14, 1);
+              dangerZoneMeshRef.current.material.opacity = 0.75 + Math.sin(elapsed * 18) * 0.25;
+              dangerZoneMeshRef.current.scale.set(1 + Math.sin(elapsed * 14) * 0.16, 1 + Math.sin(elapsed * 14) * 0.16, 1);
             }
             vGroup.position.x = 1.8 + (Math.random() - 0.5) * 0.08;
           } else if (aiAttackTimerRef.current < warningStart) {
@@ -1195,7 +1447,7 @@ export const ThreeBattleArena = ({
             vfx.villainAttackActive = true;
             vfx.villainVfxTime = 0;
 
-            // VOID TITAN Sound & Specific villain triggers
+            // Specific villain attack sounds
             if (villainId === 'void-titan') {
               sound.playLaserBeam(true);
               sound.playPortalWarp();
@@ -1205,7 +1457,7 @@ export const ThreeBattleArena = ({
               sound.playLaserBeam(true);
             } else if (villainId === 'magneto') {
               sound.playShieldBlock();
-            } else if (villainId === 'doctor-doom') {
+            } else if (villainId === 'doctor-doom' || villainId === 'doom-regent') {
               sound.playLaserBeam(true);
             } else if (villainId === 'loki') {
               sound.playMysticCast();
@@ -1219,22 +1471,26 @@ export const ThreeBattleArena = ({
         if (voidOrbsRef.current.length > 0) {
           voidOrbsRef.current.forEach((orb, oIdx) => {
             orb.material.opacity = isEnraged ? 0.85 : 0;
-            const oAng = elapsed * 3.0 + (oIdx * (Math.PI * 2 / 3));
+            const oAng = elapsed * 3.5 + (oIdx * (Math.PI * 2 / 3));
             orb.position.set(vGroup.position.x + Math.cos(oAng) * 1.5, 2.2 + Math.sin(oAng * 1.5) * 0.5, 0.5 + Math.sin(oAng) * 1.0);
           });
         }
 
         if (vAnim.state === 'idle') {
-          vGroup.position.y = Math.sin(elapsed * 2.0 + 1.2) * 0.04;
+          // Predatory stalking breathing bounce and slight rhythmic sway
+          const stalkBounce = Math.sin(elapsed * 2.8 + 1.2) * 0.05;
+          const stalkSway = Math.cos(elapsed * 1.9) * 0.02;
+          vGroup.position.y = stalkBounce;
+          vGroup.rotation.z = stalkSway;
           vGroup.position.x = 1.8;
           vGroup.position.z = 0.5;
         } else if (vAnim.state === 'staggered') {
           vAnim.time += delta;
-          const sP = Math.min(1.0, vAnim.time / 0.45);
+          const sP = Math.min(1.0, vAnim.time / 0.20); // Snappy 0.20s boss recoil
           vGroup.position.x = 1.8 + Math.sin(sP * Math.PI) * 0.45;
           vGroup.position.y = 0;
           vGroup.rotation.z = Math.sin(sP * Math.PI) * 0.1;
-          if (vAnim.time >= 0.45 && !isBossStaggered) {
+          if (vAnim.time >= 0.20 && !isBossStaggered) {
             vAnim.state = 'idle';
             vAnim.time = 0;
             vGroup.position.set(1.8, 0, 0.5);
@@ -1242,7 +1498,7 @@ export const ThreeBattleArena = ({
           }
         } else if (vAnim.state === 'attack') {
           vAnim.time += delta;
-          const p = vAnim.time / 0.48;
+          const p = vAnim.time / 0.26; // Snappy 0.26s boss strike
 
           if (p < 0.38) {
             const f = Math.sin((p / 0.38) * (Math.PI / 2));
@@ -1256,13 +1512,35 @@ export const ThreeBattleArena = ({
 
             if (!vAnim.hasDamaged) {
               vAnim.hasDamaged = true;
-              const isHeroShielding = activeGesture && (activeGesture.toUpperCase().includes('SHIELD') || activeGesture.toUpperCase().includes('PALM'));
-              if (onHeroDamaged) onHeroDamaged(isHeroShielding);
-              cameraShakeRef.current = isHeroShielding ? 0.08 : 0.26;
-              if (isHeroShielding) {
+              const isHeroDodging = heroAnimRef.current?.state === 'dodge';
+              const isHeroBlocking = (heroAnimRef.current?.state === 'block') || (activeGesture && (activeGesture.toUpperCase().includes('SHIELD') || activeGesture.toUpperCase().includes('PALM')));
+              const isHeroCountering = (heroAnimRef.current?.state === 'punch' || heroAnimRef.current?.state === 'ultimate');
+
+              const heroCurrentX = heroGroupRef.current?.position.x ?? -1.8;
+              if (isHeroDodging) {
+                if (onHeroDamaged) onHeroDamaged('dodged');
+                triggerClash(heroCurrentX, 1.8, 0.5, 0x00f3ff);
+                cameraShakeRef.current = 0.05;
+                sound.playWebSling();
+              } else if (isHeroBlocking) {
+                if (onHeroDamaged) onHeroDamaged('blocked');
+                triggerClash(-1.2, 1.8, 0.5, 0x38bdf8);
+                cameraShakeRef.current = 0.08;
                 sound.playShieldBlock();
+              } else if (isHeroCountering) {
+                if (onHeroDamaged) onHeroDamaged('clash');
+                triggerClash(0.2, 1.8, 0.5, 0xf59e0b);
+                sound.playThunder();
+                cameraShakeRef.current = 0.35;
+                vAnim.state = 'staggered';
+                vAnim.time = 0;
+                vAnim.recoiling = true;
+                vAnim.recoilTime = 0;
               } else {
+                if (onHeroDamaged) onHeroDamaged('hit');
+                triggerClash(heroCurrentX, 1.8, 0.5, 0xef4444);
                 sound.playPunch();
+                cameraShakeRef.current = 0.28;
                 if (heroAnimRef.current) {
                   heroAnimRef.current.state = 'staggered';
                   heroAnimRef.current.time = 0;
@@ -1361,8 +1639,8 @@ export const ThreeBattleArena = ({
             }
           }
 
-          // 5. DOCTOR DOOM
-          else if (villainId === 'doctor-doom') {
+          // 5. DOCTOR DOOM / DOOM REGENT
+          else if (villainId === 'doctor-doom' || villainId === 'doom-regent') {
             if (doomOrbitalBeamRef.current) {
               doomOrbitalBeamRef.current.visible = true;
               doomOrbitalBeamRef.current.material.opacity = Math.max(0, 1.0 - vt / 0.45);
@@ -1402,7 +1680,7 @@ export const ThreeBattleArena = ({
         // Boss Hit Recoil Elastic Spring Curve
         if (vAnim.recoiling) {
           vAnim.recoilTime = (vAnim.recoilTime || 0) + delta;
-          const rP = Math.min(1.0, vAnim.recoilTime / 0.28);
+          const rP = Math.min(1.0, vAnim.recoilTime / 0.20);
           vGroup.position.x = 1.8 + Math.sin(rP * Math.PI) * 0.48;
           vGroup.rotation.z = Math.sin(rP * Math.PI) * 0.1;
           if (rP >= 1.0) {
@@ -1433,6 +1711,70 @@ export const ThreeBattleArena = ({
         }
       }
 
+      // --- 3D CLASH BURST & SHOCKWAVE ANIMATION LOOP ---
+      if (clashStateRef.current.active) {
+        clashStateRef.current.time += delta;
+        const ct = clashStateRef.current.time;
+        const maxClashDur = 0.22;
+        if (ct < maxClashDur) {
+          const cProg = ct / maxClashDur;
+          if (clashRingRef.current) {
+            const sc = 0.2 + cProg * 3.8;
+            clashRingRef.current.scale.set(sc, sc, sc);
+            clashRingRef.current.material.opacity = (1.0 - cProg) * 0.95;
+          }
+          if (clashSparksRef.current) {
+            clashSparksRef.current.material.opacity = (1.0 - cProg) * 0.95;
+            const pos = clashSparksRef.current.geometry.attributes.position.array;
+            const vels = clashSparksRef.current.userData.vels;
+            for (let i = 0; i < 40; i++) {
+              pos[i * 3] += vels[i].x * delta;
+              pos[i * 3 + 1] += vels[i].y * delta;
+              pos[i * 3 + 2] += vels[i].z * delta;
+            }
+            clashSparksRef.current.geometry.attributes.position.needsUpdate = true;
+          }
+        } else {
+          clashStateRef.current.active = false;
+          if (clashRingRef.current) clashRingRef.current.visible = false;
+          if (clashSparksRef.current) clashSparksRef.current.visible = false;
+        }
+      }
+
+      // --- 3D COMIC HIT STAR ANIMATION LOOP (Street Fighter / Tekken Impact Star) ---
+      if (hitStarStateRef.current.active && hitStarRef.current) {
+        hitStarStateRef.current.time += rawDelta;
+        const ht = hitStarStateRef.current.time;
+        const maxStarDur = 0.22;
+        if (ht < maxStarDur) {
+          const prog = ht / maxStarDur;
+          const sScale = 0.35 + Math.sin(prog * Math.PI) * 1.5;
+          hitStarRef.current.scale.set(sScale, sScale, sScale);
+          hitStarRef.current.rotation.z += rawDelta * 18;
+          hitStarRef.current.rotation.y += rawDelta * 12;
+          hitStarRef.current.material.opacity = (1.0 - prog) * 1.0;
+        } else {
+          hitStarStateRef.current.active = false;
+          hitStarRef.current.visible = false;
+        }
+      }
+
+      // --- 3D GROUND IMPACT EXPANDING SHOCKWAVE LOOP ---
+      if (groundShockStateRef.current.active && groundShockRef.current) {
+        groundShockStateRef.current.time += rawDelta;
+        const gt = groundShockStateRef.current.time;
+        const maxShockDur = 0.35;
+        if (gt < maxShockDur) {
+          const prog = gt / maxShockDur;
+          const gScale = 0.4 + prog * 4.6;
+          groundShockRef.current.scale.set(gScale, gScale, 1);
+          groundShockRef.current.material.opacity = (1.0 - prog) * 0.92;
+        } else {
+          groundShockStateRef.current.active = false;
+          groundShockRef.current.visible = false;
+        }
+      }
+
       renderer.render(scene, camera);
     };
 
@@ -1446,7 +1788,7 @@ export const ThreeBattleArena = ({
       }
       renderer.dispose();
     };
-  }, [selectedHero, selectedVillain, introPhase]);
+  }, [selectedHero, selectedVillain]);
 
   // Listen to Hero Action Triggers (Punch, Ultimate, Dodge, Aim, Charge)
   useEffect(() => {
@@ -1463,10 +1805,19 @@ export const ThreeBattleArena = ({
       comboStepRef.current = nextCombo;
       lastComboTimeRef.current = now;
 
-      heroAnimRef.current = { state: 'punch', time: 0, recoiling: false, recoilTime: 0, comboIndex: nextCombo };
+      const isCounter = Boolean(heroActionTrigger.isCounterHit);
+      heroAnimRef.current = {
+        state: 'punch',
+        time: 0,
+        recoiling: false,
+        recoilTime: 0,
+        comboIndex: nextCombo,
+        isCounterHit: isCounter
+      };
       activeVfxRef.current.heroAttackType = 'fist';
       activeVfxRef.current.heroVfxTime = 0;
-      cameraShakeRef.current = 0.16 + nextCombo * 0.08;
+      cameraShakeRef.current = isCounter ? 0.44 : 0.16 + nextCombo * 0.08;
+
       if (villainAnimRef.current) {
         villainAnimRef.current.state = 'staggered';
         villainAnimRef.current.time = 0;
@@ -1474,8 +1825,10 @@ export const ThreeBattleArena = ({
         villainAnimRef.current.recoilTime = 0;
       }
 
-      // Hero Strike Audio based on Combo step
-      if (heroId === 'ironman') {
+      // Hero Strike Audio based on Counter-Hit or Combo step
+      if (isCounter) {
+        sound.playCounterHit();
+      } else if (heroId === 'ironman') {
         sound.playLaserBeam(nextCombo === 2);
       } else if (heroId === 'thor') {
         sound.playThunder();
@@ -1513,6 +1866,23 @@ export const ThreeBattleArena = ({
         sound.playMysticCast();
       } else {
         sound.playPunch();
+      }
+    } else if (heroActionTrigger.type === 'point') {
+      heroAnimRef.current = { state: 'punch', time: 0, recoiling: false, recoilTime: 0, comboIndex: 1 };
+      activeVfxRef.current.heroAttackType = 'fist';
+      activeVfxRef.current.heroVfxTime = 0;
+      cameraShakeRef.current = 0.22;
+      if (villainAnimRef.current) {
+        villainAnimRef.current.state = 'staggered';
+        villainAnimRef.current.time = 0;
+        villainAnimRef.current.recoiling = true;
+        villainAnimRef.current.recoilTime = 0;
+      }
+      sound.playLaserBeam(true);
+    } else if (heroActionTrigger.type === 'palm') {
+      heroAnimRef.current = { state: 'block', time: 0, recoiling: false, recoilTime: 0 };
+      if (shieldMeshRef.current) {
+        shieldMeshRef.current.material.opacity = 0.95;
       }
     } else if (heroActionTrigger.type === 'swipe') {
       heroAnimRef.current = { state: 'dodge', time: 0, recoiling: false };

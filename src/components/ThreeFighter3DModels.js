@@ -1,198 +1,404 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // ============================================================
-// CHARACTER SPECIFICATIONS, COLOR PALETTES & 3D ARMATURES
+// CHARACTER SPECIFICATIONS, COLOR PALETTES & 3D RIG CONFIGS
 // ============================================================
 export const HERO_CONFIGS = {
-  // 1. ARMORED TECH HERO (Plasma Ranger / Iron Man Archetype)
+  // 1. IRON MAN (Mark 85 Nanotech Armor / Plasma Ranger)
   'plasma-ranger': {
     id: 'plasma-ranger',
-    name: 'PLASMA RANGER',
-    archetype: 'Armored Tech Hero',
-    primaryColor: 0xb91c1c, // Crimson Red Metallic
-    secondaryColor: 0xeab308, // Gold Metallic Armor Plates
+    marvelId: 'ironman',
+    name: 'IRON MAN',
+    archetype: 'Armored Avenger',
+    primaryColor: 0xb91c1c, // Crimson Nanotech Armor
+    secondaryColor: 0xf59e0b, // Gold Titanium Plates
     trimColor: 0x1e293b, // Dark Titanium Joints
     glowColor: 0x00f3ff, // Cyan Arc Reactor Glow
     accentColor: '#00f3ff',
-    metalness: 0.92,
-    roughness: 0.18,
-    scale: 1.04,
+    metalness: 0.96,
+    roughness: 0.14,
+    scale: 1.0,
     hasReactor: true,
     hasRepulsors: true,
-    hasHelmet: 'tech-helmet',
-    weaponType: 'repulsor'
+    hasIronManHelmet: true,
+    weaponType: 'repulsor',
+    modelUrl: '/heros/iron_man.glb',
+    isAuthenticGlb: true
   },
   ironman: {
     id: 'ironman',
-    name: 'PLASMA RANGER',
-    archetype: 'Armored Tech Hero',
+    marvelId: 'ironman',
+    name: 'IRON MAN',
+    archetype: 'Armored Avenger',
     primaryColor: 0xb91c1c,
-    secondaryColor: 0xeab308,
+    secondaryColor: 0xf59e0b,
     trimColor: 0x1e293b,
     glowColor: 0x00f3ff,
     accentColor: '#00f3ff',
-    metalness: 0.92,
-    roughness: 0.18,
-    scale: 1.04,
+    metalness: 0.96,
+    roughness: 0.14,
+    scale: 1.0,
     hasReactor: true,
     hasRepulsors: true,
-    hasHelmet: 'tech-helmet',
-    weaponType: 'repulsor'
+    hasIronManHelmet: true,
+    weaponType: 'repulsor',
+    modelUrl: '/heros/iron_man.glb',
+    isAuthenticGlb: true
   },
 
-  // 2. THUNDER WARRIOR (Storm Guardian / Thor Archetype)
+  // 2. THOR (God of Thunder / Storm Guardian)
   'storm-guardian': {
     id: 'storm-guardian',
-    name: 'STORM GUARDIAN',
-    archetype: 'Thunder Warrior',
-    primaryColor: 0x1e293b, // Asgardian Dark Steel
-    secondaryColor: 0x94a3b8, // Silver Armor Discs
-    trimColor: 0xd97706, // Gilded Gold Trim
-    glowColor: 0x38bdf8, // Electric Lightning Blue
+    marvelId: 'thor',
+    name: 'THOR',
+    archetype: 'Asgardian Thunder God',
+    primaryColor: 0x1e293b, // Asgardian Dark Scale Steel
+    secondaryColor: 0x94a3b8, // 6 Polished Silver Roundels
+    trimColor: 0xd97706, // Gilded Gold Accents
+    glowColor: 0x38bdf8, // Lightning Blue
     accentColor: '#00f3ff',
-    metalness: 0.88,
-    roughness: 0.22,
+    metalness: 0.9,
+    roughness: 0.2,
     scale: 1.08,
     hasCape: true,
-    capeColor: 0x991b1b, // Crimson Flowing Cape
-    hasHammer: true,
-    hasHelmet: 'winged-helmet',
-    weaponType: 'hammer'
+    capeColor: 0x991b1b, // Flowing Crimson Cape
+    hasMjolnir: true,
+    hasWingedHelmet: true,
+    weaponType: 'hammer',
+    modelUrl: '/heros/thor_odinson.glb',
+    isAuthenticGlb: true
   },
   thor: {
     id: 'thor',
-    name: 'STORM GUARDIAN',
-    archetype: 'Thunder Warrior',
+    marvelId: 'thor',
+    name: 'THOR',
+    archetype: 'Asgardian Thunder God',
     primaryColor: 0x1e293b,
     secondaryColor: 0x94a3b8,
     trimColor: 0xd97706,
     glowColor: 0x38bdf8,
     accentColor: '#00f3ff',
-    metalness: 0.88,
-    roughness: 0.22,
+    metalness: 0.9,
+    roughness: 0.2,
     scale: 1.08,
     hasCape: true,
     capeColor: 0x991b1b,
-    hasHammer: true,
-    hasHelmet: 'winged-helmet',
-    weaponType: 'hammer'
+    hasMjolnir: true,
+    hasWingedHelmet: true,
+    weaponType: 'hammer',
+    modelUrl: '/heros/thor_odinson.glb',
+    isAuthenticGlb: true
   },
 
-  // 3. SHIELD DEFENDER (Shield Sentinel / Captain America Archetype)
+  // 3. CAPTAIN AMERICA (First Avenger / Shield Sentinel)
   'shield-sentinel': {
     id: 'shield-sentinel',
-    name: 'SHIELD SENTINEL',
-    archetype: 'Shield Defender',
+    marvelId: 'captain-america',
+    name: 'CAPTAIN AMERICA',
+    archetype: 'Super Soldier',
     primaryColor: 0x1d4ed8, // Tactical Cobalt Blue
     secondaryColor: 0xb91c1c, // Crimson Combat Stripes
     trimColor: 0xe2e8f0, // Silver Star Medallion
     glowColor: 0x38bdf8,
     accentColor: '#fbbf24',
-    metalness: 0.65,
-    roughness: 0.35,
-    scale: 1.04,
-    hasShield: true,
-    hasHelmet: 'combat-helmet',
-    weaponType: 'shield'
+    metalness: 0.78,
+    roughness: 0.28,
+    scale: 1.02,
+    hasCapShield: true,
+    hasCapHelmet: true,
+    hasStarHarness: true,
+    weaponType: 'shield',
+    modelUrl: '/heros/captain_america_-_marvel_cinematic_universe.glb',
+    isAuthenticGlb: true
   },
   'captain-america': {
     id: 'captain-america',
-    name: 'SHIELD SENTINEL',
-    archetype: 'Shield Defender',
+    marvelId: 'captain-america',
+    name: 'CAPTAIN AMERICA',
+    archetype: 'Super Soldier',
     primaryColor: 0x1d4ed8,
     secondaryColor: 0xb91c1c,
     trimColor: 0xe2e8f0,
     glowColor: 0x38bdf8,
     accentColor: '#fbbf24',
-    metalness: 0.65,
-    roughness: 0.35,
-    scale: 1.04,
-    hasShield: true,
-    hasHelmet: 'combat-helmet',
-    weaponType: 'shield'
+    metalness: 0.78,
+    roughness: 0.28,
+    scale: 1.02,
+    hasCapShield: true,
+    hasCapHelmet: true,
+    hasStarHarness: true,
+    weaponType: 'shield',
+    modelUrl: '/heros/captain_america_-_marvel_cinematic_universe.glb',
+    isAuthenticGlb: true
   },
 
-  // 4. AGILE WEB HERO (Web Ninja / Spider-Man Archetype)
+  // 4. SPIDER-MAN (Friendly Neighborhood / Web Ninja)
   'web-ninja': {
     id: 'web-ninja',
-    name: 'WEB NINJA',
-    archetype: 'Agile Web Hero',
+    marvelId: 'spiderman',
+    name: 'SPIDER-MAN',
+    archetype: 'Agile Web-Slinger',
     primaryColor: 0xdc2626, // Crimson Nano-Weave
-    secondaryColor: 0x1e3a8a, // Deep Tactical Navy
-    trimColor: 0x0f172a, // Obsidian Web Lines
+    secondaryColor: 0x1e3a8a, // Tactical Navy Blue
+    trimColor: 0x0f172a, // Black Web-Lines
     glowColor: 0x00f3ff,
     accentColor: '#ff2a5f',
-    metalness: 0.45,
-    roughness: 0.42,
+    metalness: 0.55,
+    roughness: 0.35,
     scale: 1.0,
+    hasSpiderMask: true,
     hasWebshooters: true,
-    hasHelmet: 'web-mask',
-    weaponType: 'web'
+    hasSpiderEmblem: true,
+    weaponType: 'web',
+    modelUrl: '/heros/spider-man.glb',
+    isAuthenticGlb: true
   },
   spiderman: {
     id: 'spiderman',
-    name: 'WEB NINJA',
-    archetype: 'Agile Web Hero',
+    marvelId: 'spiderman',
+    name: 'SPIDER-MAN',
+    archetype: 'Agile Web-Slinger',
     primaryColor: 0xdc2626,
     secondaryColor: 0x1e3a8a,
     trimColor: 0x0f172a,
     glowColor: 0x00f3ff,
     accentColor: '#ff2a5f',
-    metalness: 0.45,
-    roughness: 0.42,
+    metalness: 0.55,
+    roughness: 0.35,
     scale: 1.0,
+    hasSpiderMask: true,
     hasWebshooters: true,
-    hasHelmet: 'web-mask',
-    weaponType: 'web'
+    hasSpiderEmblem: true,
+    weaponType: 'web',
+    modelUrl: '/heros/spider-man.glb',
+    isAuthenticGlb: true
   },
 
-  // 5. MYSTIC PORTAL MAGE (Arcane Sorcerer / Doctor Strange Archetype)
+  // 5. DOCTOR STRANGE (Master of Mystic Arts / Arcane Sorcerer)
   'arcane-sorcerer': {
     id: 'arcane-sorcerer',
-    name: 'ARCANE SORCERER',
-    archetype: 'Mystic Portal Mage',
-    primaryColor: 0x1e1b4b, // Mystic Midnight Indigo
+    marvelId: 'doctor-strange',
+    name: 'DOCTOR STRANGE',
+    archetype: 'Sorcerer Supreme',
+    primaryColor: 0x1e1b4b, // Midnight Indigo Robes
     secondaryColor: 0x0f766e, // Emerald Silk Sash
     trimColor: 0xf59e0b, // Eldritch Gold Border
     glowColor: 0xf59e0b, // Eldritch Orange Flame
     accentColor: '#a855f7',
-    metalness: 0.4,
+    metalness: 0.45,
     roughness: 0.5,
-    scale: 1.04,
-    hasCloak: true,
-    capeColor: 0x881337, // Cloak of Levitation
+    scale: 1.02,
+    hasLevitationCloak: true,
+    capeColor: 0x881337,
     hasEyeOfAgamotto: true,
     hasMandalas: true,
-    hasHelmet: 'mystic-cowl',
-    weaponType: 'mandala'
+    weaponType: 'mandala',
+    modelUrl: '/heros/doctor_strange_illuminati_textured_no_rig.glb',
+    isAuthenticGlb: true
   },
   'doctor-strange': {
     id: 'doctor-strange',
-    name: 'ARCANE SORCERER',
-    archetype: 'Mystic Portal Mage',
+    marvelId: 'doctor-strange',
+    name: 'DOCTOR STRANGE',
+    archetype: 'Sorcerer Supreme',
     primaryColor: 0x1e1b4b,
     secondaryColor: 0x0f766e,
     trimColor: 0xf59e0b,
     glowColor: 0xf59e0b,
     accentColor: '#a855f7',
-    metalness: 0.4,
+    metalness: 0.45,
     roughness: 0.5,
-    scale: 1.04,
-    hasCloak: true,
+    scale: 1.02,
+    hasLevitationCloak: true,
     capeColor: 0x881337,
     hasEyeOfAgamotto: true,
     hasMandalas: true,
-    hasHelmet: 'mystic-cowl',
-    weaponType: 'mandala'
+    weaponType: 'mandala',
+    modelUrl: '/heros/doctor_strange_illuminati_textured_no_rig.glb',
+    isAuthenticGlb: true
   }
 };
 
 export const VILLAIN_CONFIGS = {
-  // 1. VOID OVERLORD (Void Titan Archetype)
+  // 1. DOCTOR DOOM / DOOM REGENT — The Monarch of Latveria
+  'doom-regent': {
+    id: 'doom-regent',
+    marvelId: 'doctor-doom',
+    name: 'DOOM REGENT',
+    archetype: 'Monarch of Techno-Arcane Ruin',
+    primaryColor: 0xd1d5db, // Polished High-Specular Metallic Silver Steel
+    secondaryColor: 0x064e3b, // Deep Emerald Velvet Cloth Hood & Long Cloak
+    trimColor: 0xf59e0b, // Eldritch Gold Inlaid Filigree & Sovereign Clasps
+    glowColor: 0x10b981, // Arcane Emerald Technomancy Core Glow
+    accentColor: '#10b981',
+    metalness: 0.98,
+    roughness: 0.12,
+    scale: 1.08,
+    hasDoomMask: true,
+    hasGreenHoodAndCloak: true,
+    hasArmoredPauldrons: true,
+    hasTechnomancyGauntlets: true,
+    hasSovereignBelt: true,
+    weaponType: 'technomancy-gauntlets',
+    modelUrl: '/villans/doctor_doom_skin__fortnite_chapter_2_-_bp_skin.glb',
+    isAuthenticGlb: true
+  },
+  'doctor-doom': {
+    id: 'doctor-doom',
+    marvelId: 'doctor-doom',
+    name: 'DOCTOR DOOM',
+    archetype: 'Monarch of Techno-Arcane Ruin',
+    primaryColor: 0xd1d5db,
+    secondaryColor: 0x064e3b,
+    trimColor: 0xf59e0b,
+    glowColor: 0x10b981,
+    accentColor: '#10b981',
+    metalness: 0.98,
+    roughness: 0.12,
+    scale: 1.08,
+    hasDoomMask: true,
+    hasGreenHoodAndCloak: true,
+    hasArmoredPauldrons: true,
+    hasTechnomancyGauntlets: true,
+    hasSovereignBelt: true,
+    weaponType: 'technomancy-gauntlets',
+    modelUrl: '/villans/doctor_doom_skin__fortnite_chapter_2_-_bp_skin.glb',
+    isAuthenticGlb: true
+  },
+
+  // 2. THANOS (The Mad Titan with the Infinity Gauntlet)
+  thanos: {
+    id: 'thanos',
+    marvelId: 'thanos',
+    name: 'THANOS',
+    archetype: 'Cosmic Warlord',
+    primaryColor: 0x581c87, // Alien Royal Purple Titan Skin
+    secondaryColor: 0xd97706, // Battle-Hardened Golden Warlord Armor
+    trimColor: 0x1e1b4b, // Obsidian Inlays
+    glowColor: 0xd946ef, // Cosmic Power Glow
+    accentColor: '#d946ef',
+    metalness: 0.92,
+    roughness: 0.22,
+    scale: 1.25, // Colossal Titan Scale
+    hasInfinityGauntlet: true,
+    hasThanosArmor: true,
+    hasThanosChin: true,
+    hasWarlordSword: true,
+    weaponType: 'infinity-gauntlet',
+    modelUrl: '/villans/thanos_4k_retextured.glb',
+    isAuthenticGlb: true
+  },
+  'mech-destroyer': {
+    id: 'mech-destroyer',
+    marvelId: 'thanos',
+    name: 'THANOS',
+    archetype: 'Cosmic Warlord',
+    primaryColor: 0x581c87,
+    secondaryColor: 0xd97706,
+    trimColor: 0x1e1b4b,
+    glowColor: 0xd946ef,
+    accentColor: '#d946ef',
+    metalness: 0.92,
+    roughness: 0.22,
+    scale: 1.25,
+    hasInfinityGauntlet: true,
+    hasThanosArmor: true,
+    hasThanosChin: true,
+    hasWarlordSword: true,
+    weaponType: 'infinity-gauntlet',
+    modelUrl: '/villans/thanos_4k_retextured.glb',
+    isAuthenticGlb: true
+  },
+
+  // 3. LOKI (God of Mischief / Shadow Assassin)
+  loki: {
+    id: 'loki',
+    marvelId: 'loki',
+    name: 'LOKI',
+    archetype: 'God of Mischief',
+    primaryColor: 0x064e3b, // Stealth Emerald Green
+    secondaryColor: 0xf59e0b, // Towering Golden Curved Horns
+    trimColor: 0x0f172a, // Obsidian Leather
+    glowColor: 0x84cc16, // Phantom Lime Green
+    accentColor: '#84cc16',
+    metalness: 0.88,
+    roughness: 0.24,
+    scale: 1.05,
+    hasLokiHorns: true,
+    hasDualDaggers: true,
+    weaponType: 'daggers',
+    modelUrl: '/villans/loki.glb',
+    isAuthenticGlb: true
+  },
+  'shadow-assassin': {
+    id: 'shadow-assassin',
+    marvelId: 'loki',
+    name: 'LOKI',
+    archetype: 'God of Mischief',
+    primaryColor: 0x064e3b,
+    secondaryColor: 0xf59e0b,
+    trimColor: 0x0f172a,
+    glowColor: 0x84cc16,
+    accentColor: '#84cc16',
+    metalness: 0.88,
+    roughness: 0.24,
+    scale: 1.05,
+    hasLokiHorns: true,
+    hasDualDaggers: true,
+    weaponType: 'daggers',
+    modelUrl: '/villans/loki.glb',
+    isAuthenticGlb: true
+  },
+
+  // 4. GREEN GOBLIN (Norman Osborn with Glider & Pumpkin Bomb)
+  'green-goblin': {
+    id: 'green-goblin',
+    marvelId: 'green-goblin',
+    name: 'GREEN GOBLIN',
+    archetype: 'Chaos Bombardier',
+    primaryColor: 0x16a34a, // Toxic Emerald Scale Armor
+    secondaryColor: 0x7c3aed, // Purple Velvet Hood & Cowl
+    trimColor: 0x0f172a, // Cyber Steel
+    glowColor: 0xf97316, // Pumpkin Molten Orange
+    accentColor: '#22c55e',
+    metalness: 0.85,
+    roughness: 0.25,
+    scale: 1.05,
+    hasGoblinMask: true,
+    hasGlider: true,
+    hasPumpkinBomb: true,
+    weaponType: 'bombs',
+    modelUrl: '/villans/green_globin_hd_3d_model_ftu.glb',
+    isAuthenticGlb: true
+  },
+
+  // 5. MAGNETO (Master of Magnetism)
+  magneto: {
+    id: 'magneto',
+    marvelId: 'magneto',
+    name: 'MAGNETO',
+    archetype: 'Mutant Sovereign',
+    primaryColor: 0xb91c1c, // Crimson Combat Tunic
+    secondaryColor: 0x581c87, // Flowing Purple Cape
+    trimColor: 0xe2e8f0, // Silver Helmet Inlay
+    glowColor: 0xef4444, // Magnetic Red Aura
+    accentColor: '#ef4444',
+    metalness: 0.9,
+    roughness: 0.2,
+    scale: 1.05,
+    weaponType: 'magnetism',
+    modelUrl: '/villans/max_eisenhardt_-_magneto.glb',
+    isAuthenticGlb: true
+  },
+
+  // 6. VOID OVERLORD (Abyssal AI Titan)
   'void-titan': {
     id: 'void-titan',
+    marvelId: 'void-titan',
     name: 'VOID OVERLORD',
-    archetype: 'Void Overlord',
+    archetype: 'Cosmic Singularity Titan',
     primaryColor: 0x0a0a14, // Dark Obsidian Cyber-Armor
     secondaryColor: 0x312e81, // Deep Dark-Matter Indigo
     trimColor: 0x475569, // Titanium Armor Joints
@@ -200,102 +406,20 @@ export const VILLAIN_CONFIGS = {
     accentColor: '#8b5cf6',
     metalness: 0.94,
     roughness: 0.16,
-    scale: 1.35, // Colossal Boss Scale
+    scale: 1.25,
     hasVoidCore: true,
     hasVoidGauntlets: true,
-    hasVoidCracks: true,
-    hasHelmet: 'void-crest',
-    weaponType: 'void-gauntlet'
-  },
-
-  // 2. SHADOW ASSASSIN (Fast & Evasive Stealth Hunter)
-  'shadow-assassin': {
-    id: 'shadow-assassin',
-    name: 'SHADOW ASSASSIN',
-    archetype: 'Shadow Assassin',
-    primaryColor: 0x064e3b, // Stealth Emerald
-    secondaryColor: 0x0f172a, // Matte Black Carbon
-    trimColor: 0xeab308, // Gold Accents
-    glowColor: 0x84cc16, // Phantom Lime Green
-    accentColor: '#84cc16',
-    metalness: 0.8,
-    roughness: 0.28,
-    scale: 1.05,
-    hasDualDaggers: true,
-    hasHelmet: 'shadow-horns',
-    weaponType: 'daggers'
-  },
-  loki: {
-    id: 'loki',
-    name: 'SHADOW ASSASSIN',
-    archetype: 'Shadow Assassin',
-    primaryColor: 0x064e3b,
-    secondaryColor: 0x0f172a,
-    trimColor: 0xeab308,
-    glowColor: 0x84cc16,
-    accentColor: '#84cc16',
-    metalness: 0.8,
-    roughness: 0.28,
-    scale: 1.05,
-    hasDualDaggers: true,
-    hasHelmet: 'shadow-horns',
-    weaponType: 'daggers'
-  },
-
-  // 3. MECH DESTROYER (Heavy Armor & Ground Attacks)
-  'mech-destroyer': {
-    id: 'mech-destroyer',
-    name: 'MECH DESTROYER',
-    archetype: 'Mech Destroyer',
-    primaryColor: 0x451a03, // Heavy Industrial Rust Iron
-    secondaryColor: 0xb45309, // Warning Hazard Gold
-    trimColor: 0x1f2937, // Hydraulic Pistons
-    glowColor: 0xf97316, // Molten Orange Core
-    accentColor: '#f97316',
-    metalness: 0.9,
-    roughness: 0.25,
-    scale: 1.28,
-    hasHydraulicGauntlets: true,
-    hasHelmet: 'siege-visor',
-    weaponType: 'mech-gauntlet'
-  },
-  thanos: {
-    id: 'thanos',
-    name: 'MECH DESTROYER',
-    archetype: 'Mech Destroyer',
-    primaryColor: 0x3b0764,
-    secondaryColor: 0xb45309,
-    trimColor: 0x1f2937,
-    glowColor: 0xd946ef,
-    accentColor: '#d946ef',
-    metalness: 0.88,
-    roughness: 0.22,
-    scale: 1.28,
-    hasHydraulicGauntlets: true,
-    hasHelmet: 'siege-visor',
-    weaponType: 'mech-gauntlet'
-  },
-
-  'green-goblin': {
-    id: 'green-goblin',
-    name: 'CHAOS BOMBARDIER',
-    archetype: 'Chaos Bombardier',
-    primaryColor: 0x16a34a,
-    secondaryColor: 0x7c3aed,
-    trimColor: 0x0f172a,
-    glowColor: 0xf97316,
-    accentColor: '#22c55e',
-    metalness: 0.75,
-    roughness: 0.3,
-    scale: 1.08,
-    hasGlider: true,
-    hasHelmet: 'goblin-mask',
-    weaponType: 'bombs'
+    hasVoidCrest: true,
+    weaponType: 'void-gauntlet',
+    modelUrl: '/villans/thanos_4k_retextured.glb',
+    isAuthenticGlb: true
   }
 };
 
-// PBR Material Factory
-function createPbrMaterial(color, metalness = 0.7, roughness = 0.3, emissive = 0x000000, emissiveIntensity = 0.3) {
+// ============================================================
+// PBR MATERIAL FACTORY
+// ============================================================
+function createPbrMaterial(color, metalness = 0.8, roughness = 0.25, emissive = 0x000000, emissiveIntensity = 0.3) {
   return new THREE.MeshStandardMaterial({
     color,
     metalness,
@@ -305,24 +429,224 @@ function createPbrMaterial(color, metalness = 0.7, roughness = 0.3, emissive = 0
   });
 }
 
+// Global GLTF Cache & Loader for instantaneous cloning without network overhead
+const gltfCache = {};
+const gltfLoader = new GLTFLoader();
+
+function loadGLTFModel(url) {
+  if (gltfCache[url]) {
+    return Promise.resolve(gltfCache[url]);
+  }
+  return new Promise((resolve, reject) => {
+    gltfLoader.load(
+      url,
+      (gltf) => {
+        gltfCache[url] = gltf;
+        resolve(gltf);
+      },
+      undefined,
+      (err) => {
+        console.error(`Failed to load 3D GLTF asset from ${url}:`, err);
+        reject(err);
+      }
+    );
+  });
+}
+
+export function preloadFighterModels() {
+  const urls = [
+    '/heros/iron_man.glb',
+    '/heros/thor_odinson.glb',
+    '/heros/captain_america_-_marvel_cinematic_universe.glb',
+    '/heros/spider-man.glb',
+    '/heros/doctor_strange_illuminati_textured_no_rig.glb',
+    '/villans/doctor_doom_skin__fortnite_chapter_2_-_bp_skin.glb',
+    '/villans/thanos_4k_retextured.glb',
+    '/villans/loki.glb',
+    '/villans/green_globin_hd_3d_model_ftu.glb',
+    '/villans/max_eisenhardt_-_magneto.glb'
+  ];
+  let delay = 100;
+  urls.forEach((url) => {
+    setTimeout(() => {
+      loadGLTFModel(url).catch(() => {});
+    }, delay);
+    delay += 200;
+  });
+}
+
+// Visible 3D Holographic Asset-Loading Error Display
+function createAssetLoadingErrorMesh(url, errorMessage) {
+  const errGroup = new THREE.Group();
+
+  const diamondGeo = new THREE.OctahedronGeometry(0.65, 0);
+  const diamondMat = new THREE.MeshBasicMaterial({ color: 0xef4444, wireframe: true });
+  const diamond = new THREE.Mesh(diamondGeo, diamondMat);
+  diamond.position.y = 1.3;
+  errGroup.add(diamond);
+
+  const coreGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.38, 8);
+  const coreMat = new THREE.MeshBasicMaterial({ color: 0xff0033 });
+  const core = new THREE.Mesh(coreGeo, coreMat);
+  core.position.y = 1.35;
+  errGroup.add(core);
+
+  const dotGeo = new THREE.SphereGeometry(0.05, 8, 8);
+  const dot = new THREE.Mesh(dotGeo, coreMat);
+  dot.position.y = 1.05;
+  errGroup.add(dot);
+
+  const ringGeo = new THREE.RingGeometry(0.7, 0.8, 32);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.02;
+  errGroup.add(ring);
+
+  return errGroup;
+}
+
+// Temporary scanning hologram avatar while asset finishes parsing
+function createScanningHologram(color, scale = 1.0) {
+  const holoGroup = new THREE.Group();
+  holoGroup.name = 'loading-hologram';
+
+  const wireMat = new THREE.MeshBasicMaterial({
+    color: color || 0x00f3ff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.45
+  });
+
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.22 * scale, 0.16 * scale, 0.6 * scale, 10), wireMat);
+  torso.position.y = 1.15 * scale;
+  holoGroup.add(torso);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.14 * scale, 10, 8), wireMat);
+  head.position.y = 1.62 * scale;
+  holoGroup.add(head);
+
+  return holoGroup;
+}
+
 // ============================================================
-// BUILD GENUINE FULL-BODY 3D HUMANOID FIGHTER (NO FLAT DECALS!)
+// SYNTHESIZE FULL SUITE OF COMBAT ANIMATION CLIPS FOR MIXAMO RIG
+// ============================================================
+function createQuatTrack(name, times, eulerArrays) {
+  const vals = [];
+  eulerArrays.forEach(([x, y, z]) => {
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z));
+    vals.push(q.x, q.y, q.z, q.w);
+  });
+  return new THREE.QuaternionKeyframeTrack(name + '.quaternion', times, vals);
+}
+
+function createPosTrack(name, times, posArrays) {
+  const vals = [];
+  posArrays.forEach(([x, y, z]) => vals.push(x, y, z));
+  return new THREE.VectorKeyframeTrack(name + '.position', times, vals);
+}
+
+function buildSynthesizedMixamoClips() {
+  return [
+    // 1. Energy Attack (Punch & Lunge) - Accelerated to 0.26s
+    new THREE.AnimationClip('attack', 0.26, [
+      createPosTrack('mixamorigHips', [0, 0.11, 0.26], [[0, 0, 0], [0, 0, 0.32], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.11, 0.26], [[0, 0, 0], [0, 0.38, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.11, 0.26], [[0, 0, 0], [-1.45, 0, -0.2], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 0.11, 0.26], [[0, 0, 0], [-0.15, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.11, 0.26], [[0, 0, 0], [0.5, 0, 0.4], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftForeArm', [0, 0.11, 0.26], [[0, 0, 0], [-1.2, 0, 0], [0, 0, 0]])
+    ]),
+
+    // 2. Special-Power Cast (Cosmic Channeling & Forward Blast) - Accelerated to 0.45s
+    new THREE.AnimationClip('special_cast', 0.45, [
+      createPosTrack('mixamorigHips', [0, 0.22, 0.45], [[0, 0, 0], [0, 0.35, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.22, 0.45], [[0, 0, 0], [-0.25, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 0.22, 0.45], [[0, 0, 0], [-0.35, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.22, 0.45], [[0, 0, 0], [-2.2, 0, 0.45], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.22, 0.45], [[0, 0, 0], [-2.2, 0, -0.45], [0, 0, 0]])
+    ]),
+
+    // 3. Block or Shield (Braced Dual-Arm Defense) - Accelerated to 0.32s
+    new THREE.AnimationClip('block', 0.32, [
+      createQuatTrack('mixamorigSpine2', [0, 0.08, 0.32], [[0, 0, 0], [-0.15, 0, 0], [-0.15, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.08, 0.32], [[0, 0, 0], [-0.85, 0, 0.45], [-0.85, 0, 0.45]]),
+      createQuatTrack('mixamorigLeftForeArm', [0, 0.08, 0.32], [[0, 0, 0], [-1.55, 0, 0], [-1.55, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.08, 0.32], [[0, 0, 0], [-0.75, 0, -0.35], [-0.75, 0, -0.35]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 0.08, 0.32], [[0, 0, 0], [-1.45, 0, 0], [-1.45, 0, 0]])
+    ]),
+
+    // 4. Dodge Left (Lateral Evasion) - Accelerated to 0.22s
+    new THREE.AnimationClip('dodge_left', 0.22, [
+      createPosTrack('mixamorigHips', [0, 0.10, 0.22], [[0, 0, 0], [-0.45, -0.15, -0.2], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.10, 0.22], [[0, 0, 0], [0, 0, -0.35], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.10, 0.22], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.10, 0.22], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]])
+    ]),
+
+    // 5. Dodge Right (Lateral Evasion) - Accelerated to 0.22s
+    new THREE.AnimationClip('dodge_right', 0.22, [
+      createPosTrack('mixamorigHips', [0, 0.10, 0.22], [[0, 0, 0], [0.45, -0.15, -0.2], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.10, 0.22], [[0, 0, 0], [0, 0, 0.35], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.10, 0.22], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.10, 0.22], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]])
+    ]),
+
+    // 6. Jump and Land - Accelerated to 0.45s
+    new THREE.AnimationClip('jump', 0.45, [
+      createPosTrack('mixamorigHips', [0, 0.08, 0.22, 0.36, 0.45], [[0, 0, 0], [0, -0.15, 0], [0, 0.85, 0], [0, -0.1, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftLeg', [0, 0.08, 0.22, 0.36, 0.45], [[0, 0, 0], [0.4, 0, 0], [0.8, 0, 0], [0.3, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightLeg', [0, 0.08, 0.22, 0.36, 0.45], [[0, 0, 0], [0.4, 0, 0], [0.8, 0, 0], [0.3, 0, 0], [0, 0, 0]])
+    ]),
+
+    // 7. Hit Reaction (Kinetic Whiplash) - Accelerated to 0.22s
+    new THREE.AnimationClip('hit_reaction', 0.22, [
+      createPosTrack('mixamorigHips', [0, 0.08, 0.22], [[0, 0, 0], [0, 0, -0.3], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.08, 0.22], [[0, 0, 0], [-0.42, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 0.08, 0.22], [[0, 0, 0], [0.55, 0, 0], [0, 0, 0]])
+    ]),
+
+    // 8. Combat-Ready Stance
+    new THREE.AnimationClip('combat_stance', 1.0, [
+      createQuatTrack('mixamorigLeftArm', [0, 0.5, 1.0], [[-0.65, 0, 0.35], [-0.6, 0, 0.38], [-0.65, 0, 0.35]]),
+      createQuatTrack('mixamorigLeftForeArm', [0, 0.5, 1.0], [[-1.2, 0, 0], [-1.25, 0, 0], [-1.2, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.5, 1.0], [[-0.45, 0, -0.25], [-0.5, 0, -0.28], [-0.45, 0, -0.25]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 0.5, 1.0], [[-0.95, 0, 0], [-1.0, 0, 0], [-0.95, 0, 0]])
+    ]),
+
+    // 9. Victory Pose
+    new THREE.AnimationClip('victory', 1.0, [
+      createQuatTrack('mixamorigRightArm', [0, 0.3, 1.0], [[0, 0, 0], [-2.7, 0, -0.2], [-2.7, 0, -0.2]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 0.3, 1.0], [[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.3, 1.0], [[0, 0, 0], [0.35, 0, 0.35], [0.35, 0, 0.35]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.3, 1.0], [[0, 0, 0], [-0.15, 0, 0], [-0.15, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 0.3, 1.0], [[0, 0, 0], [0.15, 0, 0], [0.15, 0, 0]])
+    ]),
+
+    // 10. Defeat Pose
+    new THREE.AnimationClip('defeat', 0.9, [
+      createPosTrack('mixamorigHips', [0, 0.5, 0.9], [[0, 0, 0], [0, -0.45, 0], [0, -0.55, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.5, 0.9], [[0, 0, 0], [0.55, 0, 0], [0.65, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 0.5, 0.9], [[0, 0, 0], [0.6, 0, 0], [0.7, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.5, 0.9], [[0, 0, 0], [-0.2, 0, 0], [-0.2, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.5, 0.9], [[0, 0, 0], [0.6, 0, 0], [0.6, 0, 0]])
+    ])
+  ];
+}
+
+// ============================================================
+// BUILD GENUINE RIGGED 3D MARVEL HERO / VILLAIN FIGHTER
 // ============================================================
 export function createArticulated3DFighter(character, isVillain = false) {
   const charId = character?.id;
   const config = isVillain
-    ? (VILLAIN_CONFIGS[charId] || VILLAIN_CONFIGS['void-titan'])
-    : (HERO_CONFIGS[charId] || (charId === 'dr-strange' ? HERO_CONFIGS['arcane-sorcerer'] : HERO_CONFIGS['web-ninja']));
+    ? (VILLAIN_CONFIGS[charId] || (charId === 'doctor-doom' ? VILLAIN_CONFIGS['doom-regent'] : VILLAIN_CONFIGS['void-titan']))
+    : (HERO_CONFIGS[charId] || (charId === 'dr-strange' ? HERO_CONFIGS['arcane-sorcerer'] : HERO_CONFIGS['plasma-ranger']));
 
   const s = config.scale || 1.0;
   const group = new THREE.Group();
-
-  // Premium PBR Materials
-  const primaryMat = createPbrMaterial(config.primaryColor, config.metalness, config.roughness);
-  const secondaryMat = createPbrMaterial(config.secondaryColor, 0.88, 0.22);
-  const trimMat = createPbrMaterial(config.trimColor, 0.7, 0.4);
-  const glowMat = new THREE.MeshBasicMaterial({ color: config.glowColor });
-  const darkJointMat = createPbrMaterial(0x0a0f1d, 0.5, 0.6);
+  group.name = `fighter-${config.id}`;
 
   // 1. Soft Realistic Contact Shadow on Arena Floor
   const shadowGeo = new THREE.CircleGeometry(0.85 * s, 32);
@@ -337,7 +661,7 @@ export function createArticulated3DFighter(character, isVillain = false) {
   const footRingMat = new THREE.MeshBasicMaterial({
     color: config.glowColor,
     transparent: true,
-    opacity: 0.65,
+    opacity: 0.75,
     side: THREE.DoubleSide
   });
   const footRing = new THREE.Mesh(footRingGeo, footRingMat);
@@ -345,1278 +669,1102 @@ export function createArticulated3DFighter(character, isVillain = false) {
   footRing.position.y = 0.02;
   group.add(footRing);
 
-  // 3. SKELETON ROOT JOINT (Ground y = 0)
-  const rootJoint = new THREE.Group();
-  group.add(rootJoint);
-
-  // 4. PELVIS / WAIST (y = 0.94 * s — Exact Anatomical Height, Feet Planted on Floor!)
-  const pelvisJoint = new THREE.Group();
-  pelvisJoint.position.y = 0.94 * s;
-  rootJoint.add(pelvisJoint);
-
-  // Sculpted Pelvic Hip Armor
-  const pelvisGeo = new THREE.CylinderGeometry(0.24 * s, 0.19 * s, 0.22 * s, 14);
-  const pelvisMesh = new THREE.Mesh(pelvisGeo, secondaryMat);
-  pelvisJoint.add(pelvisMesh);
-
-  // Armored Utility Belt
-  const beltGeo = new THREE.CylinderGeometry(0.25 * s, 0.25 * s, 0.08 * s, 16);
-  const beltMesh = new THREE.Mesh(beltGeo, primaryMat);
-  beltMesh.position.y = 0.08 * s;
-  pelvisJoint.add(beltMesh);
-
-  const buckleGeo = new THREE.BoxGeometry(0.12 * s, 0.09 * s, 0.06 * s);
-  const buckleMesh = new THREE.Mesh(buckleGeo, secondaryMat);
-  buckleMesh.position.set(0, 0.08 * s, 0.25 * s);
-  pelvisJoint.add(buckleMesh);
-
-  // --- 5. FULLY ARTICULATED LOWER LIMBS (FEET REST EXACTLY ON FLOOR y = 0) ---
-  const leftLegJoint = new THREE.Group();
-  leftLegJoint.position.set(-0.16 * s, -0.06 * s, 0);
-  pelvisJoint.add(leftLegJoint);
-
-  const rightLegJoint = new THREE.Group();
-  rightLegJoint.position.set(0.16 * s, -0.06 * s, 0);
-  pelvisJoint.add(rightLegJoint);
-
-  function buildAnatomicalLeg(parentJoint, isLeft) {
-    // Muscular Upper Thigh (Quadriceps)
-    const thighGeo = new THREE.CylinderGeometry(0.13 * s, 0.10 * s, 0.44 * s, 14);
-    const thighMesh = new THREE.Mesh(thighGeo, primaryMat);
-    thighMesh.position.y = -0.22 * s;
-    parentJoint.add(thighMesh);
-
-    // Lateral Armor Plate
-    const tPlateGeo = new THREE.BoxGeometry(0.04 * s, 0.32 * s, 0.12 * s);
-    const tPlate = new THREE.Mesh(tPlateGeo, secondaryMat);
-    tPlate.position.set(isLeft ? -0.12 * s : 0.12 * s, -0.22 * s, 0);
-    parentJoint.add(tPlate);
-
-    // Knee Joint
-    const kneeJoint = new THREE.Group();
-    kneeJoint.position.y = -0.44 * s;
-    parentJoint.add(kneeJoint);
-
-    const kneeCopGeo = new THREE.BoxGeometry(0.11 * s, 0.12 * s, 0.08 * s);
-    const kneeCop = new THREE.Mesh(kneeCopGeo, secondaryMat);
-    kneeCop.position.z = 0.08 * s;
-    kneeJoint.add(kneeCop);
-
-    // Lower Leg / Shin & Calf
-    const shinGeo = new THREE.CylinderGeometry(0.095 * s, 0.085 * s, 0.38 * s, 14);
-    const shinMesh = new THREE.Mesh(shinGeo, primaryMat);
-    shinMesh.position.y = -0.19 * s;
-    kneeJoint.add(shinMesh);
-
-    // Shin Greave Armor Plate
-    const greaveGeo = new THREE.BoxGeometry(0.09 * s, 0.28 * s, 0.04 * s);
-    const greave = new THREE.Mesh(greaveGeo, secondaryMat);
-    greave.position.set(0, -0.18 * s, 0.08 * s);
-    kneeJoint.add(greave);
-
-    // Ankle Joint
-    const ankleJoint = new THREE.Group();
-    ankleJoint.position.y = -0.38 * s;
-    kneeJoint.add(ankleJoint);
-
-    // Armored Combat Boot (Planted firmly on floor at root y = 0!)
-    const bootGeo = new THREE.BoxGeometry(0.14 * s, 0.10 * s, 0.26 * s);
-    const bootMesh = new THREE.Mesh(bootGeo, secondaryMat);
-    bootMesh.position.set(0, -0.05 * s, 0.05 * s);
-    ankleJoint.add(bootMesh);
-
-    return { kneeJoint, ankleJoint, bootMesh };
-  }
-
-  const leftLegParts = buildAnatomicalLeg(leftLegJoint, true);
-  const rightLegParts = buildAnatomicalLeg(rightLegJoint, false);
-
-  // Martial Stance leg flaring
-  leftLegJoint.rotation.z = 0.04;
-  rightLegJoint.rotation.z = -0.04;
-
-  // --- 6. 3D SPINE & ABDOMINAL CORE ---
-  const spineJoint = new THREE.Group();
-  spineJoint.position.y = 0.12 * s;
-  pelvisJoint.add(spineJoint);
-
-  // Lumbar Abdomen Core
-  const absCoreGeo = new THREE.CylinderGeometry(0.24 * s, 0.22 * s, 0.26 * s, 14);
-  const absCoreMesh = new THREE.Mesh(absCoreGeo, darkJointMat);
-  absCoreMesh.position.y = 0.13 * s;
-  spineJoint.add(absCoreMesh);
-
-  // 4 Sculpted 3D Abdominal Armor Plates
-  for (let a = 0; a < 4; a++) {
-    const abPlate = new THREE.Mesh(
-      new THREE.BoxGeometry(0.18 * s, 0.05 * s, 0.05 * s),
-      secondaryMat
-    );
-    abPlate.position.set(0, 0.05 * s + a * 0.055 * s, 0.20 * s);
-    spineJoint.add(abPlate);
-  }
-
-  // --- 7. V-TAPER PECTORAL CHEST HULL (y = 0.26 * s above spine) ---
-  const chestJoint = new THREE.Group();
-  chestJoint.position.y = 0.26 * s;
-  spineJoint.add(chestJoint);
-
-  // Anatomical V-Taper Torso Armor
-  const chestGeo = new THREE.BoxGeometry(0.68 * s, 0.46 * s, 0.36 * s);
-  const chestMesh = new THREE.Mesh(chestGeo, primaryMat);
-  chestMesh.position.y = 0.20 * s;
-  chestJoint.add(chestMesh);
-
-  // Left & Right Sculpted Pectoral Muscle Plates
-  const pecGeo = new THREE.BoxGeometry(0.28 * s, 0.20 * s, 0.07 * s);
-  const leftPec = new THREE.Mesh(pecGeo, secondaryMat);
-  leftPec.position.set(-0.16 * s, 0.24 * s, 0.19 * s);
-  chestJoint.add(leftPec);
-
-  const rightPec = new THREE.Mesh(pecGeo, secondaryMat);
-  rightPec.position.set(0.16 * s, 0.24 * s, 0.19 * s);
-  chestJoint.add(rightPec);
-
-  // CHARACTER UNIQUE CHEST DETAILS (GENUINE 3D EMISSIVE CORES!)
-
-  // A. Armored Tech Hero: Multi-Ring Arc Reactor
-  if (config.hasReactor) {
-    const reactorGroup = new THREE.Group();
-    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.10 * s, 0.10 * s, 0.04 * s, 18), secondaryMat);
-    rim.rotation.x = Math.PI / 2;
-    reactorGroup.add(rim);
-
-    const innerGlow = new THREE.Mesh(new THREE.CircleGeometry(0.075 * s, 16), glowMat);
-    innerGlow.position.z = 0.025 * s;
-    reactorGroup.add(innerGlow);
-
-    const reactorLight = new THREE.PointLight(0x00f3ff, 2.5, 3.5 * s);
-    reactorLight.position.set(0, 0, 0.15 * s);
-    reactorGroup.add(reactorLight);
-
-    reactorGroup.position.set(0, 0.24 * s, 0.21 * s);
-    chestJoint.add(reactorGroup);
-  }
-
-  // B. Thunder Warrior: 4 Asgardian Silver Armor Roundels
-  if (config.hasHammer) {
-    const discGeo = new THREE.CylinderGeometry(0.07 * s, 0.07 * s, 0.03 * s, 16);
-    discGeo.rotateX(Math.PI / 2);
-    const d1 = new THREE.Mesh(discGeo, secondaryMat); d1.position.set(-0.16 * s, 0.28 * s, 0.20 * s);
-    const d2 = new THREE.Mesh(discGeo, secondaryMat); d2.position.set(0.16 * s, 0.28 * s, 0.20 * s);
-    const d3 = new THREE.Mesh(discGeo, secondaryMat); d3.position.set(-0.16 * s, 0.15 * s, 0.20 * s);
-    const d4 = new THREE.Mesh(discGeo, secondaryMat); d4.position.set(0.16 * s, 0.15 * s, 0.20 * s);
-    chestJoint.add(d1); chestJoint.add(d2); chestJoint.add(d3); chestJoint.add(d4);
-  }
-
-  // C. Shield Defender: Tactical Combat Harness & Star Medallion
-  if (config.hasShield) {
-    const starMedallion = new THREE.Mesh(new THREE.CylinderGeometry(0.09 * s, 0.09 * s, 0.03 * s, 5), secondaryMat);
-    starMedallion.rotation.x = Math.PI / 2;
-    starMedallion.position.set(0, 0.24 * s, 0.20 * s);
-    chestJoint.add(starMedallion);
-
-    const strap1 = new THREE.Mesh(new THREE.BoxGeometry(0.48 * s, 0.04 * s, 0.03 * s), trimMat);
-    strap1.rotation.z = 0.45; strap1.position.set(0, 0.24 * s, 0.19 * s);
-    const strap2 = new THREE.Mesh(new THREE.BoxGeometry(0.48 * s, 0.04 * s, 0.03 * s), trimMat);
-    strap2.rotation.z = -0.45; strap2.position.set(0, 0.24 * s, 0.19 * s);
-    chestJoint.add(strap1); chestJoint.add(strap2);
-  }
-
-  // D. Mystic Portal Mage: Eye of Agamotto Talisman
-  if (config.hasEyeOfAgamotto) {
-    const eyeAmulet = new THREE.Mesh(new THREE.CylinderGeometry(0.09 * s, 0.09 * s, 0.04 * s, 16), secondaryMat);
-    eyeAmulet.rotation.x = Math.PI / 2;
-    eyeAmulet.position.set(0, 0.36 * s, 0.20 * s);
-    chestJoint.add(eyeAmulet);
-
-    const eyeGem = new THREE.Mesh(new THREE.SphereGeometry(0.045 * s, 10, 10), new THREE.MeshBasicMaterial({ color: 0x22c55e }));
-    eyeGem.position.set(0, 0.36 * s, 0.23 * s);
-    chestJoint.add(eyeGem);
-  }
-
-  // E. VOID OVERLORD: Volatile Dark-Matter Singularity Core & Fissures
-  if (config.hasVoidCore) {
-    const voidCoreGroup = new THREE.Group();
-    const coreRim = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.16 * s, 0.16 * s, 0.06 * s, 18),
-      createPbrMaterial(0x1e1b4b, 0.95, 0.15)
-    );
-    coreRim.rotation.x = Math.PI / 2;
-    voidCoreGroup.add(coreRim);
-
-    const coreSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.11 * s, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xa855f7 })
-    );
-    coreSphere.position.z = 0.03 * s;
-    voidCoreGroup.add(coreSphere);
-
-    const coreLight = new THREE.PointLight(0xa855f7, 3.2, 4.5 * s);
-    coreLight.position.set(0, 0, 0.15 * s);
-    voidCoreGroup.add(coreLight);
-
-    voidCoreGroup.position.set(0, 0.24 * s, 0.21 * s);
-    chestJoint.add(voidCoreGroup);
-  }
-
-  // Cloak / Cape Back Mesh
-  let capeMesh = null;
-  if (config.hasCape || config.hasCloak) {
-    const capeGeo = new THREE.PlaneGeometry(0.68 * s, 1.25 * s, 8, 12);
-    const capeMat = new THREE.MeshStandardMaterial({
-      color: config.capeColor || 0x991b1b,
-      roughness: 0.7,
-      metalness: 0.1,
+  // Special Arcane Technomancy Ground Rune Ring for DOOM REGENT
+  let arcaneRuneRing = null;
+  if (config.hasDoomMask || config.id === 'doom-regent' || config.id === 'doctor-doom') {
+    const runeGeo = new THREE.RingGeometry(0.95 * s, 1.15 * s, 32);
+    const runeMat = new THREE.MeshBasicMaterial({
+      color: 0x10b981,
+      transparent: true,
+      opacity: 0.85,
       side: THREE.DoubleSide
     });
-    capeMesh = new THREE.Mesh(capeGeo, capeMat);
-    capeMesh.position.set(0, -0.25 * s, -0.22 * s);
-    capeMesh.rotation.x = 0.08;
-    chestJoint.add(capeMesh);
+    arcaneRuneRing = new THREE.Mesh(runeGeo, runeMat);
+    arcaneRuneRing.rotation.x = -Math.PI / 2;
+    arcaneRuneRing.position.y = 0.025;
+    group.add(arcaneRuneRing);
+
+    const doomGroundLight = new THREE.PointLight(0x10b981, 2.5, 3.8);
+    doomGroundLight.position.set(0, 0.35, 0);
+    group.add(doomGroundLight);
   }
 
-  // --- 8. 3D NECK & ANATOMICAL HEAD / HELMET ---
-  const neckJoint = new THREE.Group();
-  neckJoint.position.set(0, 0.45 * s, 0);
-  chestJoint.add(neckJoint);
+  // 3. Fallback / Scanning Placeholder while async GLTF is mounting
+  const scanHolo = createScanningHologram(config.glowColor, s);
+  group.add(scanHolo);
 
-  const neckGeo = new THREE.CylinderGeometry(0.11 * s, 0.13 * s, 0.12 * s, 12);
-  const neckMesh = new THREE.Mesh(neckGeo, darkJointMat);
-  neckMesh.position.y = 0.04 * s;
-  neckJoint.add(neckMesh);
-
-  const headJoint = new THREE.Group();
-  headJoint.position.y = 0.16 * s;
-  neckJoint.add(headJoint);
-
-  const headGeo = new THREE.BoxGeometry(0.28 * s, 0.32 * s, 0.30 * s);
-  const headMesh = new THREE.Mesh(headGeo, primaryMat);
-  headJoint.add(headMesh);
-
-  // Distinct Fitted 3D Helmets & Masks
-  if (config.hasHelmet === 'tech-helmet') {
-    const faceplate = new THREE.Mesh(new THREE.BoxGeometry(0.24 * s, 0.26 * s, 0.06 * s), secondaryMat);
-    faceplate.position.set(0, -0.02 * s, 0.15 * s);
-    headJoint.add(faceplate);
-
-    // Glowing Cyan Eyes
-    const eyeGeo = new THREE.BoxGeometry(0.07 * s, 0.025 * s, 0.02 * s);
-    const eyeL = new THREE.Mesh(eyeGeo, glowMat); eyeL.position.set(-0.06 * s, 0.02 * s, 0.19 * s);
-    const eyeR = new THREE.Mesh(eyeGeo, glowMat); eyeR.position.set(0.06 * s, 0.02 * s, 0.19 * s);
-    headJoint.add(eyeL); headJoint.add(eyeR);
-  } else if (config.hasHelmet === 'winged-helmet') {
-    // Silver Wings
-    const wingGeo = new THREE.ConeGeometry(0.06 * s, 0.28 * s, 4);
-    const wingL = new THREE.Mesh(wingGeo, secondaryMat);
-    wingL.position.set(-0.18 * s, 0.12 * s, 0); wingL.rotation.z = 0.65;
-    const wingR = new THREE.Mesh(wingGeo, secondaryMat);
-    wingR.position.set(0.18 * s, 0.12 * s, 0); wingR.rotation.z = -0.65;
-    headJoint.add(wingL); headJoint.add(wingR);
-
-    // Lightning Eyes
-    const eyeGeo = new THREE.SphereGeometry(0.025 * s, 8, 8);
-    const eyeL = new THREE.Mesh(eyeGeo, glowMat); eyeL.position.set(-0.06 * s, 0.02 * s, 0.16 * s);
-    const eyeR = new THREE.Mesh(eyeGeo, glowMat); eyeR.position.set(0.06 * s, 0.02 * s, 0.16 * s);
-    headJoint.add(eyeL); headJoint.add(eyeR);
-  } else if (config.hasHelmet === 'combat-helmet') {
-    const starDecal = new THREE.Mesh(new THREE.CircleGeometry(0.045 * s, 5), secondaryMat);
-    starDecal.position.set(0, 0.08 * s, 0.16 * s);
-    headJoint.add(starDecal);
-
-    const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.20 * s, 0.10 * s, 0.14 * s), createPbrMaterial(0xdfa084, 0.1, 0.6));
-    jaw.position.set(0, -0.12 * s, 0.10 * s);
-    headJoint.add(jaw);
-  } else if (config.hasHelmet === 'web-mask') {
-    // Angular White Eyes with Dark Rim
-    const eyeShape = new THREE.BoxGeometry(0.085 * s, 0.055 * s, 0.02 * s);
-    const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const eyeL = new THREE.Mesh(eyeShape, whiteMat); eyeL.position.set(-0.07 * s, 0.02 * s, 0.16 * s); eyeL.rotation.z = -0.2;
-    const eyeR = new THREE.Mesh(eyeShape, whiteMat); eyeR.position.set(0.07 * s, 0.02 * s, 0.16 * s); eyeR.rotation.z = 0.2;
-    headJoint.add(eyeL); headJoint.add(eyeR);
-  } else if (config.hasHelmet === 'void-crest') {
-    // Heavy Horned Obsidian War Crest
-    const crest = new THREE.Mesh(new THREE.BoxGeometry(0.38 * s, 0.18 * s, 0.35 * s), createPbrMaterial(0x0a0a14, 0.95, 0.15));
-    crest.position.y = 0.18 * s;
-    headJoint.add(crest);
-
-    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.24 * s, 0.045 * s, 0.06 * s), glowMat);
-    visor.position.set(0, 0.03 * s, 0.17 * s);
-    headJoint.add(visor);
-
-    const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.30 * s, 0.14 * s, 0.24 * s), createPbrMaterial(0x1e1b4b, 0.85, 0.25));
-    jaw.position.set(0, -0.16 * s, 0.11 * s);
-    headJoint.add(jaw);
-  } else if (config.hasHelmet === 'shadow-horns') {
-    const hornGeo = new THREE.CylinderGeometry(0.02 * s, 0.05 * s, 0.42 * s, 10);
-    const hornL = new THREE.Mesh(hornGeo, secondaryMat); hornL.position.set(-0.12 * s, 0.25 * s, 0.06 * s); hornL.rotation.set(-0.3, 0, -0.4);
-    const hornR = new THREE.Mesh(hornGeo, secondaryMat); hornR.position.set(0.12 * s, 0.25 * s, 0.06 * s); hornR.rotation.set(-0.3, 0, 0.4);
-    headJoint.add(hornL); headJoint.add(hornR);
-  }
-
-  // --- 9. 3D UPPER LIMBS & WEAPON SOCKETS ---
-  const leftShoulder = new THREE.Group();
-  leftShoulder.position.set(-0.42 * s, 0.34 * s, 0);
-  chestJoint.add(leftShoulder);
-
-  const rightShoulder = new THREE.Group();
-  rightShoulder.position.set(0.42 * s, 0.34 * s, 0);
-  chestJoint.add(rightShoulder);
-
-  function buildAnatomicalArm(parentShoulder, isLeft) {
-    // Curved Pauldron / Shoulder Armor
-    const pauldronGeo = new THREE.SphereGeometry(0.18 * s, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.6);
-    const pauldron = new THREE.Mesh(pauldronGeo, secondaryMat);
-    pauldron.position.y = 0.04 * s;
-    parentShoulder.add(pauldron);
-
-    // Bicep / Upper Arm
-    const bicepGeo = new THREE.CylinderGeometry(0.10 * s, 0.09 * s, 0.34 * s, 14);
-    const bicepMesh = new THREE.Mesh(bicepGeo, primaryMat);
-    bicepMesh.position.y = -0.19 * s;
-    parentShoulder.add(bicepMesh);
-
-    // Elbow Joint
-    const elbowJoint = new THREE.Group();
-    elbowJoint.position.y = -0.36 * s;
-    parentShoulder.add(elbowJoint);
-
-    // Forearm Gauntlet
-    const forearmGeo = new THREE.CylinderGeometry(0.095 * s, 0.08 * s, 0.32 * s, 14);
-    const forearmMesh = new THREE.Mesh(forearmGeo, primaryMat);
-    forearmMesh.position.y = -0.16 * s;
-    elbowJoint.add(forearmMesh);
-
-    // Wrist Joint & Hand
-    const wristJoint = new THREE.Group();
-    wristJoint.position.y = -0.32 * s;
-    elbowJoint.add(wristJoint);
-
-    // Hand & Palm with 5 articulated fingers
-    const handGeo = new THREE.BoxGeometry(0.08 * s, 0.10 * s, 0.07 * s);
-    const handMesh = new THREE.Mesh(handGeo, secondaryMat);
-    handMesh.position.y = -0.05 * s;
-    wristJoint.add(handMesh);
-
-    // Palm Repulsor Light Node for Tech Hero
-    if (config.hasRepulsors) {
-      const rep = new THREE.Mesh(new THREE.CircleGeometry(0.025 * s, 12), glowMat);
-      rep.position.set(0, -0.05 * s, 0.04 * s);
-      wristJoint.add(rep);
-    }
-
-    // WEAPON SOCKET (Socket attached to wrist/hand!)
-    const weaponSocket = new THREE.Group();
-    weaponSocket.position.set(0, -0.06 * s, 0.04 * s);
-    wristJoint.add(weaponSocket);
-
-    return { elbowJoint, wristJoint, weaponSocket };
-  }
-
-  const leftArmParts = buildAnatomicalArm(leftShoulder, true);
-  const rightArmParts = buildAnatomicalArm(rightShoulder, false);
-
-  // WEAPONS ATTACHED DIRECTLY TO SKELETAL SOCKETS!
-
-  // 1. Magnetic Mjolnir Hammer (Attached to Right Hand Socket!)
-  let hammerMesh = null;
-  if (config.hasHammer) {
-    const hGroup = new THREE.Group();
-    const hHead = new THREE.Mesh(new THREE.BoxGeometry(0.24 * s, 0.18 * s, 0.15 * s), secondaryMat);
-    const hHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.025 * s, 0.025 * s, 0.42 * s), trimMat);
-    hHandle.position.y = -0.21 * s;
-    hGroup.add(hHead);
-    hGroup.add(hHandle);
-    rightArmParts.weaponSocket.add(hGroup);
-    hammerMesh = hGroup;
-  }
-
-  // 2. Vibranium Kinetic Shield (Attached to Left Forearm Socket!)
-  let shieldMesh = null;
-  if (config.hasShield) {
-    const sGroup = new THREE.Group();
-    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.38 * s, 0.38 * s, 0.04 * s, 28), primaryMat);
-    disc.rotation.x = Math.PI / 2;
-    sGroup.add(disc);
-
-    const rim = new THREE.Mesh(new THREE.RingGeometry(0.26 * s, 0.38 * s, 28), secondaryMat);
-    rim.position.z = 0.025 * s;
-    sGroup.add(rim);
-
-    const centerStar = new THREE.Mesh(new THREE.CircleGeometry(0.10 * s, 5), secondaryMat);
-    centerStar.position.z = 0.03 * s;
-    sGroup.add(centerStar);
-
-    leftArmParts.elbowJoint.add(sGroup);
-    sGroup.position.set(-0.12 * s, -0.16 * s, 0.12 * s);
-    shieldMesh = sGroup;
-  }
-
-  // 3. Eldritch Mandala Rings (Attached to both wrists for Mystic Mage!)
-  let mandalas = [];
-  if (config.hasMandalas) {
-    const mGeo = new THREE.RingGeometry(0.18 * s, 0.22 * s, 16);
-    const mMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide });
-    const mL = new THREE.Mesh(mGeo, mMat); leftArmParts.wristJoint.add(mL);
-    const mR = new THREE.Mesh(mGeo, mMat); rightArmParts.wristJoint.add(mR);
-    mandalas = [mL, mR];
-  }
-
-  // 4. Void Overlord Colossal Gauntlets
-  if (config.hasVoidGauntlets) {
-    const gauntGeo = new THREE.BoxGeometry(0.20 * s, 0.24 * s, 0.18 * s);
-    const gMat = createPbrMaterial(0x1e1b4b, 0.9, 0.2);
-    const gL = new THREE.Mesh(gauntGeo, gMat); gL.position.y = -0.06 * s; leftArmParts.wristJoint.add(gL);
-    const gR = new THREE.Mesh(gauntGeo, gMat); gR.position.y = -0.06 * s; rightArmParts.wristJoint.add(gR);
-
-    // Glowing Violet Knuckle Conduits
-    const knuckL = new THREE.Mesh(new THREE.BoxGeometry(0.18 * s, 0.04 * s, 0.04 * s), glowMat); knuckL.position.set(0, -0.14 * s, 0.10 * s); leftArmParts.wristJoint.add(knuckL);
-    const knuckR = new THREE.Mesh(new THREE.BoxGeometry(0.18 * s, 0.04 * s, 0.04 * s), glowMat); knuckR.position.set(0, -0.14 * s, 0.10 * s); rightArmParts.wristJoint.add(knuckR);
-  }
-
-  // Guard Arm Pose
-  leftShoulder.rotation.x = 0.35; leftShoulder.rotation.z = 0.25;
-  leftArmParts.elbowJoint.rotation.x = -0.75;
-  rightShoulder.rotation.x = 0.25; rightShoulder.rotation.z = -0.25;
-  rightArmParts.elbowJoint.rotation.x = -0.65;
-
-  return {
+  // 4. Rig Data Structure for External Render Loop & Kinetic Animation
+  const rig = {
     group,
     config,
-    rootJoint,
-    pelvisJoint,
-    spineJoint,
-    chestJoint,
-    neckJoint,
-    headJoint,
-    leftShoulder,
-    rightShoulder,
-    leftElbow: leftArmParts.elbowJoint,
-    rightElbow: rightArmParts.elbowJoint,
-    leftWrist: leftArmParts.wristJoint,
-    rightWrist: rightArmParts.wristJoint,
-    leftLegJoint,
-    rightLegJoint,
-    leftKnee: leftLegParts.kneeJoint,
-    rightKnee: rightLegParts.kneeJoint,
-    capeMesh,
-    hammerMesh,
-    shieldMesh,
-    mandalas
+    mixer: null,
+    actions: {},
+    currentAction: null,
+    currentActionName: 'idle',
+    fadeToAction: null,
+    model: null,
+    isLoaded: false,
+    loadFailed: false,
+    arcaneRuneRing,
+    bones: {},
+    pelvisJoint: null,
+    spineJoint: null,
+    chestJoint: null,
+    neckJoint: null,
+    headJoint: null,
+    leftShoulder: null,
+    rightShoulder: null,
+    leftElbow: null,
+    rightElbow: null,
+    leftWrist: null,
+    rightWrist: null,
+    leftLegJoint: null,
+    rightLegJoint: null,
+    leftKnee: null,
+    rightKnee: null,
+    capeMesh: null,
+    hammerMesh: null,
+    shieldMesh: null,
+    infinityGauntlet: null,
+    mandalas: []
   };
+
+  // 5. Asynchronous GLTF Model Loading & Mixamo Rig Attachment
+  const modelUrl = config.modelUrl || '/assets/models/xbot.glb';
+  loadGLTFModel(modelUrl)
+    .then((cachedGltf) => {
+      group.remove(scanHolo);
+
+      // Clone model with all skin weights & skeleton bones
+      const clonedModel = SkeletonUtils.clone(cachedGltf.scene);
+
+      if (config.isAuthenticGlb) {
+        // Auto-normalize scale and grounding based on exact 3D geometry bounds
+        clonedModel.updateMatrixWorld(true);
+        const rawBox = new THREE.Box3().setFromObject(clonedModel);
+        const rawSize = new THREE.Vector3();
+        rawBox.getSize(rawSize);
+
+        // Realistic heights in meters: Titans (Thanos) 2.35m, Bosses (Doctor Doom) 2.15m, Standard warriors 1.95m
+        const isColossal = config.id === 'thanos' || config.id === 'mech-destroyer' || config.id === 'void-titan';
+        const isBoss = isColossal || config.id === 'doom-regent' || config.id === 'doctor-doom';
+        const targetHeightMeters = (isColossal ? 2.35 : (isBoss ? 2.15 : 1.95)) * (config.scale || 1.0);
+
+        const modelHeight = rawSize.y > 0.001 ? rawSize.y : 1.0;
+        const normScale = targetHeightMeters / modelHeight;
+        clonedModel.scale.set(normScale, normScale, normScale);
+        clonedModel.updateMatrixWorld(true);
+
+        // Ground feet perfectly at arena floor (Y = 0) and center on X and Z
+        const scaledBox = new THREE.Box3().setFromObject(clonedModel);
+        const scaledCenter = new THREE.Vector3();
+        scaledBox.getCenter(scaledCenter);
+
+        clonedModel.position.set(
+          -scaledCenter.x,
+          -scaledBox.min.y,
+          -scaledCenter.z
+        );
+      } else {
+        clonedModel.scale.set(s, s, s);
+        clonedModel.position.set(0, 0, 0);
+      }
+
+      // Record base positions and rotations for kinematic combat animations
+      rig.baseModelPos = clonedModel.position.clone();
+      rig.baseModelRot = clonedModel.rotation.clone();
+
+      // Extract all Mixamo bones into rig and sanitize names for AnimationMixer binding
+      const bones = {};
+      clonedModel.traverse((node) => {
+        if (node.isBone) {
+          node.name = node.name.replace(/:/g, '');
+          bones[node.name] = node;
+          bones[node.name.replace('mixamorig', '')] = node;
+          bones[node.name.toLowerCase()] = node;
+        }
+      });
+      rig.bones = bones;
+
+      const getBone = (name) => {
+        const clean = name.replace(/:/g, '');
+        return (
+          bones[clean] ||
+          bones['mixamorig' + clean] ||
+          bones[clean.toLowerCase()] ||
+          bones['mixamorig' + clean.toLowerCase()] ||
+          null
+        );
+      };
+
+      // Bone mappings
+      rig.pelvisJoint = getBone('Hips') || clonedModel;
+      rig.spineJoint = getBone('Spine1') || getBone('Spine') || rig.pelvisJoint;
+      rig.chestJoint = getBone('Spine2') || rig.spineJoint;
+      rig.neckJoint = getBone('Neck') || rig.chestJoint;
+      rig.headJoint = getBone('Head') || rig.neckJoint;
+      rig.leftShoulder = getBone('LeftShoulder') || rig.chestJoint;
+      rig.rightShoulder = getBone('RightShoulder') || rig.chestJoint;
+      rig.leftArm = getBone('LeftArm') || rig.leftShoulder;
+      rig.rightArm = getBone('RightArm') || rig.rightShoulder;
+      rig.leftElbow = getBone('LeftForeArm') || rig.leftArm;
+      rig.rightElbow = getBone('RightForeArm') || rig.rightArm;
+      rig.leftWrist = getBone('LeftHand') || rig.leftElbow;
+      rig.rightWrist = getBone('RightHand') || rig.rightElbow;
+      rig.leftLegJoint = getBone('LeftUpLeg') || rig.pelvisJoint;
+      rig.rightLegJoint = getBone('RightUpLeg') || rig.pelvisJoint;
+      rig.leftKnee = getBone('LeftLeg') || rig.leftLegJoint;
+      rig.rightKnee = getBone('RightLeg') || rig.rightLegJoint;
+
+      // Apply tailored dual-tone character PBR materials & enable dynamic shadows
+      clonedModel.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.frustumCulled = true;
+          if (child.material) {
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            if (config.isAuthenticGlb) {
+              mats.forEach((mat) => {
+                const meshName = (child.name || '').toLowerCase();
+                const isCloth = meshName.includes('cape') || meshName.includes('cloak') || meshName.includes('hood') || meshName.includes('cloth');
+                mat.side = isCloth ? THREE.DoubleSide : THREE.FrontSide;
+                if (mat.map) {
+                  mat.map.colorSpace = THREE.SRGBColorSpace;
+                  mat.map.anisotropy = 2;
+                  mat.map.generateMipmaps = true;
+                  mat.map.minFilter = THREE.LinearMipmapLinearFilter;
+                }
+                if (mat.normalMap) {
+                  mat.normalMap.anisotropy = 2;
+                }
+                if (mat.roughnessMap) {
+                  mat.roughnessMap.anisotropy = 2;
+                }
+                if (mat.metalnessMap) {
+                  mat.metalnessMap.anisotropy = 2;
+                }
+                if (mat.roughness !== undefined && mat.roughness > 0.6) {
+                  mat.roughness = 0.38;
+                }
+                mat.needsUpdate = true;
+              });
+            } else {
+              const mat = child.material.clone();
+              const isAccentMesh = child.name.includes('.001');
+              mat.color.setHex(isAccentMesh ? config.secondaryColor : config.primaryColor);
+              mat.metalness = config.metalness !== undefined ? config.metalness : 0.9;
+              mat.roughness = config.roughness !== undefined ? config.roughness : 0.2;
+              child.material = mat;
+            }
+          }
+        }
+      });
+
+      // 6. Setup AnimationMixer with GLTF clips & Synthesized Combat Suite
+      const mixer = new THREE.AnimationMixer(clonedModel);
+      rig.mixer = mixer;
+      const actions = {};
+
+      if (cachedGltf.animations && cachedGltf.animations.length > 0) {
+        cachedGltf.animations.forEach((clip) => {
+          const action = mixer.clipAction(clip);
+          const lowerName = clip.name.toLowerCase();
+          actions[lowerName] = action;
+          if (lowerName.includes('idle') && !actions['idle']) {
+            actions['idle'] = action;
+          }
+          if ((lowerName.includes('punch') || lowerName.includes('attack')) && !actions['attack']) {
+            actions['attack'] = action;
+          }
+          if ((lowerName.includes('walk') || lowerName.includes('run')) && !actions['walk']) {
+            actions['walk'] = action;
+          }
+        });
+        if (!actions['idle']) {
+          actions['idle'] = mixer.clipAction(cachedGltf.animations[0]);
+        }
+      }
+
+      // Add synthesized clips if model possesses Mixamo-compatible bones
+      if (bones['hips'] || bones['mixamorighips']) {
+        const synthClips = buildSynthesizedMixamoClips();
+        synthClips.forEach((clip) => {
+          if (!actions[clip.name.toLowerCase()]) {
+            const action = mixer.clipAction(clip);
+            actions[clip.name.toLowerCase()] = action;
+          }
+        });
+      }
+      if (!actions['dodge']) actions['dodge'] = actions['dodge_left'] || actions['idle'];
+      if (!actions['combat_stance']) actions['combat_stance'] = actions['idle'];
+      if (!actions['attack']) actions['attack'] = actions['idle'];
+      if (!actions['special_cast']) actions['special_cast'] = actions['attack'];
+
+      rig.actions = actions;
+
+      rig.fadeToAction = function(actionName, duration = 0.25, loopOnce = false) {
+        const targetAction = actions[actionName] || actions['idle'];
+        if (!targetAction) return;
+
+        if (rig.currentAction === targetAction && targetAction.isRunning()) return;
+
+        const prevAction = rig.currentAction;
+        rig.currentAction = targetAction;
+        rig.currentActionName = actionName;
+
+        if (loopOnce) {
+          targetAction.reset();
+          targetAction.setLoop(THREE.LoopOnce, 1);
+          targetAction.clampWhenFinished = true;
+        } else {
+          targetAction.reset();
+          targetAction.setLoop(THREE.LoopRepeat, Infinity);
+        }
+
+        targetAction.setEffectiveTimeScale(1);
+        targetAction.setEffectiveWeight(1);
+
+        if (prevAction && prevAction !== targetAction) {
+          targetAction.crossFadeFrom(prevAction, duration, true);
+        }
+        targetAction.play();
+      };
+
+      mixer.addEventListener('finished', (e) => {
+        if (rig.currentActionName !== 'idle' && rig.currentActionName !== 'combat_stance' && rig.currentActionName !== 'victory' && rig.currentActionName !== 'defeat') {
+          rig.fadeToAction('idle', 0.28);
+        }
+      });
+
+      rig.fadeToAction('idle', 0.1);
+
+      // ============================================================
+      // 7. ATTACH AUTHENTIC 3D MARVEL ARMOR & GEAR (ONLY FOR PROCEDURAL MANNEQUINS)
+      // ============================================================
+      if (!config.isAuthenticGlb) {
+        const primaryMat = createPbrMaterial(config.primaryColor, config.metalness, config.roughness);
+        const secondaryMat = createPbrMaterial(config.secondaryColor, 0.9, 0.18);
+        const trimMat = createPbrMaterial(config.trimColor, 0.92, 0.18);
+        const glowMat = new THREE.MeshBasicMaterial({ color: config.glowColor });
+
+      // ------------------------------------------------------------
+      // 1. IRON MAN (Mark 85 Nanotech Armor)
+      // ------------------------------------------------------------
+      if (config.hasIronManHelmet && rig.headJoint) {
+        const imHelm = new THREE.Group();
+        imHelm.name = 'iron-man-helmet';
+
+        // Red Cranial Aerodynamic Shell
+        const dome = new THREE.Mesh(new THREE.SphereGeometry(0.145, 14, 12), primaryMat);
+        dome.position.set(0, 0.04, -0.01);
+        imHelm.add(dome);
+
+        // Golden Sculpted Titanium Faceplate with Cheekbones
+        const goldFace = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.22, 0.08), secondaryMat);
+        goldFace.position.set(0, 0.01, 0.10);
+        imHelm.add(goldFace);
+
+        // Tapered Jawline
+        const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 0.07), primaryMat);
+        jaw.position.set(0, -0.07, 0.09);
+        imHelm.add(jaw);
+
+        // Glowing Cyan LED Eye Slits with Point Light
+        const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.015, 0.02), glowMat);
+        eyeL.position.set(-0.045, 0.035, 0.142);
+        imHelm.add(eyeL);
+
+        const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.015, 0.02), glowMat);
+        eyeR.position.set(0.045, 0.035, 0.142);
+        imHelm.add(eyeR);
+
+        const eyeGlowLight = new THREE.PointLight(0x00f3ff, 1.8, 2.5);
+        eyeGlowLight.position.set(0, 0.035, 0.18);
+        imHelm.add(eyeGlowLight);
+
+        rig.headJoint.add(imHelm);
+      }
+
+      if (config.hasReactor && rig.chestJoint) {
+        // Glowing Nanotech Arc Reactor (RT)
+        const reactorGroup = new THREE.Group();
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.03, 16), secondaryMat);
+        rim.rotation.x = Math.PI / 2;
+        reactorGroup.add(rim);
+
+        const core = new THREE.Mesh(new THREE.CircleGeometry(0.06, 16), glowMat);
+        core.position.z = 0.018;
+        reactorGroup.add(core);
+
+        const pointL = new THREE.PointLight(config.glowColor, 3.4, 5.0);
+        pointL.position.set(0, 0, 0.14);
+        reactorGroup.add(pointL);
+
+        // Gold Pectoral Nanotech Armor Plates
+        const pecL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.14, 0.05), secondaryMat);
+        pecL.position.set(-0.11, 0.10, 0.12);
+        reactorGroup.add(pecL);
+
+        const pecR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.14, 0.05), secondaryMat);
+        pecR.position.set(0.11, 0.10, 0.12);
+        reactorGroup.add(pecR);
+
+        // Gold Segmented Abdominal Armor Plates
+        const abPlate = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.04), secondaryMat);
+        abPlate.position.set(0, -0.08, 0.10);
+        reactorGroup.add(abPlate);
+
+        reactorGroup.position.set(0, 0.10, 0.06);
+        rig.chestJoint.add(reactorGroup);
+
+        // Tiered Crimson Pauldrons on Shoulders
+        if (rig.leftShoulder) {
+          const pL = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.10, 0.16), primaryMat);
+          pL.position.set(-0.08, 0.06, 0);
+          rig.leftShoulder.add(pL);
+        }
+        if (rig.rightShoulder) {
+          const pR = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.10, 0.16), primaryMat);
+          pR.position.set(0.08, 0.06, 0);
+          rig.rightShoulder.add(pR);
+        }
+
+        // Gold Thigh Armor Plates on Legs
+        if (rig.leftLegJoint) {
+          const thighL = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.24, 0.14), secondaryMat);
+          thighL.position.set(0, -0.16, 0.02);
+          rig.leftLegJoint.add(thighL);
+        }
+        if (rig.rightLegJoint) {
+          const thighR = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.24, 0.14), secondaryMat);
+          thighR.position.set(0, -0.16, 0.02);
+          rig.rightLegJoint.add(thighR);
+        }
+      }
+
+      if (config.hasRepulsors) {
+        if (rig.leftWrist) {
+          const repL = new THREE.Mesh(new THREE.CircleGeometry(0.038, 12), glowMat);
+          repL.position.set(0, -0.06, 0.03);
+          const pLightL = new THREE.PointLight(config.glowColor, 2.0, 2.5);
+          pLightL.position.set(0, -0.06, 0.05);
+          rig.leftWrist.add(repL);
+          rig.leftWrist.add(pLightL);
+        }
+        if (rig.rightWrist) {
+          const repR = new THREE.Mesh(new THREE.CircleGeometry(0.038, 12), glowMat);
+          repR.position.set(0, -0.06, 0.03);
+          const pLightR = new THREE.PointLight(config.glowColor, 2.0, 2.5);
+          pLightR.position.set(0, -0.06, 0.05);
+          rig.rightWrist.add(repR);
+          rig.rightWrist.add(pLightR);
+        }
+      }
+
+      // ------------------------------------------------------------
+      // 2. THANOS (The Mad Titan & The Infinity Gauntlet)
+      // ------------------------------------------------------------
+      if (config.hasThanosChin && rig.headJoint) {
+        const thanosHead = new THREE.Group();
+
+        // Iconic Grooved Titan Chin Ridges
+        const chin = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.10, 0.11), primaryMat);
+        chin.position.set(0, -0.08, 0.08);
+        for (let r = -2; r <= 2; r++) {
+          const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.08, 0.02), trimMat);
+          ridge.position.set(r * 0.025, 0, 0.055);
+          chin.add(ridge);
+        }
+        thanosHead.add(chin);
+
+        // Golden Warlord Battle Helmet
+        const helm = new THREE.Mesh(new THREE.SphereGeometry(0.165, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.65), secondaryMat);
+        helm.position.set(0, 0.06, 0);
+        thanosHead.add(helm);
+
+        // Menacing Glowing Eyes
+        const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.015, 0.02), glowMat);
+        eyeL.position.set(-0.045, 0.03, 0.14);
+        thanosHead.add(eyeL);
+
+        const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.015, 0.02), glowMat);
+        eyeR.position.set(0.045, 0.03, 0.14);
+        thanosHead.add(eyeR);
+
+        rig.headJoint.add(thanosHead);
+      }
+
+      if (config.hasThanosArmor && rig.chestJoint) {
+        const thanosCuirass = new THREE.Group();
+        // Massive Golden Titan Chest Cuirass
+        const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.28, 0.22), secondaryMat);
+        chestPlate.position.set(0, 0.10, 0.05);
+        thanosCuirass.add(chestPlate);
+
+        // Dark Obsidian Center Inlay
+        const centerInlay = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.24, 0.24), trimMat);
+        centerInlay.position.set(0, 0.10, 0.05);
+        thanosCuirass.add(centerInlay);
+
+        // Golden Armored Belt / Tassets
+        const belt = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.12, 0.20), secondaryMat);
+        belt.position.set(0, -0.12, 0.04);
+        thanosCuirass.add(belt);
+
+        rig.chestJoint.add(thanosCuirass);
+
+        // Heavy Golden Tiered Pauldrons
+        if (rig.leftShoulder) {
+          const pauldronL = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.14, 0.22), secondaryMat);
+          pauldronL.position.set(-0.10, 0.08, 0);
+          rig.leftShoulder.add(pauldronL);
+        }
+        if (rig.rightShoulder) {
+          const pauldronR = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.14, 0.22), secondaryMat);
+          pauldronR.position.set(0.10, 0.08, 0);
+          rig.rightShoulder.add(pauldronR);
+        }
+      }
+
+      if (config.hasInfinityGauntlet && rig.leftWrist) {
+        const gauntGroup = new THREE.Group();
+        gauntGroup.name = 'infinity-gauntlet';
+
+        // Heavy Sculpted Golden Gauntlet
+        const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.30, 0.18), secondaryMat);
+        gBody.position.set(0, -0.08, 0.02);
+        gauntGroup.add(gBody);
+
+        // ALL 6 ICONIC INFINITY STONES WITH INTENSE EMISSION & LIGHTS
+        const stones = [
+          { color: 0xa855f7, name: 'Power', pos: [-0.07, 0.05, 0.115] },   // Purple
+          { color: 0x38bdf8, name: 'Space', pos: [-0.025, 0.06, 0.115] },  // Blue
+          { color: 0xef4444, name: 'Reality', pos: [0.025, 0.06, 0.115] }, // Red
+          { color: 0xf97316, name: 'Soul', pos: [0.07, 0.05, 0.115] },     // Orange
+          { color: 0x10b981, name: 'Time', pos: [-0.09, -0.02, 0.10] },    // Green (Thumb)
+          { color: 0xfacc15, name: 'Mind', pos: [0.0, -0.02, 0.118] }      // Giant Yellow (Center)
+        ];
+
+        stones.forEach((st) => {
+          const isMind = st.name === 'Mind';
+          const gemGeo = new THREE.SphereGeometry(isMind ? 0.036 : 0.025, 12, 12);
+          const gemMat = new THREE.MeshBasicMaterial({ color: st.color });
+          const gemMesh = new THREE.Mesh(gemGeo, gemMat);
+          gemMesh.position.set(...st.pos);
+          gauntGroup.add(gemMesh);
+
+          const gemLight = new THREE.PointLight(st.color, isMind ? 3.0 : 1.4, 2.2);
+          gemLight.position.set(...st.pos);
+          gauntGroup.add(gemLight);
+        });
+
+        rig.leftWrist.add(gauntGroup);
+        rig.infinityGauntlet = gauntGroup;
+      }
+
+      if (config.hasWarlordSword && rig.rightWrist) {
+        // Double-Bladed Warlord Sword
+        const swordGroup = new THREE.Group();
+        const bladeGeo = new THREE.BoxGeometry(0.09, 1.5, 0.02);
+        const blade = new THREE.Mesh(bladeGeo, trimMat);
+        blade.position.set(0, 0, 0.05);
+        swordGroup.add(blade);
+
+        const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.35, 8), secondaryMat);
+        swordGroup.add(hilt);
+
+        rig.rightWrist.add(swordGroup);
+      }
+
+      // ------------------------------------------------------------
+      // 3. DOOM REGENT / DOCTOR DOOM (The Iron Sovereign)
+      // ------------------------------------------------------------
+      if (config.hasDoomMask && rig.headJoint) {
+        const doomGroup = new THREE.Group();
+        const silverChromeMat = new THREE.MeshStandardMaterial({
+          color: 0xd1d5db,
+          metalness: 0.98,
+          roughness: 0.12
+        });
+        const emeraldVelvetMat = new THREE.MeshStandardMaterial({
+          color: 0x064e3b,
+          roughness: 0.88,
+          metalness: 0.08,
+          side: THREE.DoubleSide
+        });
+
+        // Curved Metallic Silver Face Mask
+        const faceGeo = new THREE.CylinderGeometry(0.12, 0.11, 0.22, 16, 1, false, -Math.PI * 0.42, Math.PI * 0.84);
+        const faceMesh = new THREE.Mesh(faceGeo, silverChromeMat);
+        faceMesh.position.set(0, 0.02, 0.09);
+        doomGroup.add(faceMesh);
+
+        // Defined Dark Eye Slits with Glowing Emerald Pupils Behind Mask
+        const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.016, 0.04), new THREE.MeshBasicMaterial({ color: 0x022c22 }));
+        eyeL.position.set(-0.045, 0.045, 0.17);
+        const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        pupilL.position.set(-0.045, 0.045, 0.18);
+        doomGroup.add(eyeL);
+        doomGroup.add(pupilL);
+
+        const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.016, 0.04), new THREE.MeshBasicMaterial({ color: 0x022c22 }));
+        eyeR.position.set(0.045, 0.045, 0.17);
+        const pupilR = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        pupilR.position.set(0.045, 0.045, 0.18);
+        doomGroup.add(eyeR);
+        doomGroup.add(pupilR);
+
+        // Deep Green Velvet Hood
+        const hoodDome = new THREE.Mesh(
+          new THREE.SphereGeometry(0.165, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.65),
+          emeraldVelvetMat
+        );
+        hoodDome.position.set(0, 0.07, -0.01);
+        doomGroup.add(hoodDome);
+
+        rig.headJoint.add(doomGroup);
+      }
+
+      if (config.hasGreenHoodAndCloak && rig.chestJoint) {
+        const cloakGroup = new THREE.Group();
+        const goldMedallionMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.92, roughness: 0.18 });
+        const emeraldVelvetMat = new THREE.MeshStandardMaterial({ color: 0x064e3b, roughness: 0.88, side: THREE.DoubleSide });
+
+        // Dual Circular Gold Sovereign Clasps with green gems
+        const claspL = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.02, 16), goldMedallionMat);
+        claspL.rotation.x = Math.PI / 2;
+        claspL.position.set(-0.16, 0.18, 0.14);
+        cloakGroup.add(claspL);
+
+        const claspR = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.02, 16), goldMedallionMat);
+        claspR.rotation.x = Math.PI / 2;
+        claspR.position.set(0.16, 0.18, 0.14);
+        cloakGroup.add(claspR);
+
+        // Gold Sovereign Connecting Chain
+        const chainGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.32, 8);
+        const chainMesh = new THREE.Mesh(chainGeo, goldMedallionMat);
+        chainMesh.rotation.z = Math.PI / 2;
+        chainMesh.position.set(0, 0.18, 0.15);
+        cloakGroup.add(chainMesh);
+
+        // Long Flowing Emerald Velvet Cloak
+        const cloakGeo = new THREE.PlaneGeometry(0.85, 1.45, 8, 12);
+        const cloakMesh = new THREE.Mesh(cloakGeo, emeraldVelvetMat);
+        cloakMesh.position.set(0, -0.62, -0.16);
+        cloakMesh.rotation.x = 0.07;
+        cloakGroup.add(cloakMesh);
+        rig.capeMesh = cloakMesh;
+
+        rig.chestJoint.add(cloakGroup);
+
+        // Tiered Silver Pauldrons on Shoulders
+        const silverPauldronsMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.98, roughness: 0.12 });
+        if (rig.leftShoulder) {
+          const pL = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.18), silverPauldronsMat);
+          pL.position.set(-0.09, 0.07, 0);
+          rig.leftShoulder.add(pL);
+        }
+        if (rig.rightShoulder) {
+          const pR = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.18), silverPauldronsMat);
+          pR.position.set(0.09, 0.07, 0);
+          rig.rightShoulder.add(pR);
+        }
+      }
+
+      if (config.hasTechnomancyGauntlets) {
+        const technomancyMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+        if (rig.leftWrist) {
+          const orbL = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), technomancyMat);
+          orbL.position.set(0, -0.06, 0.03);
+          const tLightL = new THREE.PointLight(0x10b981, 2.5, 3.0);
+          tLightL.position.set(0, -0.06, 0.05);
+          rig.leftWrist.add(orbL);
+          rig.leftWrist.add(tLightL);
+        }
+        if (rig.rightWrist) {
+          const orbR = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), technomancyMat);
+          orbR.position.set(0, -0.06, 0.03);
+          const tLightR = new THREE.PointLight(0x10b981, 2.5, 3.0);
+          tLightR.position.set(0, -0.06, 0.05);
+          rig.rightWrist.add(orbR);
+          rig.rightWrist.add(tLightR);
+        }
+      }
+
+      // ------------------------------------------------------------
+      // 4. THOR (Winged Helmet & Mjolnir)
+      // ------------------------------------------------------------
+      if (config.hasWingedHelmet && rig.headJoint) {
+        const thorHelm = new THREE.Group();
+        const helmBase = new THREE.Mesh(new THREE.SphereGeometry(0.155, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.6), secondaryMat);
+        thorHelm.add(helmBase);
+
+        // Silver Eagle Wings
+        const wingGeo = new THREE.ConeGeometry(0.055, 0.32, 4);
+        const wingL = new THREE.Mesh(wingGeo, secondaryMat);
+        wingL.position.set(-0.18, 0.12, 0); wingL.rotation.z = 0.65;
+        const wingR = new THREE.Mesh(wingGeo, secondaryMat);
+        wingR.position.set(0.18, 0.12, 0); wingR.rotation.z = -0.65;
+        thorHelm.add(wingL);
+        thorHelm.add(wingR);
+
+        // Lightning Blue Eyes
+        const stormEyes = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+        const eL = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.012, 0.02), stormEyes);
+        eL.position.set(-0.04, 0.03, 0.14);
+        const eR = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.012, 0.02), stormEyes);
+        eR.position.set(0.04, 0.03, 0.14);
+        thorHelm.add(eL);
+        thorHelm.add(eR);
+
+        rig.headJoint.add(thorHelm);
+      }
+
+      if (config.hasCape && rig.chestJoint) {
+        const roundelsGroup = new THREE.Group();
+        // 6 Circular Polished Silver Chest Roundels with Gold Rims
+        const rMat = secondaryMat;
+        const roundelGeo = new THREE.CylinderGeometry(0.048, 0.048, 0.02, 16);
+        const roundelCoords = [
+          [-0.10, 0.16, 0.13], [0.10, 0.16, 0.13],
+          [-0.10, 0.06, 0.13], [0.10, 0.06, 0.13],
+          [-0.09, -0.04, 0.12], [0.09, -0.04, 0.12]
+        ];
+        roundelCoords.forEach(([x, y, z]) => {
+          const rMesh = new THREE.Mesh(roundelGeo, rMat);
+          rMesh.rotation.x = Math.PI / 2;
+          rMesh.position.set(x, y, z);
+          roundelsGroup.add(rMesh);
+        });
+
+        // Crimson Asgardian Cape
+        const capeMat = new THREE.MeshStandardMaterial({
+          color: config.capeColor || 0x991b1b,
+          roughness: 0.85,
+          side: THREE.DoubleSide
+        });
+        const capeGeo = new THREE.PlaneGeometry(0.85, 1.45, 8, 12);
+        const capeMesh = new THREE.Mesh(capeGeo, capeMat);
+        capeMesh.position.set(0, -0.65, -0.16);
+        capeMesh.rotation.x = 0.08;
+        roundelsGroup.add(capeMesh);
+        rig.capeMesh = capeMesh;
+
+        rig.chestJoint.add(roundelsGroup);
+      }
+
+      if (config.hasMjolnir && rig.rightWrist) {
+        const hGroup = new THREE.Group();
+        const hHead = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.17, 0.15), secondaryMat);
+        const hHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.44, 10), trimMat);
+        hHandle.position.y = -0.22;
+        hGroup.add(hHead);
+        hGroup.add(hHandle);
+
+        const lightPoint = new THREE.PointLight(0x38bdf8, 2.8, 3.5);
+        lightPoint.position.set(0, 0.05, 0);
+        hGroup.add(lightPoint);
+
+        hGroup.position.set(0, -0.1, 0.05);
+        rig.rightWrist.add(hGroup);
+        rig.hammerMesh = hGroup;
+      }
+
+      // ------------------------------------------------------------
+      // 5. CAPTAIN AMERICA (Vibranium Shield & Combat Helmet)
+      // ------------------------------------------------------------
+      if (config.hasCapShield && rig.leftElbow) {
+        const sGroup = new THREE.Group();
+        // Outer Crimson Ring
+        const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.04, 28), createPbrMaterial(0xb91c1c, 0.9, 0.18));
+        disc.rotation.x = Math.PI / 2;
+        sGroup.add(disc);
+
+        // Silver Ring
+        const silverRing = new THREE.Mesh(new THREE.RingGeometry(0.26, 0.35, 28), createPbrMaterial(0xe2e8f0, 0.92, 0.15));
+        silverRing.position.z = 0.025;
+        sGroup.add(silverRing);
+
+        // Inner Crimson Ring
+        const innerCrimson = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.26, 28), createPbrMaterial(0xb91c1c, 0.9, 0.18));
+        innerCrimson.position.z = 0.026;
+        sGroup.add(innerCrimson);
+
+        // Center Blue Disc
+        const blueDisc = new THREE.Mesh(new THREE.CircleGeometry(0.16, 28), createPbrMaterial(0x1d4ed8, 0.88, 0.2));
+        blueDisc.position.z = 0.027;
+        sGroup.add(blueDisc);
+
+        // Gleaming Silver 5-Pointed Star
+        const centerStar = new THREE.Mesh(new THREE.CircleGeometry(0.09, 5), createPbrMaterial(0xffffff, 0.95, 0.1));
+        centerStar.position.z = 0.03;
+        sGroup.add(centerStar);
+
+        sGroup.position.set(-0.12, -0.16, 0.12);
+        rig.leftElbow.add(sGroup);
+        rig.shieldMesh = sGroup;
+      }
+
+      if (config.hasStarHarness && rig.chestJoint) {
+        const harness = new THREE.Group();
+        // Silver 5-pointed star on chest
+        const starGeo = new THREE.CircleGeometry(0.085, 5);
+        const starMesh = new THREE.Mesh(starGeo, createPbrMaterial(0xffffff, 0.92, 0.12));
+        starMesh.position.set(0, 0.14, 0.135);
+        harness.add(starMesh);
+
+        // Red and white vertical combat stripes across abdomen
+        const stripesGroup = new THREE.Group();
+        for (let s = -2; s <= 2; s++) {
+          const isRed = Math.abs(s) % 2 === 0;
+          const stripe = new THREE.Mesh(
+            new THREE.BoxGeometry(0.032, 0.18, 0.04),
+            createPbrMaterial(isRed ? 0xb91c1c : 0xf8fafc, 0.8, 0.25)
+          );
+          stripe.position.set(s * 0.038, -0.04, 0.12);
+          stripesGroup.add(stripe);
+        }
+        harness.add(stripesGroup);
+
+        rig.chestJoint.add(harness);
+      }
+
+      if (config.hasCapHelmet && rig.headJoint) {
+        const cHelm = new THREE.Mesh(new THREE.SphereGeometry(0.155, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.6), primaryMat);
+        const starA = new THREE.Mesh(new THREE.CircleGeometry(0.035, 5), trimMat);
+        starA.position.set(0, 0.07, 0.14);
+        cHelm.add(starA);
+        rig.headJoint.add(cHelm);
+      }
+
+      // ------------------------------------------------------------
+      // 6. SPIDER-MAN (Web Mask & Wrist Webshooters)
+      // ------------------------------------------------------------
+      if (config.hasSpiderMask && rig.headJoint) {
+        const spideyLenses = new THREE.Group();
+        const lensGeo = new THREE.BoxGeometry(0.08, 0.05, 0.02);
+        const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+        const lensL = new THREE.Mesh(lensGeo, whiteMat);
+        lensL.position.set(-0.065, 0.02, 0.145);
+        lensL.rotation.z = -0.2;
+        spideyLenses.add(lensL);
+
+        const lensR = new THREE.Mesh(lensGeo, whiteMat);
+        lensR.position.set(0.065, 0.02, 0.145);
+        lensR.rotation.z = 0.2;
+        spideyLenses.add(lensR);
+
+        rig.headJoint.add(spideyLenses);
+      }
+
+      if (config.hasSpiderEmblem && rig.chestJoint) {
+        const spiderEmblem = new THREE.Group();
+        // Bold Black Spider Chest Emblem
+        const sBody = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.09, 0.02), trimMat);
+        sBody.position.set(0, 0.12, 0.135);
+        spiderEmblem.add(sBody);
+
+        for (let leg = 0; leg < 4; leg++) {
+          const lGeo = new THREE.BoxGeometry(0.08, 0.015, 0.01);
+          const lL = new THREE.Mesh(lGeo, trimMat);
+          lL.position.set(-0.05, 0.15 - leg * 0.025, 0.135);
+          lL.rotation.z = 0.25 - leg * 0.15;
+          spiderEmblem.add(lL);
+
+          const lR = new THREE.Mesh(lGeo, trimMat);
+          lR.position.set(0.05, 0.15 - leg * 0.025, 0.135);
+          lR.rotation.z = -0.25 + leg * 0.15;
+          spiderEmblem.add(lR);
+        }
+
+        rig.chestJoint.add(spiderEmblem);
+      }
+
+      if (config.hasWebshooters) {
+        const webMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+        if (rig.leftWrist) {
+          const wL = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.03, 8), webMat);
+          wL.position.set(0, -0.05, 0.04);
+          rig.leftWrist.add(wL);
+        }
+        if (rig.rightWrist) {
+          const wR = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.03, 8), webMat);
+          wR.position.set(0, -0.05, 0.04);
+          rig.rightWrist.add(wR);
+        }
+      }
+
+      // ------------------------------------------------------------
+      // 7. DOCTOR STRANGE (Cloak of Levitation & Eye of Agamotto)
+      // ------------------------------------------------------------
+      if (config.hasEyeOfAgamotto && rig.chestJoint) {
+        const eyeAmulet = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.03, 16), trimMat);
+        eyeAmulet.rotation.x = Math.PI / 2;
+        eyeAmulet.position.set(0, 0.18, 0.14);
+        const eyeGem = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        eyeGem.position.set(0, 0.18, 0.16);
+        const timeLight = new THREE.PointLight(0x10b981, 2.0, 2.5);
+        timeLight.position.set(0, 0.18, 0.18);
+        rig.chestJoint.add(eyeAmulet);
+        rig.chestJoint.add(eyeGem);
+        rig.chestJoint.add(timeLight);
+      }
+
+      if (config.hasLevitationCloak && rig.chestJoint) {
+        const cloakGroup = new THREE.Group();
+        const capeMat = new THREE.MeshStandardMaterial({ color: 0x881337, roughness: 0.82, side: THREE.DoubleSide });
+
+        // High Dramatic Standing Collar
+        const collarGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.22, 16, 1, true, -Math.PI * 0.7, Math.PI * 1.4);
+        const collar = new THREE.Mesh(collarGeo, capeMat);
+        collar.position.set(0, 0.22, -0.06);
+        cloakGroup.add(collar);
+
+        // Flowing Cape Tails
+        const capeGeo = new THREE.PlaneGeometry(0.85, 1.4, 8, 12);
+        const capeMesh = new THREE.Mesh(capeGeo, capeMat);
+        capeMesh.position.set(0, -0.60, -0.16);
+        capeMesh.rotation.x = 0.08;
+        cloakGroup.add(capeMesh);
+        rig.capeMesh = capeMesh;
+
+        rig.chestJoint.add(cloakGroup);
+      }
+
+      if (config.hasMandalas) {
+        const mGeo = new THREE.RingGeometry(0.18, 0.24, 16);
+        const mMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide });
+        if (rig.leftWrist) {
+          const mL = new THREE.Mesh(mGeo, mMat);
+          rig.leftWrist.add(mL);
+          rig.mandalas.push(mL);
+        }
+        if (rig.rightWrist) {
+          const mR = new THREE.Mesh(mGeo, mMat);
+          rig.rightWrist.add(mR);
+          rig.mandalas.push(mR);
+        }
+      }
+
+      // ------------------------------------------------------------
+      // 8. LOKI (Iconic Towering Golden Horns)
+      // ------------------------------------------------------------
+      if (config.hasLokiHorns && rig.headJoint) {
+        const hornsGroup = new THREE.Group();
+        const hornGeo = new THREE.CylinderGeometry(0.015, 0.045, 0.46, 10);
+
+        const hornL = new THREE.Mesh(hornGeo, secondaryMat);
+        hornL.position.set(-0.14, 0.28, 0.08);
+        hornL.rotation.set(-0.35, 0, -0.42);
+        hornsGroup.add(hornL);
+
+        const hornR = new THREE.Mesh(hornGeo, secondaryMat);
+        hornR.position.set(0.14, 0.28, 0.08);
+        hornR.rotation.set(-0.35, 0, 0.42);
+        hornsGroup.add(hornR);
+
+        rig.headJoint.add(hornsGroup);
+      }
+
+      if (config.hasDualDaggers) {
+        const daggerMat = new THREE.MeshBasicMaterial({ color: 0x84cc16 });
+        if (rig.leftWrist) {
+          const dagL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.38, 0.01), daggerMat);
+          dagL.position.set(0, -0.15, 0.06);
+          rig.leftWrist.add(dagL);
+        }
+        if (rig.rightWrist) {
+          const dagR = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.38, 0.01), daggerMat);
+          dagR.position.set(0, -0.15, 0.06);
+          rig.rightWrist.add(dagR);
+        }
+      }
+
+      // ------------------------------------------------------------
+      // 9. GREEN GOBLIN (Demonic Goblin Mask & Glider)
+      // ------------------------------------------------------------
+      if (config.hasGoblinMask && rig.headJoint) {
+        const gobGroup = new THREE.Group();
+        const helm = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 12), primaryMat);
+        gobGroup.add(helm);
+
+        // Pointed Goblin Ears
+        const earGeo = new THREE.ConeGeometry(0.04, 0.16, 6);
+        const earL = new THREE.Mesh(earGeo, primaryMat);
+        earL.position.set(-0.16, 0.06, -0.02);
+        earL.rotation.z = 1.1;
+        gobGroup.add(earL);
+
+        const earR = new THREE.Mesh(earGeo, primaryMat);
+        earR.position.set(0.16, 0.06, -0.02);
+        earR.rotation.z = -1.1;
+        gobGroup.add(earR);
+
+        // Menacing Yellow/Orange Glowing Eyes
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+        const eL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.02), eyeMat);
+        eL.position.set(-0.045, 0.035, 0.145);
+        gobGroup.add(eL);
+
+        const eR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.02), eyeMat);
+        eR.position.set(0.045, 0.035, 0.145);
+        gobGroup.add(eR);
+
+        rig.headJoint.add(gobGroup);
+      }
+
+      if (config.hasGlider) {
+        const glider = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.12, 0.55), trimMat);
+        glider.position.set(0, 0.06, 0);
+        group.add(glider);
+      }
+
+      if (config.hasPumpkinBomb && rig.rightWrist) {
+        const bomb = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 12), new THREE.MeshBasicMaterial({ color: 0xf97316 }));
+        bomb.position.set(0, -0.12, 0.06);
+        const bLight = new THREE.PointLight(0xf97316, 2.5, 3.0);
+        bomb.add(bLight);
+        rig.rightWrist.add(bomb);
+      }
+
+      // ------------------------------------------------------------
+      // 10. VOID OVERLORD / VOID TITAN
+      // ------------------------------------------------------------
+        if (config.hasVoidCore && rig.chestJoint) {
+          const vCore = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), new THREE.MeshBasicMaterial({ color: 0xa855f7 }));
+          vCore.position.set(0, 0.12, 0.14);
+          const vLight = new THREE.PointLight(0xa855f7, 3.2, 4.5);
+          vCore.add(vLight);
+          rig.chestJoint.add(vCore);
+        }
+      }
+
+      // Mount cloned rigged model to root group
+      group.add(clonedModel);
+      rig.model = clonedModel;
+      rig.isLoaded = true;
+      if (typeof rig.onLoaded === 'function') {
+        rig.onLoaded();
+      }
+    })
+    .catch((err) => {
+      group.remove(scanHolo);
+      rig.loadFailed = true;
+      const errorMesh = createAssetLoadingErrorMesh(modelUrl, err?.message);
+      group.add(errorMesh);
+    });
+
+  return rig;
 }
 
 // ============================================================
-// ============================================================
-// FULL COMBAT KINEMATIC SKELETAL ANIMATIONS (AUTHENTIC MARTIAL ARTS!)
+// FULL COMBAT KINEMATIC SKELETAL ANIMATIONS (60 FPS FLUIDITY & TRANSITIONS)
 // ============================================================
 export function animateArticulated3DFighter(rig, state, time, delta, elapsed, isHero, activeGesture, comboIndex = 0) {
   if (!rig) return;
 
-  const {
-    config = {},
-    pelvisJoint,
-    spineJoint,
-    chestJoint,
-    neckJoint,
-    headJoint,
-    leftShoulder,
-    rightShoulder,
-    leftElbow,
-    rightElbow,
-    leftWrist,
-    rightWrist,
-    leftLegJoint,
-    rightLegJoint,
-    leftKnee,
-    rightKnee,
-    capeMesh,
-    hammerMesh,
-    shieldMesh,
-    mandalas
-  } = rig;
-
-  const s = config.scale || 1.0;
-  const id = config.id || '';
-  const weaponType = config.weaponType || '';
-
-  // Determine Fighter Archetype
-  const isTech = id === 'ironman' || id === 'plasma-ranger' || weaponType === 'repulsor';
-  const isThunder = id === 'thor' || id === 'storm-guardian' || weaponType === 'hammer';
-  const isShield = id === 'captain-america' || id === 'shield-sentinel' || weaponType === 'shield';
-  const isWeb = id === 'spiderman' || id === 'web-ninja' || weaponType === 'web';
-  const isMage = id === 'doctor-strange' || id === 'dr-strange' || id === 'arcane-sorcerer' || weaponType === 'mandala';
-  const isVoid = id === 'void-titan' || id === 'void-overlord';
-  const isAssassin = id === 'shadow-assassin' || id === 'loki';
-  const isMech = id === 'mech-destroyer';
-
-  // --- SECONDARY MESH PHYSICS & AURA EFFECTS ---
-  // 1. Cape wind aerodynamic simulation
-  if (capeMesh) {
-    const isMoving = state === 'punch' || state === 'ultimate' || state === 'dodge';
-    const capeSpeed = isMoving ? 9.0 : 3.8;
-    const capeAmp = isMoving ? 0.32 : 0.08;
-    capeMesh.rotation.x = 0.12 + Math.sin(elapsed * capeSpeed) * capeAmp;
-    capeMesh.rotation.y = Math.cos(elapsed * (capeSpeed * 0.7)) * (capeAmp * 0.55);
-    capeMesh.rotation.z = Math.sin(elapsed * 2.8) * 0.05;
+  // 1. Continuous Skeletal AnimationMixer Update
+  if (rig.mixer) {
+    rig.mixer.update(delta);
   }
 
-  // 2. Mystic Mandala Rings: High-velocity counter-rotation
-  if (mandalas && mandalas.length > 0) {
-    mandalas.forEach((m, idx) => {
-      const spinMult = state === 'punch' ? 16 : state === 'ultimate' ? 24 : 4.5;
-      m.rotation.z += delta * (idx === 0 ? spinMult : -spinMult);
-      const pulse = 1.0 + Math.sin(elapsed * 6 + idx) * (state === 'ultimate' ? 0.3 : 0.08);
-      m.scale.set(pulse, pulse, pulse);
+  // 2. Dispatch Smooth State Cross-Fading through AnimationMixer
+  if (rig.fadeToAction) {
+    if (state === 'idle') {
+      rig.fadeToAction('idle', 0.25);
+    } else if (state === 'punch' || state === 'attack') {
+      rig.fadeToAction('attack', 0.12, true);
+    } else if (state === 'palm' || state === 'block') {
+      rig.fadeToAction('block', 0.15);
+    } else if (state === 'point') {
+      rig.fadeToAction('attack', 0.15);
+    } else if (state === 'forward') {
+      rig.fadeToAction('attack', 0.12, true);
+    } else if (state === 'ultimate' || state === 'special_cast') {
+      rig.fadeToAction('special_cast', 0.2, true);
+    } else if (state === 'dodge') {
+      rig.fadeToAction('dodge_left', 0.12, true);
+    } else if (state === 'staggered' || state === 'hit_reaction') {
+      rig.fadeToAction('hit_reaction', 0.1, true);
+    } else if (state === 'victory') {
+      rig.fadeToAction('victory', 0.3);
+    } else if (state === 'defeat') {
+      rig.fadeToAction('defeat', 0.3, true);
+    }
+  }
+
+  // 3. Dynamic Procedural Kinematics for realistic respiration, lunges, defensive bracing & flinching
+  if (rig.model && rig.baseModelPos) {
+    const bPos = rig.baseModelPos;
+    const bRot = rig.baseModelRot || new THREE.Euler(0, 0, 0);
+
+    if (state === 'idle') {
+      // Smooth breathing respiration and weight shift
+      const breath = Math.sin(elapsed * 2.6 + (isHero ? 0 : 1.4)) * 0.016;
+      const sway = Math.cos(elapsed * 1.5 + (isHero ? 0 : 0.7)) * 0.012;
+      rig.model.position.y = bPos.y + breath;
+      rig.model.position.x = bPos.x + sway * 0.4;
+      rig.model.rotation.y = bRot.y + sway * 0.7;
+    } else if (state === 'punch' || state === 'attack') {
+      const cStep = comboIndex || 0;
+      const attackProgress = Math.sin(Math.min(1.0, (time || 0) * 4.5) * Math.PI);
+      if (cStep === 2) {
+        // Heavy Finisher Slam / Launcher rotation
+        rig.model.position.z = bPos.z + attackProgress * 0.28;
+        rig.model.position.y = bPos.y + Math.sin(Math.min(1.0, (time || 0) * 3.5) * Math.PI) * 0.45;
+        rig.model.rotation.x = bRot.x - attackProgress * 0.45;
+        rig.model.rotation.y = bRot.y + (isHero ? 0.35 : -0.35) * attackProgress;
+      } else if (cStep === 1) {
+        // Heavy Body Hook Torso Twist
+        rig.model.position.z = bPos.z + attackProgress * 0.20;
+        rig.model.position.y = bPos.y - attackProgress * 0.05;
+        rig.model.rotation.y = bRot.y + (isHero ? 0.38 : -0.38) * attackProgress;
+        rig.model.rotation.z = bRot.z + (isHero ? 0.12 : -0.12) * attackProgress;
+      } else {
+        // Fast Kinetic Jab Snap
+        rig.model.position.z = bPos.z + attackProgress * 0.16;
+        rig.model.position.y = bPos.y - attackProgress * 0.02;
+        rig.model.rotation.y = bRot.y + (isHero ? 0.22 : -0.22) * attackProgress;
+      }
+    } else if (state === 'palm' || state === 'block') {
+      // Defensive guard crouch
+      rig.model.position.y = bPos.y - 0.035;
+      rig.model.rotation.x = bRot.x + 0.08;
+    } else if (state === 'ultimate' || state === 'special_cast') {
+      // Floating cataclysm elevation
+      const hover = Math.sin(elapsed * 4.2) * 0.06 + 0.10;
+      rig.model.position.y = bPos.y + hover;
+      rig.model.rotation.y = bRot.y + Math.sin(elapsed * 5) * 0.06;
+    } else if (state === 'staggered' || state === 'hit_reaction') {
+      // Authentic arcade hit recoil with visceral head/torso snap
+      const snap = Math.sin(Math.min(1.0, (time || 0) * 8.0) * Math.PI);
+      const shake = Math.sin(elapsed * 28) * 0.035 * snap;
+      rig.model.position.x = bPos.x + shake;
+      rig.model.position.z = bPos.z - snap * 0.18;
+      rig.model.position.y = bPos.y - snap * 0.04;
+      rig.model.rotation.z = bRot.z + (isHero ? -0.15 : 0.15) * snap;
+      rig.model.rotation.x = bRot.x - 0.14 * snap;
+    }
+  }
+
+  // 4. Continuous Flowing Cloth Simulation on Cloaks/Capes
+  if (rig.capeMesh) {
+    rig.capeMesh.rotation.x = 0.07 + Math.sin(elapsed * 2.8 + (isHero ? 0 : 1.2)) * 0.06;
+    rig.capeMesh.rotation.y = Math.cos(elapsed * 2.2) * 0.03;
+  }
+
+  // 5. Rotating Technomancy Ground Rune for DOOM REGENT
+  if (rig.arcaneRuneRing) {
+    rig.arcaneRuneRing.rotation.z += delta * 0.85;
+  }
+
+  // 6. Rotating Mystic Mandalas for Arcane Sorcerer
+  if (rig.mandalas && rig.mandalas.length > 0) {
+    rig.mandalas.forEach((m) => {
+      m.rotation.z += delta * 4.5;
     });
   }
-
-  // 3. Hammer Weapon Dynamic Micro-Torque
-  if (hammerMesh) {
-    if (state === 'idle') {
-      hammerMesh.rotation.z = Math.sin(elapsed * 1.8) * 0.04;
-    }
-  }
-
-  // Baseline Pelvis Floor Alignment
-  const basePelvisY = 0.94 * s;
-
-  // ============================================================
-  // 1. CHARACTER-SPECIFIC AUTHENTIC IDLE STANCES
-  // ============================================================
-  if (state === 'idle') {
-    const breath = Math.sin(elapsed * 2.2);
-    const weightShift = Math.sin(elapsed * 1.4);
-
-    if (isTech) {
-      // ARMORED TECH HERO: Micro-levitation thruster hover!
-      const hover = Math.sin(elapsed * 3.8);
-      pelvisJoint.position.y = basePelvisY + 0.04 + hover * 0.02;
-      spineJoint.rotation.x = 0.05 + breath * 0.02;
-      chestJoint.rotation.x = 0.03 + breath * 0.02;
-      chestJoint.rotation.y = weightShift * 0.02;
-      headJoint.rotation.x = -0.04;
-      headJoint.rotation.y = Math.sin(elapsed * 1.2) * 0.08;
-
-      leftShoulder.rotation.x = 0.28 + breath * 0.02;
-      leftShoulder.rotation.z = 0.25;
-      leftElbow.rotation.x = -0.55;
-      if (leftWrist) leftWrist.rotation.x = -0.4;
-
-      rightShoulder.rotation.x = 0.28 - breath * 0.02;
-      rightShoulder.rotation.z = -0.25;
-      rightElbow.rotation.x = -0.55;
-      if (rightWrist) rightWrist.rotation.x = -0.4;
-
-      leftLegJoint.rotation.x = 0.12;
-      rightLegJoint.rotation.x = 0.08;
-      leftKnee.rotation.x = 0.2;
-      rightKnee.rotation.x = 0.16;
-    } else if (isThunder) {
-      // THUNDER WARRIOR: Wide, grounded Asgardian warrior stance!
-      pelvisJoint.position.y = basePelvisY + breath * 0.015;
-      pelvisJoint.rotation.y = isHero ? 0.15 : -0.15;
-      spineJoint.rotation.x = breath * 0.025;
-      chestJoint.rotation.x = breath * 0.03;
-      chestJoint.rotation.y = isHero ? 0.1 : -0.1;
-      headJoint.rotation.y = isHero ? -0.08 : 0.08;
-
-      rightShoulder.rotation.x = 0.22 - breath * 0.02;
-      rightShoulder.rotation.z = -0.25;
-      rightElbow.rotation.x = -0.5;
-      if (rightWrist) rightWrist.rotation.x = 0.25;
-
-      leftShoulder.rotation.x = 0.5 + breath * 0.03;
-      leftShoulder.rotation.z = 0.35;
-      leftElbow.rotation.x = -1.1;
-
-      leftLegJoint.rotation.z = 0.18;
-      rightLegJoint.rotation.z = -0.18;
-      leftLegJoint.rotation.x = 0.05;
-      rightLegJoint.rotation.x = -0.05;
-      leftKnee.rotation.x = 0.08;
-      rightKnee.rotation.x = 0.08;
-    } else if (isShield) {
-      // SHIELD DEFENDER: Tactical military boxing guard!
-      const bounce = Math.abs(Math.sin(elapsed * 3.2)) * 0.018;
-      pelvisJoint.position.y = basePelvisY - 0.03 + bounce;
-      spineJoint.rotation.x = 0.08 + breath * 0.02;
-      chestJoint.rotation.x = 0.06;
-      chestJoint.rotation.y = isHero ? 0.2 : -0.2;
-
-      leftShoulder.rotation.x = 0.65;
-      leftShoulder.rotation.z = 0.38;
-      leftElbow.rotation.x = -1.35;
-
-      rightShoulder.rotation.x = 0.35;
-      rightShoulder.rotation.z = -0.2;
-      rightElbow.rotation.x = -1.2;
-
-      leftLegJoint.rotation.x = -0.15;
-      rightLegJoint.rotation.x = 0.2;
-      leftKnee.rotation.x = 0.28;
-      rightKnee.rotation.x = 0.18;
-    } else if (isWeb) {
-      // AGILE WEB HERO: Low iconic spider crouch!
-      pelvisJoint.position.y = basePelvisY - 0.16 + breath * 0.01;
-      spineJoint.rotation.x = 0.35;
-      chestJoint.rotation.x = 0.28;
-      headJoint.rotation.x = -0.3;
-      headJoint.rotation.z = Math.sin(elapsed * 1.5) * 0.06;
-
-      leftShoulder.rotation.x = 0.95;
-      leftShoulder.rotation.z = 0.45;
-      leftElbow.rotation.x = -0.85;
-
-      rightShoulder.rotation.x = 0.45;
-      rightShoulder.rotation.z = -0.35;
-      rightElbow.rotation.x = -1.1;
-      if (rightWrist) rightWrist.rotation.x = -0.7;
-
-      leftLegJoint.rotation.z = 0.42;
-      rightLegJoint.rotation.z = -0.42;
-      leftLegJoint.rotation.x = -0.2;
-      rightLegJoint.rotation.x = 0.25;
-      leftKnee.rotation.x = 0.75;
-      rightKnee.rotation.x = 0.85;
-    } else if (isMage) {
-      // MYSTIC PORTAL MAGE: Meditative floating levitation!
-      const floatAnim = Math.sin(elapsed * 2.0);
-      pelvisJoint.position.y = basePelvisY + 0.14 + floatAnim * 0.03;
-      spineJoint.rotation.x = -0.05 + breath * 0.02;
-      chestJoint.rotation.x = -0.03;
-      headJoint.rotation.x = 0.02;
-
-      leftShoulder.rotation.x = 0.3 + floatAnim * 0.04;
-      leftShoulder.rotation.z = 0.45;
-      leftElbow.rotation.x = -0.8;
-      if (leftWrist) leftWrist.rotation.z = Math.sin(elapsed * 2.5) * 0.2;
-
-      rightShoulder.rotation.x = 0.3 - floatAnim * 0.04;
-      rightShoulder.rotation.z = -0.45;
-      rightElbow.rotation.x = -0.8;
-      if (rightWrist) rightWrist.rotation.z = -Math.sin(elapsed * 2.5) * 0.2;
-
-      leftLegJoint.rotation.x = 0.35;
-      rightLegJoint.rotation.x = 0.35;
-      leftLegJoint.rotation.z = 0.2;
-      rightLegJoint.rotation.z = -0.2;
-      leftKnee.rotation.x = 0.65;
-      rightKnee.rotation.x = 0.65;
-    } else if (isVoid || !isHero) {
-      // VOID OVERLORD (BOSS): Colossal, imposing dark titan stance!
-      const bossBreath = Math.sin(elapsed * 1.8);
-      pelvisJoint.position.y = basePelvisY + bossBreath * 0.025;
-      spineJoint.rotation.x = 0.06;
-      chestJoint.rotation.x = 0.08 + bossBreath * 0.04;
-      headJoint.rotation.x = -0.05;
-
-      leftShoulder.rotation.x = 0.35 + bossBreath * 0.03;
-      leftShoulder.rotation.z = 0.3;
-      leftElbow.rotation.x = -0.65;
-      if (leftWrist) leftWrist.rotation.x = Math.sin(elapsed * 2) * 0.15;
-
-      rightShoulder.rotation.x = 0.35 - bossBreath * 0.03;
-      rightShoulder.rotation.z = -0.3;
-      rightElbow.rotation.x = -0.65;
-      if (rightWrist) rightWrist.rotation.x = -Math.sin(elapsed * 2) * 0.15;
-
-      leftLegJoint.rotation.z = 0.15;
-      rightLegJoint.rotation.z = -0.15;
-      leftKnee.rotation.x = 0.06;
-      rightKnee.rotation.x = 0.06;
-    } else {
-      pelvisJoint.position.y = basePelvisY + breath * 0.015;
-      spineJoint.rotation.x = breath * 0.02;
-      chestJoint.rotation.x = breath * 0.03;
-      chestJoint.rotation.y = weightShift * 0.03;
-      headJoint.rotation.x = -breath * 0.02;
-
-      leftShoulder.rotation.x = 0.35 + breath * 0.03;
-      leftElbow.rotation.x = -0.75 - breath * 0.04;
-      rightShoulder.rotation.x = 0.25 - breath * 0.03;
-      rightElbow.rotation.x = -0.65 + breath * 0.04;
-
-      leftLegJoint.rotation.x = 0.04 - breath * 0.02;
-      rightLegJoint.rotation.x = -0.04 + breath * 0.02;
-      leftKnee.rotation.x = breath * 0.03;
-      rightKnee.rotation.x = -breath * 0.03;
-    }
-  }
-
-  // ============================================================
-  // 2. CHARACTER-SPECIFIC POWER ATTACKS
-  // ============================================================
-  else if (state === 'punch') {
-    const p = Math.min(1.0, time / 0.44);
-    const cIdx = (comboIndex || 0) % 3;
-
-    if (isTech) {
-      if (cIdx === 0) {
-        // TECH COMBO 1: Lead Repulsor Snap Jab
-        if (p < 0.35) {
-          const f = Math.sin((p / 0.35) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? f * 0.25 : -f * 0.25;
-          chestJoint.rotation.y = isHero ? f * 0.4 : -f * 0.4;
-          rightShoulder.rotation.x = -f * 1.57;
-          rightElbow.rotation.x = 0;
-          if (rightWrist) rightWrist.rotation.x = -f * 1.4;
-          leftShoulder.rotation.x = 0.5;
-          leftElbow.rotation.x = -1.2;
-        } else if (p < 0.55) {
-          const kickback = Math.sin(((p - 0.35) / 0.2) * Math.PI) * 0.2;
-          chestJoint.rotation.x = -kickback;
-          rightShoulder.rotation.x = -1.57 + kickback * 0.5;
-          if (rightWrist) rightWrist.rotation.x = -1.4;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
-          chestJoint.rotation.y = isHero ? ease * 0.4 : -ease * 0.4;
-          rightShoulder.rotation.x = -ease * 1.57 + (1 - ease) * 0.28;
-          rightElbow.rotation.x = (1 - ease) * -0.55;
-          if (rightWrist) rightWrist.rotation.x = -ease * 1.4;
-        }
-      } else if (cIdx === 1) {
-        // TECH COMBO 2: Heavy Armored Kinetic Cross & Torso Drive
-        if (p < 0.38) {
-          const f = Math.sin((p / 0.38) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? f * 0.55 : -f * 0.55;
-          chestJoint.rotation.y = isHero ? f * 0.75 : -f * 0.75;
-          rightShoulder.rotation.x = -f * 1.65;
-          rightShoulder.rotation.z = isHero ? -f * 0.2 : f * 0.2;
-          rightElbow.rotation.x = 0;
-          leftShoulder.rotation.x = 0.6;
-          leftElbow.rotation.x = -1.4;
-          rightLegJoint.rotation.x = -f * 0.3;
-          rightKnee.rotation.x = f * 0.35;
-        } else if (p < 0.58) {
-          pelvisJoint.rotation.y = isHero ? 0.55 : -0.55;
-          chestJoint.rotation.y = isHero ? 0.75 : -0.75;
-          rightShoulder.rotation.x = -1.65;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.58) / 0.42) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? ease * 0.55 : -ease * 0.55;
-          chestJoint.rotation.y = isHero ? ease * 0.75 : -ease * 0.75;
-          rightShoulder.rotation.x = -ease * 1.65 + (1 - ease) * 0.28;
-          rightElbow.rotation.x = (1 - ease) * -0.55;
-        }
-      } else {
-        // TECH COMBO 3: Dual-Thruster Airborne Supersonic Dropkick
-        if (p < 0.42) {
-          const f = Math.sin((p / 0.42) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + f * 0.5;
-          chestJoint.rotation.x = -f * 0.45;
-          leftLegJoint.rotation.x = -f * 1.6;
-          rightLegJoint.rotation.x = -f * 1.5;
-          leftShoulder.rotation.x = f * 0.7;
-          rightShoulder.rotation.x = f * 0.7;
-        } else if (p < 0.62) {
-          pelvisJoint.position.y = basePelvisY + 0.5;
-          leftLegJoint.rotation.x = -1.6;
-          rightLegJoint.rotation.x = -1.5;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.62) / 0.38) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + ease * 0.5;
-          leftLegJoint.rotation.x = -ease * 1.6;
-          rightLegJoint.rotation.x = -ease * 1.5;
-          leftKnee.rotation.x = (1 - ease) * 0.7;
-          rightKnee.rotation.x = (1 - ease) * 0.7;
-        }
-      }
-    } else if (isThunder) {
-      if (cIdx === 0) {
-        // THUNDER COMBO 1: Mjolnir Chin Uppercut
-        if (p < 0.36) {
-          const f = Math.sin((p / 0.36) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + f * 0.15;
-          spineJoint.rotation.x = -f * 0.25;
-          rightShoulder.rotation.x = 0.8 - f * 2.8;
-          rightElbow.rotation.x = -f * 0.5;
-          leftShoulder.rotation.x = 0.4;
-          leftElbow.rotation.x = -0.8;
-        } else if (p < 0.56) {
-          rightShoulder.rotation.x = -2.0;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.56) / 0.44) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + ease * 0.15;
-          rightShoulder.rotation.x = -ease * 2.0 + (1 - ease) * 0.22;
-        }
-      } else if (cIdx === 1) {
-        // THUNDER COMBO 2: Centrifugal Horizontal Ribcage Mjolnir Bash
-        if (p < 0.32) {
-          const f = Math.sin((p / 0.32) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? -f * 0.65 : f * 0.65;
-          chestJoint.rotation.y = isHero ? -f * 0.85 : f * 0.85;
-          rightShoulder.rotation.x = f * 1.1;
-          rightShoulder.rotation.z = -0.5;
-        } else if (p < 0.52) {
-          const f = (p - 0.32) / 0.20;
-          const swing = Math.sin(f * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? (-0.65 + swing * 1.45) : (0.65 - swing * 1.45);
-          chestJoint.rotation.y = isHero ? (-0.85 + swing * 1.75) : (0.85 - swing * 1.75);
-          rightShoulder.rotation.x = 1.1 - swing * 2.8;
-          rightShoulder.rotation.z = 0.4;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.52) / 0.48) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? ease * 0.8 : -ease * 0.8;
-          chestJoint.rotation.y = isHero ? ease * 0.9 : -ease * 0.9;
-          rightShoulder.rotation.x = -1.7 * ease + (1 - ease) * 0.22;
-        }
-      } else {
-        // THUNDER COMBO 3: Leaping 2-Handed Skyward Mjolnir Meteor Slam
-        if (p < 0.40) {
-          const f = Math.sin((p / 0.40) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + f * 0.55;
-          spineJoint.rotation.x = -f * 0.35;
-          leftShoulder.rotation.x = -f * 2.8;
-          rightShoulder.rotation.x = -f * 2.8;
-        } else if (p < 0.60) {
-          const f = (p - 0.40) / 0.20;
-          const smash = Math.sin(f * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + 0.55 - smash * 0.7;
-          spineJoint.rotation.x = -0.35 + smash * 0.65;
-          leftShoulder.rotation.x = -2.8 + smash * 3.4;
-          rightShoulder.rotation.x = -2.8 + smash * 3.4;
-          leftKnee.rotation.x = smash * 0.85;
-          rightKnee.rotation.x = smash * 0.85;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.60) / 0.40) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY - ease * 0.15;
-          leftShoulder.rotation.x = ease * 0.6 + (1 - ease) * 0.22;
-          rightShoulder.rotation.x = ease * 0.6 + (1 - ease) * 0.22;
-          leftKnee.rotation.x = ease * 0.85;
-          rightKnee.rotation.x = ease * 0.85;
-        }
-      }
-    } else if (isShield) {
-      if (cIdx === 0) {
-        // SHIELD COMBO 1: Lead Vibranium Shield Edge Thrust
-        if (p < 0.35) {
-          const f = Math.sin((p / 0.35) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? f * 0.4 : -f * 0.4;
-          chestJoint.rotation.y = isHero ? f * 0.5 : -f * 0.5;
-          leftShoulder.rotation.x = -f * 1.5;
-          leftElbow.rotation.x = -f * 0.2;
-          rightShoulder.rotation.x = 0.4;
-          rightElbow.rotation.x = -1.2;
-        } else if (p < 0.55) {
-          leftShoulder.rotation.x = -1.5;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
-          leftShoulder.rotation.x = -ease * 1.5 + (1 - ease) * 0.65;
-          chestJoint.rotation.y = isHero ? ease * 0.5 : -ease * 0.5;
-        }
-      } else if (cIdx === 1) {
-        // SHIELD COMBO 2: Spinning Overhand Cross Hook
-        if (p < 0.38) {
-          const f = Math.sin((p / 0.38) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? f * 0.65 : -f * 0.65;
-          chestJoint.rotation.y = isHero ? f * 0.8 : -f * 0.8;
-          rightShoulder.rotation.x = -f * 1.45;
-          rightShoulder.rotation.z = -f * 0.5;
-          rightElbow.rotation.x = -f * 0.8;
-          leftShoulder.rotation.x = 0.2;
-          leftElbow.rotation.x = -1.4;
-        } else if (p < 0.58) {
-          rightShoulder.rotation.x = -1.45;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.58) / 0.42) * (Math.PI / 2));
-          rightShoulder.rotation.x = -ease * 1.45 + (1 - ease) * 0.35;
-          chestJoint.rotation.y = isHero ? ease * 0.8 : -ease * 0.8;
-        }
-      } else {
-        // SHIELD COMBO 3: Flying Spartan Knee & Heavy Shield Drive
-        if (p < 0.40) {
-          const f = Math.sin((p / 0.40) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + f * 0.4;
-          rightLegJoint.rotation.x = -f * 1.4;
-          rightKnee.rotation.x = f * 1.5;
-          leftShoulder.rotation.x = -f * 1.35;
-          rightShoulder.rotation.x = -f * 1.1;
-        } else if (p < 0.60) {
-          pelvisJoint.position.y = basePelvisY + 0.4;
-          leftShoulder.rotation.x = -1.35;
-          rightShoulder.rotation.x = -1.1;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.60) / 0.40) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + ease * 0.4;
-          rightLegJoint.rotation.x = -ease * 1.4;
-          rightKnee.rotation.x = ease * 1.5;
-          leftShoulder.rotation.x = -ease * 1.35 + (1 - ease) * 0.65;
-          rightShoulder.rotation.x = -ease * 1.1 + (1 - ease) * 0.35;
-        }
-      }
-    } else if (isWeb) {
-      if (cIdx === 0) {
-        // WEB COMBO 1: Low Ducking Snap Jab & Web Flick
-        if (p < 0.35) {
-          const f = Math.sin((p / 0.35) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY - f * 0.22;
-          leftKnee.rotation.x = f * 0.8;
-          rightKnee.rotation.x = f * 0.8;
-          rightShoulder.rotation.x = -f * 1.55;
-          rightElbow.rotation.x = 0;
-        } else if (p < 0.55) {
-          rightShoulder.rotation.x = -1.55;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY - ease * 0.22;
-          rightShoulder.rotation.x = -ease * 1.55;
-          leftKnee.rotation.x = ease * 0.8;
-          rightKnee.rotation.x = ease * 0.8;
-        }
-      } else if (cIdx === 1) {
-        // WEB COMBO 2: Spinning 360 Crescent High Kick
-        if (p < 0.38) {
-          const f = Math.sin((p / 0.38) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? f * 1.4 : -f * 1.4;
-          rightLegJoint.rotation.x = -f * 1.6;
-          rightLegJoint.rotation.z = f * 1.2;
-          chestJoint.rotation.x = f * 0.35;
-        } else if (p < 0.58) {
-          rightLegJoint.rotation.x = -1.6;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.58) / 0.42) * (Math.PI / 2));
-          pelvisJoint.rotation.y = isHero ? ease * 1.4 : -ease * 1.4;
-          rightLegJoint.rotation.x = -ease * 1.6;
-          rightLegJoint.rotation.z = ease * 1.2;
-        }
-      } else {
-        // WEB COMBO 3: Acrobatic Flying Web-Zip Double Dropkick
-        if (p < 0.42) {
-          const f = Math.sin((p / 0.42) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + f * 0.55;
-          chestJoint.rotation.x = -f * 0.45;
-          leftLegJoint.rotation.x = -f * 1.6;
-          rightLegJoint.rotation.x = -f * 1.5;
-          leftShoulder.rotation.x = 0.6;
-          rightShoulder.rotation.x = 0.6;
-        } else if (p < 0.6) {
-          pelvisJoint.position.y = basePelvisY + 0.55;
-          leftLegJoint.rotation.x = -1.6;
-          rightLegJoint.rotation.x = -1.5;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.6) / 0.4) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + ease * 0.55;
-          leftLegJoint.rotation.x = -ease * 1.6;
-          rightLegJoint.rotation.x = -ease * 1.5;
-          leftKnee.rotation.x = (1 - ease) * 0.75;
-          rightKnee.rotation.x = (1 - ease) * 0.85;
-        }
-      }
-    } else if (isMage) {
-      if (cIdx === 0) {
-        // MAGE COMBO 1: Eldritch Mandala Palm Thrust
-        if (p < 0.35) {
-          const f = Math.sin((p / 0.35) * (Math.PI / 2));
-          rightShoulder.rotation.x = -f * 1.5;
-          rightElbow.rotation.x = 0;
-          if (rightWrist) rightWrist.rotation.x = -f * 1.2;
-          leftShoulder.rotation.x = -f * 0.6;
-          leftElbow.rotation.x = -1.1;
-        } else if (p < 0.55) {
-          rightShoulder.rotation.x = -1.5;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
-          rightShoulder.rotation.x = -ease * 1.5 + (1 - ease) * 0.3;
-        }
-      } else if (cIdx === 1) {
-        // MAGE COMBO 2: Dual Concentric Arcane Blades X-Slash
-        if (p < 0.35) {
-          const f = Math.sin((p / 0.35) * (Math.PI / 2));
-          leftShoulder.rotation.x = -f * 1.4;
-          rightShoulder.rotation.x = -f * 1.4;
-          leftShoulder.rotation.z = -f * 0.4;
-          rightShoulder.rotation.z = f * 0.4;
-          leftElbow.rotation.x = -f * 0.3;
-          rightElbow.rotation.x = -f * 0.3;
-        } else if (p < 0.55) {
-          leftShoulder.rotation.x = -1.4;
-          rightShoulder.rotation.x = -1.4;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.55) / 0.45) * (Math.PI / 2));
-          leftShoulder.rotation.x = -ease * 1.4 + (1 - ease) * 0.3;
-          rightShoulder.rotation.x = -ease * 1.4 + (1 - ease) * 0.3;
-        }
-      } else {
-        // MAGE COMBO 3: Mystic Levitation Telekinetic Force Burst
-        if (p < 0.38) {
-          const f = Math.sin((p / 0.38) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + f * 0.4;
-          leftShoulder.rotation.x = -f * 1.55;
-          rightShoulder.rotation.x = -f * 1.55;
-          leftShoulder.rotation.z = -f * 0.2;
-          rightShoulder.rotation.z = f * 0.2;
-          if (leftWrist) leftWrist.rotation.x = -f * 1.2;
-          if (rightWrist) rightWrist.rotation.x = -f * 1.2;
-        } else if (p < 0.58) {
-          pelvisJoint.position.y = basePelvisY + 0.4;
-          leftShoulder.rotation.x = -1.55;
-          rightShoulder.rotation.x = -1.55;
-        } else {
-          const ease = 1.0 - Math.sin(((p - 0.58) / 0.42) * (Math.PI / 2));
-          pelvisJoint.position.y = basePelvisY + ease * 0.4;
-          leftShoulder.rotation.x = -ease * 1.55 + (1 - ease) * 0.3;
-          rightShoulder.rotation.x = -ease * 1.55 + (1 - ease) * 0.3;
-        }
-      }
-    } else if (isVoid || !isHero) {
-      // VOID OVERLORD / BOSS: Overhead Cataclysmic Seismic Smash!
-      if (p < 0.4) {
-        const f = Math.sin((p / 0.4) * (Math.PI / 2));
-        spineJoint.rotation.x = -f * 0.35;
-        chestJoint.rotation.x = -f * 0.4;
-        rightShoulder.rotation.x = -f * 2.5;
-        rightElbow.rotation.x = f * 0.3;
-        leftShoulder.rotation.x = 0.5;
-        headJoint.rotation.x = f * 0.2;
-      } else if (p < 0.6) {
-        const f = (p - 0.4) / 0.2;
-        const smash = Math.sin(f * (Math.PI / 2));
-        spineJoint.rotation.x = -0.35 + smash * 0.65;
-        chestJoint.rotation.x = -0.4 + smash * 0.75;
-        rightShoulder.rotation.x = -2.5 + smash * 3.6;
-        rightElbow.rotation.x = 0;
-        leftKnee.rotation.x = smash * 0.4;
-        rightKnee.rotation.x = smash * 0.4;
-      } else {
-        const ease = 1.0 - Math.sin(((p - 0.6) / 0.4) * (Math.PI / 2));
-        spineJoint.rotation.x = ease * 0.3;
-        chestJoint.rotation.x = ease * 0.35;
-        rightShoulder.rotation.x = ease * 1.1 + (1 - ease) * 0.35;
-        leftKnee.rotation.x = ease * 0.4 + (1 - ease) * 0.06;
-        rightKnee.rotation.x = ease * 0.4 + (1 - ease) * 0.06;
-      }
-    } else {
-      const f = Math.sin((p / 0.38) * (Math.PI / 2));
-      pelvisJoint.rotation.y = isHero ? f * 0.35 : -f * 0.35;
-      chestJoint.rotation.y = isHero ? f * 0.45 : -f * 0.45;
-      rightShoulder.rotation.x = -f * 1.5;
-      rightElbow.rotation.x = f * 0.6;
-    }
-  }
-
-  // ============================================================
-  // 3. CINEMATIC ULTIMATE CATACLYSM FINISHER
-  // ============================================================
-  else if (state === 'ultimate') {
-    const p = Math.min(1.0, time / 0.55);
-
-    if (isThunder) {
-      // THUNDER WARRIOR: Summoning Celestial Lightning with Both Hands on Mjolnir!
-      if (p < 0.48) {
-        const f = Math.sin((p / 0.48) * (Math.PI / 2));
-        pelvisJoint.position.y = basePelvisY + f * 0.6;
-        leftShoulder.rotation.x = -f * 2.9;
-        rightShoulder.rotation.x = -f * 2.9;
-        leftElbow.rotation.x = 0;
-        rightElbow.rotation.x = 0;
-        spineJoint.rotation.x = -f * 0.3;
-        leftLegJoint.rotation.x = f * 0.35;
-        rightLegJoint.rotation.x = f * 0.35;
-      } else {
-        const f = (p - 0.48) / 0.52;
-        const ease = Math.sin(f * (Math.PI / 2));
-        leftShoulder.rotation.x = -2.9 + ease * 3.4;
-        rightShoulder.rotation.x = -2.9 + ease * 3.4;
-        spineJoint.rotation.x = -0.3 + ease * 0.7;
-        pelvisJoint.position.y = basePelvisY + (1 - ease) * 0.6;
-      }
-    } else if (isTech) {
-      // TECH HERO: Arc Reactor Unibeam Overdrive!
-      pelvisJoint.position.y = basePelvisY + 0.35;
-      leftShoulder.rotation.x = 0.75;
-      leftShoulder.rotation.z = 0.4;
-      rightShoulder.rotation.x = 0.75;
-      rightShoulder.rotation.z = -0.4;
-      leftElbow.rotation.x = -1.4;
-      rightElbow.rotation.x = -1.4;
-      chestJoint.rotation.x = -0.4;
-      headJoint.rotation.x = 0.2;
-      leftLegJoint.rotation.x = 0.25;
-      rightLegJoint.rotation.x = 0.25;
-    } else {
-      if (p < 0.45) {
-        const f = Math.sin((p / 0.45) * (Math.PI / 2));
-        leftShoulder.rotation.x = -f * 2.8;
-        rightShoulder.rotation.x = -f * 2.8;
-        chestJoint.rotation.x = -f * 0.3;
-      } else {
-        const f = (p - 0.45) / 0.55;
-        const ease = Math.sin(f * (Math.PI / 2));
-        leftShoulder.rotation.x = -2.8 + ease * 3.1;
-        rightShoulder.rotation.x = -2.8 + ease * 3.0;
-        chestJoint.rotation.x = -0.3 + ease * 0.6;
-      }
-    }
-  }
-
-  // ============================================================
-  // 4. SHIELD BLOCK / PARRY STANCE
-  // ============================================================
-  else if (state === 'block' || (activeGesture && activeGesture.includes('SHIELD'))) {
-    pelvisJoint.position.y = basePelvisY - 0.08;
-    chestJoint.rotation.x = 0.12;
-    leftKnee.rotation.x = 0.38;
-    rightKnee.rotation.x = 0.38;
-
-    if (isShield) {
-      leftShoulder.rotation.x = 0.92;
-      leftShoulder.rotation.z = 0.48;
-      leftElbow.rotation.x = -1.5;
-      rightShoulder.rotation.x = 0.35;
-      rightElbow.rotation.x = -1.1;
-    } else if (isMage) {
-      leftShoulder.rotation.x = 0.75;
-      leftShoulder.rotation.z = -0.3;
-      rightShoulder.rotation.x = 0.75;
-      rightShoulder.rotation.z = 0.3;
-      leftElbow.rotation.x = -1.2;
-      rightElbow.rotation.x = -1.2;
-    } else {
-      leftShoulder.rotation.x = 0.95;
-      leftShoulder.rotation.z = 0.55;
-      leftElbow.rotation.x = -1.45;
-      rightShoulder.rotation.x = 0.4;
-      rightElbow.rotation.x = -1.2;
-    }
-  }
-
-  // ============================================================
-  // 5. WARP DODGE / ACROBATIC EVASION
-  // ============================================================
-  else if (state === 'dodge') {
-    const p = Math.min(1.0, time / 0.38);
-    const f = Math.sin(p * Math.PI);
-
-    if (isWeb) {
-      pelvisJoint.position.y = basePelvisY + f * 0.65;
-      spineJoint.rotation.x = -f * Math.PI;
-      chestJoint.rotation.x = -f * Math.PI;
-      leftLegJoint.rotation.x = f * 1.2;
-      rightLegJoint.rotation.x = f * 1.2;
-      leftKnee.rotation.x = f * 1.4;
-      rightKnee.rotation.x = f * 1.4;
-    } else if (isTech) {
-      pelvisJoint.position.y = basePelvisY + f * 0.35;
-      chestJoint.rotation.z = isHero ? -f * 0.55 : f * 0.55;
-      leftLegJoint.rotation.z = -f * 0.4;
-      rightLegJoint.rotation.z = f * 0.4;
-    } else {
-      pelvisJoint.rotation.z = isHero ? -f * 0.4 : f * 0.4;
-      chestJoint.rotation.z = isHero ? -f * 0.3 : f * 0.3;
-      leftLegJoint.rotation.z = -f * 0.5;
-      rightLegJoint.rotation.z = f * 0.5;
-    }
-  }
-
-  // ============================================================
-  // 6. REALISTIC MULTI-STAGE HIT REACTION & STAGGER
-  // ============================================================
-  else if (state === 'staggered') {
-    const sP = Math.min(1.0, time / 0.45);
-    if (sP < 0.33) {
-      // Phase 1: High-Velocity Kinetic Whiplash (Head snaps back, spine arches, knees buckle)
-      const f = Math.sin((sP / 0.33) * (Math.PI / 2));
-      pelvisJoint.position.y = basePelvisY - 0.08 * f;
-      spineJoint.rotation.x = -0.42 * f;
-      chestJoint.rotation.x = -0.48 * f;
-      headJoint.rotation.x = 0.65 * f;
-      headJoint.rotation.y = (isHero ? -0.3 : 0.3) * f;
-      leftShoulder.rotation.x = 0.35 * f;
-      leftShoulder.rotation.z = 0.55 * f;
-      rightShoulder.rotation.x = 0.25 * f;
-      rightShoulder.rotation.z = -0.55 * f;
-      leftKnee.rotation.x = 0.45 * f;
-      rightKnee.rotation.x = 0.45 * f;
-    } else if (sP < 0.72) {
-      // Phase 2: High-Frequency Shudder Vibration & Defensive Clutch
-      const shudder = Math.sin((sP - 0.33) * 35) * 0.04;
-      pelvisJoint.position.y = basePelvisY - 0.08 + shudder;
-      spineJoint.rotation.x = -0.3 + shudder;
-      chestJoint.rotation.x = -0.32 + shudder;
-      headJoint.rotation.x = 0.45 + shudder * 0.5;
-      headJoint.rotation.y = (isHero ? -0.2 : 0.2);
-      leftShoulder.rotation.x = 0.4;
-      leftElbow.rotation.x = -1.1;
-      rightShoulder.rotation.x = -0.6;
-      rightElbow.rotation.x = -1.3;
-      leftKnee.rotation.x = 0.4;
-      rightKnee.rotation.x = 0.4;
-    } else {
-      // Phase 3: Smooth Elastic Return to Guard Stance
-      const ease = 1.0 - Math.sin(((sP - 0.72) / 0.28) * (Math.PI / 2));
-      pelvisJoint.position.y = basePelvisY - 0.08 * ease;
-      spineJoint.rotation.x = -0.3 * ease;
-      chestJoint.rotation.x = -0.32 * ease;
-      headJoint.rotation.x = 0.45 * ease;
-      headJoint.rotation.y = (isHero ? -0.2 : 0.2) * ease;
-      leftShoulder.rotation.x = 0.4 * ease + (1 - ease) * 0.28;
-      leftElbow.rotation.x = -1.1 * ease + (1 - ease) * -0.55;
-      rightShoulder.rotation.x = -0.6 * ease + (1 - ease) * 0.28;
-      rightElbow.rotation.x = -1.3 * ease + (1 - ease) * -0.55;
-      leftKnee.rotation.x = 0.4 * ease;
-      rightKnee.rotation.x = 0.4 * ease;
-    }
-  }
-
-  // ============================================================
-  // 7. TRIUMPHANT VICTORY POSE
-  // ============================================================
-  else if (state === 'victory') {
-    if (isThunder) {
-      pelvisJoint.position.y = basePelvisY;
-      rightShoulder.rotation.x = -2.85;
-      rightShoulder.rotation.z = -0.2;
-      rightElbow.rotation.x = 0;
-      leftShoulder.rotation.x = 0.4;
-      leftShoulder.rotation.z = 0.4;
-      chestJoint.rotation.x = -0.15;
-      headJoint.rotation.x = 0.2;
-    } else if (isTech) {
-      pelvisJoint.position.y = basePelvisY + 0.3;
-      rightShoulder.rotation.x = -2.7;
-      rightElbow.rotation.x = 0;
-      leftShoulder.rotation.x = 0.3;
-      chestJoint.rotation.x = -0.1;
-      leftLegJoint.rotation.x = 0.2;
-      rightLegJoint.rotation.x = 0.15;
-    } else if (isWeb) {
-      pelvisJoint.position.y = basePelvisY - 0.22;
-      spineJoint.rotation.x = 0.45;
-      chestJoint.rotation.x = 0.4;
-      headJoint.rotation.x = -0.55;
-      leftShoulder.rotation.x = 1.1;
-      rightShoulder.rotation.x = 0.5;
-      leftKnee.rotation.x = 0.95;
-      rightKnee.rotation.x = 1.05;
-    } else if (isMage) {
-      pelvisJoint.position.y = basePelvisY + 0.25;
-      leftShoulder.rotation.x = 0.4;
-      rightShoulder.rotation.x = 0.4;
-      leftLegJoint.rotation.x = 0.5;
-      rightLegJoint.rotation.x = 0.5;
-      leftKnee.rotation.x = 0.8;
-      rightKnee.rotation.x = 0.8;
-    } else {
-      rightShoulder.rotation.x = -2.5;
-      rightElbow.rotation.x = 0;
-      chestJoint.rotation.x = -0.15;
-    }
-  }
-
-  // ============================================================
-  // 8. DRAMATIC DEFEAT COLLAPSE
-  // ============================================================
-  else if (state === 'defeat') {
-    pelvisJoint.position.y = 0.38 * s;
-    spineJoint.rotation.x = 0.65;
-    chestJoint.rotation.x = 0.75;
-    headJoint.rotation.x = 0.7;
-    leftKnee.rotation.x = 1.65;
-    rightKnee.rotation.x = 0.85;
-    leftShoulder.rotation.x = -0.3;
-    rightShoulder.rotation.x = 0.8;
-    rightElbow.rotation.x = -0.3;
-  }
 }
-

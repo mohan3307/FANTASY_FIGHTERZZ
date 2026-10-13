@@ -1,57 +1,76 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createArticulated3DFighter, animateArticulated3DFighter } from './ThreeFighter3DModels';
 
-export const Character3DPreview = ({ character, isVillain = false }) => {
+export const Character3DPreview = ({ character, isVillain = false, isPaused = false }) => {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const characterGroupRef = useRef(null);
   const rigRef = useRef(null);
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
 
+  const lightsRef = useRef({});
+  const pedestalRingRef = useRef(null);
+  const isPausedRef = useRef(isPaused);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  // 1. Initialize WebGL Scene, Camera, Renderer, Lights & Loop ONCE on mount
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
 
-    const width = container.clientWidth || 320;
-    const height = container.clientHeight || 450;
+    const initialWidth = Math.max(container.clientWidth || 360, 240);
+    const initialHeight = Math.max(container.clientHeight || 480, 320);
 
-    // 1. Scene & Setup
+    // 1. Scene & Camera Setup
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // 2. Camera Setup for Full-Body View
-    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(38, initialWidth / initialHeight, 0.1, 100);
     camera.position.set(0, 1.15, 3.8);
     camera.lookAt(0, 0.95, 0);
 
-    // 3. WebGL Renderer
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // 2. High-Performance WebGL Renderer (Capped DPI for 60+ FPS responsiveness)
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(initialWidth, initialHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.35;
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
 
-    // 4. Studio Lighting Rig
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+    // 3. Studio Lighting Rig
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.6);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
     keyLight.position.set(1.5, 3.5, 3.5);
     scene.add(keyLight);
 
+    const frontHeroLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    frontHeroLight.position.set(0, 1.8, 3.5);
+    scene.add(frontHeroLight);
+
     const rimLightColor = isVillain ? 0xa855f7 : 0x00f3ff;
-    const rimLight = new THREE.PointLight(rimLightColor, 3.2, 8);
+    const rimLight = new THREE.PointLight(rimLightColor, 3.2, 10);
     rimLight.position.set(-2.0, 2.2, -1.5);
     scene.add(rimLight);
 
-    const fillLight = new THREE.PointLight(0xffffff, 1.2, 6);
+    const bounceLight = new THREE.PointLight(rimLightColor, 2.2, 6);
+    bounceLight.position.set(0, 0.1, 1.2);
+    scene.add(bounceLight);
+
+    const fillLight = new THREE.PointLight(0xffffff, 1.2, 8);
     fillLight.position.set(2.0, 1.0, 2.0);
     scene.add(fillLight);
 
-    // 5. Holographic Pedestal / Ground Contact Ring
+    lightsRef.current = { rimLight, bounceLight };
+
+    // 4. Holographic Pedestal / Ground Contact Ring
     const pedestalGeo = new THREE.CylinderGeometry(1.2, 1.3, 0.08, 32);
     const pedestalMat = new THREE.MeshStandardMaterial({
       color: 0x080e1e,
@@ -71,16 +90,9 @@ export const Character3DPreview = ({ character, isVillain = false }) => {
     ring.rotation.x = Math.PI / 2;
     ring.position.y = 0.01;
     scene.add(ring);
+    pedestalRingRef.current = ring;
 
-    // 6. Spawn Full-Body 3D Fighter
-    const fighterResult = createArticulated3DFighter(character, isVillain);
-    const fighterGroup = fighterResult.group;
-    fighterGroup.position.set(0, 0, 0);
-    scene.add(fighterGroup);
-    characterGroupRef.current = fighterGroup;
-    rigRef.current = fighterResult;
-
-    // 7. Interactive Drag to Rotate
+    // 5. Interactive Drag to Rotate
     let isDragging = false;
     let previousMouseX = 0;
 
@@ -90,9 +102,9 @@ export const Character3DPreview = ({ character, isVillain = false }) => {
     };
 
     const onMouseMove = (e) => {
-      if (!isDragging || !fighterGroup) return;
+      if (!isDragging || !characterGroupRef.current) return;
       const deltaX = e.clientX - previousMouseX;
-      fighterGroup.rotation.y += deltaX * 0.012;
+      characterGroupRef.current.rotation.y += deltaX * 0.012;
       previousMouseX = e.clientX;
     };
 
@@ -104,29 +116,35 @@ export const Character3DPreview = ({ character, isVillain = false }) => {
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
 
-    // Resize Handler
-    const handleResize = () => {
+    // Responsive framing ResizeObserver
+    const updateSize = () => {
       if (!container || !renderer || !camera) return;
-      const w = container.clientWidth || 320;
-      const h = container.clientHeight || 450;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+      const w = container.clientWidth || 360;
+      const h = container.clientHeight || 480;
+      if (w > 20 && h > 20) {
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      }
     };
-    window.addEventListener('resize', handleResize);
 
-    // 8. Render Loop with Smooth Auto-Turntable Rotation
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(container);
+
+    // 6. Smooth Turntable & Kinematic Render Loop
     let clock = new THREE.Clock();
     let animId;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const delta = Math.min(clock.getDelta(), 0.1);
+      if (isPausedRef.current) return;
+
+      const delta = Math.min(clock.getDelta(), 0.05);
       const elapsed = clock.getElapsedTime();
 
       // Subtle turntable rotation when not dragging
-      if (!isDragging && fighterGroup) {
-        fighterGroup.rotation.y += delta * 0.45;
+      if (!isDragging && characterGroupRef.current) {
+        characterGroupRef.current.rotation.y += delta * 0.45;
       }
 
       // Idle breathing kinematics
@@ -141,19 +159,74 @@ export const Character3DPreview = ({ character, isVillain = false }) => {
 
     return () => {
       cancelAnimationFrame(animId);
+      resizeObserver.disconnect();
       container.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
-      window.removeEventListener('resize', handleResize);
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      pedestalGeo.dispose();
+      pedestalMat.dispose();
+      ringGeo.dispose();
+      ringMat.dispose();
       renderer.dispose();
     };
+  }, []);
+
+  // 2. Fast Model Swapping in place when Character or isVillain changes (Zero Context Recreation!)
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    setIsModelLoaded(false);
+
+    // Remove and clean up previous character model
+    if (characterGroupRef.current) {
+      scene.remove(characterGroupRef.current);
+      characterGroupRef.current = null;
+      rigRef.current = null;
+    }
+
+    // Update pedestal ring and accent lighting
+    const accentHex = character?.accentColor
+      ? parseInt(character.accentColor.replace('#', '0x'), 16)
+      : (isVillain ? 0xa855f7 : 0x00f3ff);
+
+    if (lightsRef.current.rimLight) lightsRef.current.rimLight.color.setHex(accentHex);
+    if (lightsRef.current.bounceLight) lightsRef.current.bounceLight.color.setHex(accentHex);
+    if (pedestalRingRef.current) pedestalRingRef.current.material.color.setHex(accentHex);
+
+    // Spawn new fighter model into existing scene
+    const fighterResult = createArticulated3DFighter(character, isVillain);
+    const fighterGroup = fighterResult.group;
+    fighterGroup.position.set(0, 0, 0);
+    scene.add(fighterGroup);
+    characterGroupRef.current = fighterGroup;
+    rigRef.current = fighterResult;
+
+    if (fighterResult.isLoaded) {
+      setIsModelLoaded(true);
+    } else {
+      fighterResult.onLoaded = () => {
+        setIsModelLoaded(true);
+      };
+    }
   }, [character, isVillain]);
 
   return (
     <div className="rs-3d-character-preview-container" ref={mountRef}>
+      {!isModelLoaded && (
+        <div className="rs-preview-loading-hologram">
+          <div
+            className="rs-loading-pulse-spinner"
+            style={{ borderColor: isVillain ? '#a855f7' : '#00f3ff' }}
+          ></div>
+          <div className="rs-loading-pulse-label">
+            STREAMING 3D HOLOGRAPHIC RIG...
+          </div>
+        </div>
+      )}
       <div className="rs-preview-drag-hint">DRAG TO ROTATE 360°</div>
     </div>
   );

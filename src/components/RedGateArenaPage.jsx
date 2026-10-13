@@ -31,7 +31,7 @@ export const RedGateArenaPage = ({
   // Intro Sequence Phases: 'city-pan' -> 'hero-entrance' -> 'boss-entrance' -> 'cinematic-banner' -> 'countdown' -> 'active'
   const [introPhase, setIntroPhase] = useState('city-pan');
   const [countdownNum, setCountdownNum] = useState(3);
-  const [expoMode, setExpoMode] = useState(true); // Expo Blitz 60s vs Standard 99s
+  const [expoMode, setExpoMode] = useState(false); // Standard 99s round
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
 
   // NEW DEEP FIGHTING GAME STATS
@@ -51,7 +51,7 @@ export const RedGateArenaPage = ({
   const [weaponCharged, setWeaponCharged] = useState(false);
 
   // Match Details & Score
-  const [roundTime, setRoundTime] = useState(60); // 60s for Expo Blitz
+  const [roundTime, setRoundTime] = useState(99); // Standard fighting game 99s
   const [comboCount, setComboCount] = useState(0);
   const [maxComboReached, setMaxComboReached] = useState(0);
   const [totalDamageDealt, setTotalDamageDealt] = useState(0);
@@ -62,18 +62,44 @@ export const RedGateArenaPage = ({
   const [isVictory, setIsVictory] = useState(false);
   const [isDefeated, setIsDefeated] = useState(false);
   const [cvConfidence, setCvConfidence] = useState(0);
+  const [cvTrackingStatus, setCvTrackingStatus] = useState(cameraStream ? 'LOADING MODEL' : 'CAMERA OFF');
   const [isScreenShaking, setIsScreenShaking] = useState(false);
   const [bossHitFlash, setBossHitFlash] = useState(false);
   const [damagePopups, setDamagePopups] = useState([]);
   const [incomingAttackWarning, setIncomingAttackWarning] = useState(false);
   const [heroActionTrigger, setHeroActionTrigger] = useState(null);
 
-  // Telemetry Debug Info
-  const [telemetry, setTelemetry] = useState({ fps: 60, aiState: 'APPROACH', distance: '3.8' });
+  // References to keep event handlers synced without resetting CV engine
+  const introPhaseRef = useRef(introPhase);
+  useEffect(() => { introPhaseRef.current = introPhase; }, [introPhase]);
+
+  const isVictoryRef = useRef(isVictory);
+  useEffect(() => { isVictoryRef.current = isVictory; }, [isVictory]);
+
+  const isDefeatedRef = useRef(isDefeated);
+  useEffect(() => { isDefeatedRef.current = isDefeated; }, [isDefeated]);
+
+  const heroHpRef = useRef(heroHp);
+  useEffect(() => { heroHpRef.current = heroHp; }, [heroHp]);
+
+  const bossHpRef = useRef(bossHp);
+  useEffect(() => { bossHpRef.current = bossHp; }, [bossHp]);
+
+  // Telemetry Debug Info (Direct DOM ref updates to avoid 60fps React re-renders)
+  const [telemetry] = useState({ fps: 60, aiState: 'APPROACH', distance: '3.8' });
+  const telemFpsRef = useRef(null);
+  const telemAiRef = useRef(null);
+
+  const handleTelemetryUpdate = (t) => {
+    if (telemFpsRef.current) telemFpsRef.current.textContent = `${t.fps} FPS // 60HZ`;
+    if (telemAiRef.current) telemAiRef.current.textContent = `AI FSM: ${t.aiState}`;
+  };
 
   const pipVideoRef = useRef(null);
   const pipCanvasRef = useRef(null);
   const cvEngineRef = useRef(null);
+  const confBadgeRef = useRef(null);
+  const lastGestureTextRef = useRef('');
   const gestureTimeoutRef = useRef(null);
   const comboTimerRef = useRef(null);
   const staggerTimerRef = useRef(null);
@@ -111,55 +137,55 @@ export const RedGateArenaPage = ({
     }, 850);
   };
 
-  // Cinematic Trailer Intro Sequence Timing (City -> Hero -> Void Titan -> Banner -> Countdown)
+  // Accelerated Cinematic Trailer Intro Sequence (Fast & Punchy ~3.1s total)
   useEffect(() => {
     sound.playPortalWarp();
 
-    // 1. City Pan & Energy Portal Awakening (0.0s - 1.4s)
+    // 1. City Pan & Energy Portal Awakening (0.0s - 0.4s)
     const t1 = setTimeout(() => {
       setIntroPhase('hero-entrance');
       sound.playLaserBeam(false);
-    }, 1400);
+    }, 400);
 
-    // 2. Hero Drops In & Weapon Materialization (1.4s - 3.0s)
+    // 2. Hero Drops In & Weapon Materialization (0.4s - 0.85s)
     const t2 = setTimeout(() => {
       setIntroPhase('boss-entrance');
       sound.playPortalWarp();
-    }, 3000);
+    }, 850);
 
-    // 3. Void Titan Steps Through Dark Vortex (3.0s - 4.6s)
+    // 3. Boss Steps Through Dark Vortex (0.85s - 1.3s)
     const t3 = setTimeout(() => {
       setIntroPhase('cinematic-banner');
       sound.playModal();
-    }, 4600);
+    }, 1300);
 
-    // 4. Countdown 3, 2, 1, FIGHT! (4.6s - 7.6s)
+    // 4. Snappy Countdown 3, 2, 1, FIGHT! (1.3s - 3.1s)
     const t4 = setTimeout(() => {
       setIntroPhase('countdown');
       setCountdownNum(3);
       sound.playClick();
-    }, 6200);
+    }, 1700);
 
     const t5 = setTimeout(() => {
       setCountdownNum(2);
       sound.playClick();
-    }, 7000);
+    }, 2100);
 
     const t6 = setTimeout(() => {
       setCountdownNum(1);
       sound.playClick();
-    }, 7800);
+    }, 2500);
 
     const t7 = setTimeout(() => {
       setCountdownNum('FIGHT!');
       sound.playThunder();
-    }, 8600);
+    }, 2800);
 
     const t8 = setTimeout(() => {
       setIntroPhase('active');
-      addLog(`[SYSTEM] Battle active! S-Rank Boss ${selectedVillain?.name || 'VOID TITAN'} engaged!`);
+      addLog(`[SYSTEM] ⚡ Battle active! S-Rank Boss ${selectedVillain?.name || 'VOID TITAN'} engaged!`);
       addLog(`[TUTORIAL] Strike [2] or Push Forward. Shield [1] Parries attacks. Ultimate [4] at 100%!`);
-    }, 9200);
+    }, 3100);
 
     return () => {
       clearTimeout(t1);
@@ -173,12 +199,23 @@ export const RedGateArenaPage = ({
     };
   }, [selectedVillain]);
 
-  // Skip Intro Button Handler
+  // Instant Skip Intro Handler
   const handleSkipIntro = () => {
     setIntroPhase('active');
     sound.playClick();
-    addLog(`[SYSTEM] Intro bypassed. Battle active!`);
+    addLog(`[SYSTEM] ⚡ Intro bypassed. Battle active!`);
   };
+
+  // Keyboard shortcut to skip intro immediately on SPACE or ENTER
+  useEffect(() => {
+    const handleSkipKey = (e) => {
+      if (introPhaseRef.current !== 'active' && (e.key === ' ' || e.key === 'Enter')) {
+        handleSkipIntro();
+      }
+    };
+    window.addEventListener('keydown', handleSkipKey);
+    return () => window.removeEventListener('keydown', handleSkipKey);
+  }, []);
 
   // Round Clock Timer (Countdown)
   useEffect(() => {
@@ -186,9 +223,9 @@ export const RedGateArenaPage = ({
     const interval = setInterval(() => {
       setRoundTime((prev) => {
         if (prev <= 1) {
-          // Time Over condition
-          if (heroHp > 0 && bossHp > 0) {
-            if (heroHp > (maxHeroHp * 0.35)) triggerVictory();
+          // Time Over condition - only triggers exactly when countdown reaches zero
+          if (prev === 1 && heroHpRef.current > 0 && bossHpRef.current > 0) {
+            if (heroHpRef.current > (maxHeroHp * 0.35)) triggerVictory();
             else triggerDefeat();
           }
           return 0;
@@ -197,7 +234,7 @@ export const RedGateArenaPage = ({
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [introPhase, isVictory, isDefeated, heroHp, bossHp]);
+  }, [introPhase, isVictory, isDefeated]);
 
   // Ghost HP Catchup Bar
   useEffect(() => {
@@ -207,30 +244,104 @@ export const RedGateArenaPage = ({
     return () => clearTimeout(timer);
   }, [bossHp]);
 
+  const [activeStream, setActiveStream] = useState(cameraStream);
+  useEffect(() => {
+    if (cameraStream) setActiveStream(cameraStream);
+  }, [cameraStream]);
+
+  // Direct webcam enable handler in arena
+  const enableWebcamDirectly = async () => {
+    sound.playClick();
+    setCvTrackingStatus('LOADING MODEL');
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Webcam API not supported');
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640, max: 640 },
+          height: { ideal: 480, max: 480 },
+          frameRate: { ideal: 30, max: 30 }
+        },
+        audio: false
+      });
+      setActiveStream(stream);
+      addLog('[CAMERA] 📹 Webcam connected! Initializing 21-landmark tracking...');
+    } catch (err) {
+      console.warn('Direct webcam failure:', err);
+      setCvTrackingStatus('CAMERA OFF');
+      addLog('[CAMERA] Webcam unavailable. Keyboard controls [1-4, SPACE, A/D] active!');
+    }
+  };
+
   // Bind live camera stream to PIP and start Computer Vision Detection Engine
   useEffect(() => {
-    if (cameraStream && pipVideoRef.current) {
-      pipVideoRef.current.srcObject = cameraStream;
-      pipVideoRef.current.onloadedmetadata = () => {
-        pipVideoRef.current.play().catch(() => {});
+    if (!activeStream) {
+      setCvTrackingStatus('CAMERA OFF');
+      return;
+    }
 
-        if (pipCanvasRef.current) {
-          pipCanvasRef.current.width = pipVideoRef.current.videoWidth || 320;
-          pipCanvasRef.current.height = pipVideoRef.current.videoHeight || 240;
+    if (!pipVideoRef.current) return;
 
-          cvEngineRef.current = new ComputerVisionGestureEngine(
-            pipVideoRef.current,
-            pipCanvasRef.current,
-            (res) => {
-              setCvConfidence(Math.round(res.confidence * 100));
-              if (introPhase === 'active' && !isVictory && !isDefeated) {
+    pipVideoRef.current.srcObject = activeStream;
+
+    const startEngine = () => {
+      pipVideoRef.current.play().catch(() => {});
+
+      if (pipCanvasRef.current) {
+        // Lock canvas to fixed 320x240 for instantaneous HUD clearing & rendering
+        pipCanvasRef.current.width = 320;
+        pipCanvasRef.current.height = 240;
+
+        if (cvEngineRef.current) {
+          cvEngineRef.current.stop();
+        }
+
+        cvEngineRef.current = new ComputerVisionGestureEngine(
+          pipVideoRef.current,
+          pipCanvasRef.current,
+          (res) => {
+            // Update confidence badge directly in DOM (zero React re-render thrashing!)
+            const confPercent = Math.round(res.confidence * 100);
+            if (confBadgeRef.current) {
+              confBadgeRef.current.textContent = `${confPercent}% CONF`;
+            }
+
+            // Instant live feedback on current gesture
+            if (res.gesture && res.gesture !== 'none') {
+              const GESTURE_NAME_MAP = {
+                palm: '🖐️ OPEN PALM (SHIELD)',
+                fist: '✊ CLOSED FIST (STRIKE)',
+                point: '☝️ POINTING (AIM BEAM)',
+                forward: '🥊 FORWARD PUNCH (COMBO)',
+                both_hands: '🙌 BOTH HANDS (ULTIMATE)',
+                vsign: '🙌 BOTH HANDS (ULTIMATE)',
+                swipe: '👈👉 SWIPE (WARP DODGE)'
+              };
+
+              if (introPhaseRef.current !== 'active') {
+                const readyText = `${GESTURE_NAME_MAP[res.gesture] || res.gesture} [READY]`;
+                if (lastGestureTextRef.current !== readyText) {
+                  lastGestureTextRef.current = readyText;
+                  setActiveGesture(readyText);
+                }
+              } else if (res.actionTriggered && !isVictoryRef.current && !isDefeatedRef.current) {
                 handleTriggerGesture(res.gesture, true);
               }
             }
-          );
-          cvEngineRef.current.start();
-        }
-      };
+          },
+          (status) => {
+            setCvTrackingStatus(status);
+          }
+        );
+        cvEngineRef.current.start();
+      }
+    };
+
+    if (pipVideoRef.current.readyState >= 1) {
+      startEngine();
+    } else {
+      pipVideoRef.current.onloadedmetadata = startEngine;
     }
 
     return () => {
@@ -239,7 +350,7 @@ export const RedGateArenaPage = ({
         cvEngineRef.current = null;
       }
     };
-  }, [cameraStream, introPhase, isVictory, isDefeated]);
+  }, [activeStream]);
 
   // Keyboard Hotkeys Fallback Controls:
   // [1] = Parry / Shield (Open Palm)
@@ -267,7 +378,7 @@ export const RedGateArenaPage = ({
   // COMBAT GESTURE TRIGGER (Full 6 Hand Controls & Reaction Logic)
   const handleTriggerGesture = (gestureType, fromCV = false) => {
     const now = Date.now();
-    if (now - lastAttackTimeRef.current < 260) return;
+    if (now - lastAttackTimeRef.current < 150) return;
     lastAttackTimeRef.current = now;
 
     setLastGestureType(gestureType);
@@ -310,21 +421,38 @@ export const RedGateArenaPage = ({
 
     // 2. CLOSED FIST // HEAVY KINETIC COMBO STRIKE
     else if (gestureType === 'fist') {
-      setActiveGesture('✊ HEAVY KINETIC STRIKE');
+      const isCounterHit = Boolean(incomingAttackWarning);
+      if (isCounterHit) {
+        setIncomingAttackWarning(false);
+        sound.playCounterHit();
+        showBanner('⚡ COUNTER HIT! +75% CRUSH DMG!', 'counter');
+        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER HIT! Interrupted ${selectedVillain?.name}'s attack startup!`);
+      }
+
+      setActiveGesture(isCounterHit ? '⚡ COUNTER HIT CRUSH!' : '✊ HEAVY KINETIC STRIKE');
 
       // Combo count handling
+      let currentComboStep = 1;
       setComboCount((prev) => {
         const next = prev + 1;
+        currentComboStep = next;
         if (next > maxComboReached) setMaxComboReached(next);
         if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
         comboTimerRef.current = setTimeout(() => setComboCount(0), 2800);
         return next;
       });
 
+      if (!isCounterHit && currentComboStep % 3 === 0) {
+        showBanner('💥 3-HIT COMBO FINISHER! AIRBORNE SLAM!', 'combo');
+      }
+
       let baseDmg = Math.floor(Math.random() * 800) + 3800;
       if (weaponCharged) {
         baseDmg += 2600;
         setWeaponCharged(false);
+      }
+      if (isCounterHit) {
+        baseDmg = Math.round(baseDmg * 1.75); // Tekken-style Counter-Hit Crush multiplier
       }
       const comboMult = 1 + Math.min(0.35, comboCount * 0.035);
       if (isBossStaggered) baseDmg *= 1.85;
@@ -341,14 +469,14 @@ export const RedGateArenaPage = ({
 
       if (!isBossStaggered) {
         setBossStaggerHp((prev) => {
-          const next = Math.max(0, prev - 4800);
+          const next = Math.max(0, prev - (isCounterHit ? 7500 : 4800));
           if (next === 0) triggerStaggerBreak();
           return next;
         });
       }
 
       setHeroSuperEnergy((prev) => {
-        const gain = isBossStaggered ? 18 : 12;
+        const gain = isCounterHit ? 24 : isBossStaggered ? 18 : 12;
         const next = Math.min(100, prev + gain);
         if (next === 100 && prev < 100) {
           showBanner('⚡ SPECIAL ABILITY READY! (RAISE BOTH HANDS / 4)', 'ready');
@@ -356,9 +484,9 @@ export const RedGateArenaPage = ({
         return next;
       });
 
-      triggerHitEffects(finalDmg, isBossStaggered);
-      setHeroActionTrigger({ type: 'fist', id: Date.now() });
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ✊ Heavy Strike struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
+      triggerHitEffects(finalDmg, isCounterHit || isBossStaggered);
+      setHeroActionTrigger({ type: 'fist', id: Date.now(), isCounterHit });
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${isCounterHit ? '⚡ Counter Strike' : '✊ Heavy Strike'} struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
@@ -368,11 +496,23 @@ export const RedGateArenaPage = ({
 
     // 3. INDEX POINTING // TARGETED AIM BEAM
     else if (gestureType === 'point') {
-      setActiveGesture(`☝️ TARGETED CORE AIM // ${selectedHero?.weaponName || 'BEAM'}`);
-      sound.playLaserBeam(true);
+      const isCounterHit = Boolean(incomingAttackWarning);
+      if (isCounterHit) {
+        setIncomingAttackWarning(false);
+        sound.playCounterHit();
+        showBanner('⚡ COUNTER SNIPE! +75% CRUSH DMG!', 'counter');
+        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER SNIPE! Interrupted ${selectedVillain?.name}!`);
+      } else {
+        sound.playLaserBeam(true);
+      }
 
-      const baseDmg = weaponCharged ? 6500 : 4200;
+      setActiveGesture(isCounterHit ? '⚡ COUNTER SNIPE HIT!' : `☝️ TARGETED CORE AIM // ${selectedHero?.weaponName || 'BEAM'}`);
+
+      let baseDmg = weaponCharged ? 6500 : 4200;
       setWeaponCharged(false);
+      if (isCounterHit) {
+        baseDmg = Math.round(baseDmg * 1.75);
+      }
 
       setBossHp((prev) => {
         const next = Math.max(0, prev - baseDmg);
@@ -382,9 +522,11 @@ export const RedGateArenaPage = ({
       });
 
       triggerHitEffects(baseDmg, true);
-      setHeroActionTrigger({ type: 'point', id: Date.now() });
-      showBanner(`🎯 DIRECT HIT! -${baseDmg.toLocaleString()} DMG!`, 'info');
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🎯 Pointing aim beam penetrated ${selectedVillain?.name}'s core for ${baseDmg.toLocaleString()} DMG!`);
+      setHeroActionTrigger({ type: 'point', id: Date.now(), isCounterHit });
+      if (!isCounterHit) {
+        showBanner(`🎯 DIRECT HIT! -${baseDmg.toLocaleString()} DMG!`, 'info');
+      }
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🎯 Aim beam penetrated ${selectedVillain?.name}'s core for ${baseDmg.toLocaleString()} DMG!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
@@ -394,21 +536,38 @@ export const RedGateArenaPage = ({
 
     // 4. QUICK FORWARD HAND MOVEMENT // KINETIC COMBO STRIKE
     else if (gestureType === 'forward') {
-      setActiveGesture('🥊 KINETIC COMBO STRIKE');
+      const isCounterHit = Boolean(incomingAttackWarning);
+      if (isCounterHit) {
+        setIncomingAttackWarning(false);
+        sound.playCounterHit();
+        showBanner('⚡ COUNTER HIT! +75% CRUSH DMG!', 'counter');
+        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER HIT! Interrupted ${selectedVillain?.name}'s attack startup!`);
+      }
+
+      setActiveGesture(isCounterHit ? '⚡ COUNTER HIT CRUSH!' : '🥊 KINETIC COMBO STRIKE');
 
       // Combo count handling
+      let currentComboStep = 1;
       setComboCount((prev) => {
         const next = prev + 1;
+        currentComboStep = next;
         if (next > maxComboReached) setMaxComboReached(next);
         if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
         comboTimerRef.current = setTimeout(() => setComboCount(0), 2800);
         return next;
       });
 
+      if (!isCounterHit && currentComboStep % 3 === 0) {
+        showBanner('💥 3-HIT COMBO FINISHER! AIRBORNE SLAM!', 'combo');
+      }
+
       let baseDmg = Math.floor(Math.random() * 800) + 3200;
       if (weaponCharged) {
         baseDmg += 2400;
         setWeaponCharged(false);
+      }
+      if (isCounterHit) {
+        baseDmg = Math.round(baseDmg * 1.75);
       }
       const comboMult = 1 + Math.min(0.35, comboCount * 0.035);
       if (isBossStaggered) baseDmg *= 1.85;
@@ -425,14 +584,14 @@ export const RedGateArenaPage = ({
 
       if (!isBossStaggered) {
         setBossStaggerHp((prev) => {
-          const next = Math.max(0, prev - 4800);
+          const next = Math.max(0, prev - (isCounterHit ? 7500 : 4800));
           if (next === 0) triggerStaggerBreak();
           return next;
         });
       }
 
       setHeroSuperEnergy((prev) => {
-        const gain = isBossStaggered ? 18 : 12;
+        const gain = isCounterHit ? 24 : isBossStaggered ? 18 : 12;
         const next = Math.min(100, prev + gain);
         if (next === 100 && prev < 100) {
           showBanner('⚡ SPECIAL ABILITY READY! (RAISE BOTH HANDS / 4)', 'ready');
@@ -440,9 +599,9 @@ export const RedGateArenaPage = ({
         return next;
       });
 
-      triggerHitEffects(finalDmg, isBossStaggered);
-      setHeroActionTrigger({ type: 'forward', id: Date.now() });
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 💥 Strike struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
+      triggerHitEffects(finalDmg, isCounterHit || isBossStaggered);
+      setHeroActionTrigger({ type: 'forward', id: Date.now(), isCounterHit });
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${isCounterHit ? '⚡ Counter Strike' : '💥 Strike'} struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
@@ -537,10 +696,30 @@ export const RedGateArenaPage = ({
     }
   };
 
-  // Handle Hero Taking Damage from Villain Strikes
-  const handleHeroDamaged = (wasShielding) => {
-    if (wasShielding) {
+  // Handle Hero Taking Damage from Villain Strikes (Deflection, Evasion, Clash, or Impact)
+  const handleHeroDamaged = (defenseType) => {
+    if (defenseType === 'blocked' || defenseType === true) {
       addLog(`🛡️ Hero Shield absorbed 100% of the kinetic blow! No damage taken!`);
+      showBanner(`🛡️ ATTACK BLOCKED! 0 DAMAGE!`, 'parry');
+      return;
+    }
+    if (defenseType === 'dodged') {
+      showBanner(`🌀 CLEAN EVASION! 0 DAMAGE!`, 'dodge');
+      setHeroSuperEnergy((prev) => Math.min(100, prev + 15));
+      addLog(`🌀 ${selectedHero?.name} phased completely through ${selectedVillain?.name}'s strike! No damage taken!`);
+      return;
+    }
+    if (defenseType === 'clash') {
+      showBanner(`⚡ MID-AIR CLASH! COUNTER STRIKE!`, 'parry');
+      setHeroSuperEnergy((prev) => Math.min(100, prev + 25));
+      setBossHp((prev) => {
+        const next = Math.max(0, prev - 4500);
+        checkBossPhase(next);
+        if (next === 0) triggerVictory();
+        return next;
+      });
+      triggerHitEffects(4500, true);
+      addLog(`⚡ COUNTER CLASH! ${selectedHero?.name} intercepted ${selectedVillain?.name}'s attack in mid-air for 4,500 DMG!`);
       return;
     }
 
@@ -554,7 +733,7 @@ export const RedGateArenaPage = ({
     });
 
     setIsScreenShaking(true);
-    setTimeout(() => setIsScreenShaking(false), 260);
+    setTimeout(() => setIsScreenShaking(false), 240);
     showBanner(`⚠️ IMPACT TAKEN! -${dmg} HP!`, 'warning');
     addLog(`💥 ${selectedVillain?.name} slammed ${selectedHero?.name} for ${dmg} DMG!`);
   };
@@ -562,7 +741,7 @@ export const RedGateArenaPage = ({
   const triggerVictory = () => {
     setIsVictory(true);
     sound.playVictoryFanfare();
-    showBanner('🏆 VICTORY! TITAN DEFEATED!', 'victory');
+    showBanner(`🏆 VICTORY! ${selectedVillain?.name || 'BOSS'} DEFEATED!`, 'victory');
     addLog(`🏆 GLORY! ${selectedVillain?.name} collapsed! S-Rank Gate successfully sealed!`);
   };
 
@@ -651,7 +830,7 @@ export const RedGateArenaPage = ({
         heroActionTrigger={heroActionTrigger}
         isVictory={isVictory}
         isDefeated={isDefeated}
-        onTelemetryUpdate={setTelemetry}
+        onTelemetryUpdate={handleTelemetryUpdate}
       />
 
       {/* ============================================================
@@ -700,6 +879,16 @@ export const RedGateArenaPage = ({
               </span>
             </div>
           )}
+
+          {/* Interactive Fast Skip Intro Button */}
+          <button
+            type="button"
+            className="rs-cinematic-skip-btn"
+            onClick={handleSkipIntro}
+            title="Start Combat Immediately (SPACE / ENTER)"
+          >
+            ⚡ SKIP INTRO [SPACE / ENTER]
+          </button>
         </div>
       )}
 
@@ -840,11 +1029,11 @@ export const RedGateArenaPage = ({
       <div className="rs-hud-telemetry-panel">
         <div className="rs-telem-row">
           <span className="rs-telem-dot green"></span>
-          <span className="rs-telem-text">{telemetry.fps} FPS // 60HZ</span>
+          <span ref={telemFpsRef} className="rs-telem-text">{telemetry.fps} FPS // 60HZ</span>
         </div>
         <div className="rs-telem-row">
           <Cpu size={11} className="text-cyan-400" />
-          <span className="rs-telem-text">AI FSM: {telemetry.aiState}</span>
+          <span ref={telemAiRef} className="rs-telem-text">AI FSM: {telemetry.aiState}</span>
         </div>
         <div className="rs-telem-row">
           <Activity size={11} className="text-violet-400" />
@@ -959,10 +1148,46 @@ export const RedGateArenaPage = ({
       <div className="rs-cv-battle-pip-box">
         <div className="rs-cv-battle-header">
           <div className="rs-cv-status-live">
-            <span className="rs-cv-status-dot"></span>
-            <span>CV SENSOR LIVE</span>
+            <span
+              className="rs-cv-status-dot"
+              style={{
+                backgroundColor:
+                  cvTrackingStatus === 'TRACKING'
+                    ? '#10b981'
+                    : cvTrackingStatus === 'HAND NOT DETECTED'
+                    ? '#f59e0b'
+                    : cvTrackingStatus === 'LOADING MODEL'
+                    ? '#00f3ff'
+                    : cvTrackingStatus === 'CAMERA OFF'
+                    ? '#64748b'
+                    : '#ef4444',
+                boxShadow:
+                  cvTrackingStatus === 'TRACKING'
+                    ? '0 0 10px #10b981'
+                    : cvTrackingStatus === 'HAND NOT DETECTED'
+                    ? '0 0 10px #f59e0b'
+                    : cvTrackingStatus === 'LOADING MODEL'
+                    ? '0 0 10px #00f3ff'
+                    : 'none'
+              }}
+            ></span>
+            <span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+              {cvTrackingStatus}
+            </span>
           </div>
-          <span className="rs-cv-conf-badge">{cvConfidence}% ACC</span>
+          {cvTrackingStatus === 'TRACKING' ? (
+            <span
+              ref={confBadgeRef}
+              className="rs-cv-conf-badge"
+              style={{ color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+            >
+              {cvConfidence || 95}% CONF
+            </span>
+          ) : (
+            <span className="rs-cv-conf-badge" style={{ color: '#94a3b8', fontSize: '9px' }}>
+              KEYS ACTIVE
+            </span>
+          )}
         </div>
         <div className="rs-cv-video-frame">
           <video
@@ -976,10 +1201,30 @@ export const RedGateArenaPage = ({
             ref={pipCanvasRef}
             className="rs-cv-canvas-element"
           />
+          {(!activeStream || cvTrackingStatus === 'CAMERA OFF') && (
+            <div className="rs-cv-camera-off-overlay">
+              <button
+                className="rs-cv-enable-btn"
+                onClick={enableWebcamDirectly}
+                type="button"
+              >
+                <Camera size={14} />
+                <span>ENABLE WEBCAM</span>
+              </button>
+            </div>
+          )}
         </div>
         <div className="rs-cv-active-gesture-tag">
           <span className="rs-cv-gesture-name">
-            {activeGesture && !activeGesture.includes('Standby') ? activeGesture : 'STANDBY (SHOW GESTURE)'}
+            {activeGesture && !activeGesture.includes('Standby')
+              ? activeGesture
+              : cvTrackingStatus === 'TRACKING'
+              ? 'TRACKING LIVE — SHOW MOVE'
+              : cvTrackingStatus === 'HAND NOT DETECTED'
+              ? 'SHOW HAND TO CAMERA'
+              : cvTrackingStatus === 'LOADING MODEL'
+              ? 'LOADING AI MODEL...'
+              : 'KEYBOARD: [1-4, SPACE, A/D]'}
           </span>
         </div>
       </div>
@@ -1115,9 +1360,9 @@ export const RedGateArenaPage = ({
             <div className="rs-defeat-skull-glow victory-glow">
               <Award size={52} className="text-cyan-400 animate-pulse" />
             </div>
-            <h2 className="rs-defeat-title text-cyan-400">VOID TITAN OBLITERATED!</h2>
+            <h2 className="rs-defeat-title text-cyan-400">{selectedVillain?.name || 'BOSS'} OBLITERATED!</h2>
             <p className="rs-defeat-subtitle">
-              Tactical mastery achieved! S-Rank Void Gate successfully sealed with {selectedHero?.name}.
+              Tactical mastery achieved! S-Rank Red Gate successfully sealed against {selectedVillain?.name || 'Dungeon Boss'} with {selectedHero?.name}.
             </p>
             <div className="rs-victory-stats-row">
               <div className="rs-vic-stat">

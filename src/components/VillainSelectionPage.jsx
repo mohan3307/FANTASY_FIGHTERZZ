@@ -18,8 +18,8 @@ import { sound } from '../utils/audio';
 import { Character3DPreview } from './Character3DPreview';
 import confetti from 'canvas-confetti';
 
-export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStartBattle }) => {
-  const [selectedVillainId, setSelectedVillainId] = useState('void-titan');
+export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStartBattle, isPaused = false }) => {
+  const [selectedVillainId, setSelectedVillainId] = useState('doctor-doom');
   const [battleStarting, setBattleStarting] = useState(false);
 
   const selectedVillain = MARVEL_VILLAINS.find((v) => v.id === selectedVillainId) || MARVEL_VILLAINS[0];
@@ -48,7 +48,7 @@ export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStart
       if (onStartBattle) {
         onStartBattle(selectedHero, selectedVillain);
       }
-    }, 2000);
+    }, 650);
   };
 
   const getBadgeIcon = (type) => {
@@ -159,7 +159,7 @@ export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStart
           {/* Center Column: Full-Body 3D Boss Hologram Preview */}
           <div className="rs-select-3d-stage">
             <div className="rs-3d-hologram-wrap villain-stage-wrap">
-              <Character3DPreview character={selectedVillain} isVillain={true} />
+              <Character3DPreview character={selectedVillain} isVillain={true} isPaused={isPaused} />
             </div>
 
             <div className="rs-3d-hero-meta-badge villain-meta-badge" style={{ borderColor: selectedVillain.accentColor }}>

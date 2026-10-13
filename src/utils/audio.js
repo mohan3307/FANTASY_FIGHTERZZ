@@ -310,6 +310,120 @@ class SoundFX {
       osc.stop(now + 0.45);
     } catch (e) {}
   }
+
+  // Victory Fanfare Chord Progression
+  playVictoryFanfare() {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+        gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.6);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.6);
+      });
+    } catch (e) {}
+  }
+
+  // Razor Blade Slash / Screen Transition Shutter Slice
+  playBladeSlash() {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      // High-frequency steel whoosh
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(2800, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.18);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.18);
+
+      // Low metallic body thud
+      const sub = this.ctx.createOscillator();
+      const subGain = this.ctx.createGain();
+      sub.type = 'triangle';
+      sub.frequency.setValueAtTime(180, now + 0.04);
+      sub.frequency.exponentialRampToValueAtTime(35, now + 0.28);
+      subGain.gain.setValueAtTime(0.35, now + 0.04);
+      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      sub.connect(subGain);
+      subGain.connect(this.ctx.destination);
+      sub.start(now + 0.04);
+      sub.stop(now + 0.28);
+    } catch (e) {}
+  }
+
+  // Tekken / SF6 Style Counter Hit / Heavy Impact Smash
+  playCounterHit() {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      // Sub-bass heavy thud
+      const sub = this.ctx.createOscillator();
+      const subGain = this.ctx.createGain();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(120, now);
+      sub.frequency.exponentialRampToValueAtTime(20, now + 0.35);
+      subGain.gain.setValueAtTime(0.5, now);
+      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      sub.connect(subGain);
+      subGain.connect(this.ctx.destination);
+      sub.start(now);
+      sub.stop(now + 0.35);
+
+      // Glass / Electric Shatter
+      const shatter = this.ctx.createOscillator();
+      const sGain = this.ctx.createGain();
+      shatter.type = 'sawtooth';
+      shatter.frequency.setValueAtTime(1900, now);
+      shatter.frequency.exponentialRampToValueAtTime(400, now + 0.16);
+      sGain.gain.setValueAtTime(0.25, now);
+      sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      shatter.connect(sGain);
+      sGain.connect(this.ctx.destination);
+      shatter.start(now);
+      shatter.stop(now + 0.16);
+    } catch (e) {}
+  }
+
+  // Dramatic Defeat Tone
+  playDefeatSound() {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      [220, 196, 174.6, 130.8].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.18);
+        gain.gain.setValueAtTime(0.22, now + idx * 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.18 + 0.7);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.18);
+        osc.stop(now + idx * 0.18 + 0.7);
+      });
+    } catch (e) {}
+  }
 }
 
 export const sound = new SoundFX();

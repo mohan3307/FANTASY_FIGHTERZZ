@@ -23,22 +23,38 @@ export const CameraPermissionModal = ({ isOpen, onAccessGranted, onClose }) => {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const cvEngineRef = useRef(null);
+  const hasHandedOffStreamRef = useRef(false);
+  const lastMsgRef = useRef('');
 
-  // Stop camera when modal unmounts
+  // Stop camera preview when modal unmounts
   useEffect(() => {
     return () => {
-      stopCamera();
+      if (cvEngineRef.current) {
+        cvEngineRef.current.stop();
+        cvEngineRef.current = null;
+      }
+      if (!hasHandedOffStreamRef.current && streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
     };
   }, []);
 
-  const stopCamera = () => {
+  const stopCamera = (force = false) => {
     if (cvEngineRef.current) {
       cvEngineRef.current.stop();
       cvEngineRef.current = null;
     }
-    if (streamRef.current) {
+    if (streamRef.current && (force || !hasHandedOffStreamRef.current)) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
+    }
+  };
+
+  const updateDetected = (msg) => {
+    if (msg && msg !== lastMsgRef.current) {
+      lastMsgRef.current = msg;
+      setDetectedGesture(msg);
     }
   };
 
@@ -49,19 +65,25 @@ export const CameraPermissionModal = ({ isOpen, onAccessGranted, onClose }) => {
         videoRef.current.play().catch(() => {});
         // Initialize Computer Vision
         if (canvasRef.current) {
-          canvasRef.current.width = videoRef.current.videoWidth || 320;
-          canvasRef.current.height = videoRef.current.videoHeight || 240;
+          canvasRef.current.width = 320;
+          canvasRef.current.height = 240;
 
           cvEngineRef.current = new ComputerVisionGestureEngine(
             videoRef.current,
             canvasRef.current,
             (res) => {
-              if (res.gesture === 'palm') setDetectedGesture('🖐️ OPEN PALM (ENERGY SHIELD READY)');
-              else if (res.gesture === 'fist') setDetectedGesture('✊ CLOSED FIST (HEAVY STRIKE READY)');
-              else if (res.gesture === 'point') setDetectedGesture('☝️ POINTING (AIM BEAM READY)');
-              else if (res.gesture === 'forward') setDetectedGesture('🥊 FORWARD PUSH (COMBO STRIKE READY)');
-              else if (res.gesture === 'both_hands' || res.gesture === 'vsign') setDetectedGesture('🙌 BOTH HANDS (ULTIMATE READY)');
-              else if (res.gesture === 'swipe') setDetectedGesture('👈👉 SWIPE (WARP DODGE READY)');
+              if (res.gesture === 'palm') updateDetected('🖐️ OPEN PALM (ENERGY SHIELD READY)');
+              else if (res.gesture === 'fist') updateDetected('✊ CLOSED FIST (HEAVY STRIKE READY)');
+              else if (res.gesture === 'point') updateDetected('☝️ POINTING (AIM BEAM READY)');
+              else if (res.gesture === 'forward') updateDetected('🥊 FORWARD PUSH (COMBO STRIKE READY)');
+              else if (res.gesture === 'both_hands' || res.gesture === 'vsign') updateDetected('🙌 BOTH HANDS (ULTIMATE READY)');
+              else if (res.gesture === 'swipe') updateDetected('👈👉 SWIPE (WARP DODGE READY)');
+            },
+            (status) => {
+              if (status === 'LOADING MODEL') updateDetected('⏳ Loading AI Model...');
+              else if (status === 'HAND NOT DETECTED') updateDetected('👁️ Hand Not Detected — Show Hand in Frame');
+              else if (status === 'TRACKING') updateDetected('🎯 Hand Detected — Perform Gesture');
+              else if (status.startsWith('ERROR')) updateDetected(`⚠️ ${status}`);
             }
           );
           cvEngineRef.current.start();
@@ -81,12 +103,12 @@ export const CameraPermissionModal = ({ isOpen, onAccessGranted, onClose }) => {
         throw new Error('Your browser does not support WebRTC Camera API. Try Google Chrome.');
       }
 
-      // Request User Media with standard fallbacks
+      // Request User Media with clean instant constraints (capped at 640x480 30fps for zero lag)
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: 'user'
+          width: { ideal: 640, max: 640 },
+          height: { ideal: 480, max: 480 },
+          frameRate: { ideal: 30, max: 30 }
         },
         audio: false
       });
@@ -127,6 +149,11 @@ export const CameraPermissionModal = ({ isOpen, onAccessGranted, onClose }) => {
   const handleProceed = () => {
     sound.playClick();
     sound.playPortalWarp();
+    hasHandedOffStreamRef.current = true;
+    if (cvEngineRef.current) {
+      cvEngineRef.current.stop();
+      cvEngineRef.current = null;
+    }
     if (onAccessGranted) {
       onAccessGranted({
         stream: streamRef.current,

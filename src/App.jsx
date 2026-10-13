@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Play,
   BookOpen,
@@ -20,16 +20,23 @@ import { VillainSelectionPage } from './components/VillainSelectionPage';
 import { CameraPermissionModal } from './components/CameraPermissionModal';
 import { BattleRulesModal } from './components/BattleRulesModal';
 import { RedGateArenaPage } from './components/RedGateArenaPage';
-import { QuantumWarpTransition } from './components/QuantumWarpTransition';
+import { FighterSlashTransition } from './components/FighterSlashTransition';
 import { MARVEL_HEROES } from './data/marvelHeroes';
 import { MARVEL_VILLAINS } from './data/marvelVillains';
+import { preloadFighterModels } from './components/ThreeFighter3DModels';
+import { preloadHandLandmarker } from './utils/gestureDetector';
 import { sound } from './utils/audio';
 
 export function App() {
+  // Preload character 3D models and AI Vision model in background for instant camera & 0ms gesture response
+  useEffect(() => {
+    preloadFighterModels();
+    preloadHandLandmarker();
+  }, []);
   // Navigation State: 'home' | 'hero-select' | 'villain-select' | 'red-gate-battle'
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedHero, setSelectedHero] = useState(MARVEL_HEROES[0]);
-  const [selectedVillain, setSelectedVillain] = useState(MARVEL_VILLAINS[1]); // Default Thanos
+  const [selectedVillain, setSelectedVillain] = useState(MARVEL_VILLAINS[0]); // Default Doctor Doom
 
   // Innovative Page Transition Warp State
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -139,140 +146,228 @@ export function App() {
     alert('Session safely terminated. Standby mode active.');
   };
 
+  // Background Mode: 'heroes' (4K Cinematic Heroes Assemble) | 'arena' (4K Celestial Arena)
+  const [homeBgMode, setHomeBgMode] = useState('heroes');
+
   return (
     <div className="rs-main-app-root">
       {/* 1. Page Content Router */}
       {currentPage === 'home' && (
         <div className="rs-screen-viewport">
-          <div className="rs-stage-container">
-            {/* Cinematic Background Layer with Marvel Heroes Artwork */}
+          <div className="rs-stage-container rs-home-stage-4k">
+            {/* Cinematic 4K Ultra Background Layer */}
             <img
-              src="/assets/marvel_heroes_bg.jpg"
-              alt="Reality Shift Gesture Arena"
-              className="rs-stage-background-img"
+              src={homeBgMode === 'heroes' ? '/assets/heroes_assemble_4k.jpg' : '/assets/marvel_arena_4k.jpg'}
+              alt="Reality Shift 4K Gesture Arena"
+              className="rs-stage-background-img rs-stage-bg-4k"
             />
             <div className="rs-stage-vignette-overlay"></div>
             <div className="rs-stage-ambient-pulse"></div>
 
-            {/* Interactive Energy Particle Canvas */}
+            {/* 4K Interactive Energy Particle Canvas */}
             <PortalParticles />
 
-            {/* Top Center Brand Logo */}
-            <div className="rs-stage-logo-container" onClick={() => sound.playHover()}>
-              <div className="rs-logo-glow-aura"></div>
-              <h1 className="rs-main-title">REALITY SHIFT</h1>
-              <div className="rs-sub-title-badge">
-                <span className="rs-sub-title-text">GESTURE ARENA</span>
-              </div>
-            </div>
-
-            {/* Top Right Player HUD */}
-            <div className="rs-stage-top-hud">
-              <div className="rs-hud-profile-badge">
-                <div className="rs-hud-avatar-icon">
-                  <User size={13} />
-                </div>
-                <div className="rs-hud-profile-info">
-                  <span className="rs-hud-user-name">Hero_001</span>
-                  <span className="rs-hud-user-lvl">Lv. 5</span>
-                </div>
-                <div className="rs-hud-progress-track">
-                  <div className="rs-hud-progress-bar" style={{ width: '65%' }}></div>
+            {/* Pristine 4K Top Navigation Bar */}
+            <header className="rs-home-top-bar">
+              {/* Brand Logo & Title on Left */}
+              <div className="rs-home-brand-block" onClick={() => sound.playHover()}>
+                <div className="rs-home-logo-glow"></div>
+                <div className="rs-home-logo-emblem">⚡</div>
+                <div className="rs-home-brand-text">
+                  <h1 className="rs-main-title-clean">REALITY SHIFT</h1>
+                  <div className="rs-sub-title-badge-clean">
+                    <span className="rs-badge-dot"></span>
+                    <span className="rs-sub-title-text">GESTURE ARENA 4K</span>
+                    <span className="rs-badge-tag">ULTRA-HD</span>
+                  </div>
                 </div>
               </div>
 
-              <div
-                className="rs-hud-currency-pill energy"
-                onClick={() => {
-                  sound.playClick();
-                  setEnergy((prev) => prev + 50);
-                }}
-                title="Click to recharge +50 Energy"
-              >
-                <Zap size={14} className="rs-hud-curr-icon energy-icon" />
-                <span className="rs-hud-curr-amount">{energy.toLocaleString()}</span>
-                <span className="rs-hud-curr-plus">+</span>
+              {/* Player Profile & Controls on Right */}
+              <div className="rs-stage-top-hud rs-home-hud-clean">
+                <div className="rs-hud-profile-badge">
+                  <div className="rs-hud-avatar-icon">
+                    <User size={14} />
+                  </div>
+                  <div className="rs-hud-profile-info">
+                    <span className="rs-hud-user-name">Hero_001</span>
+                    <span className="rs-hud-user-lvl">Lv. 5</span>
+                  </div>
+                  <div className="rs-hud-progress-track">
+                    <div className="rs-hud-progress-bar" style={{ width: '65%' }}></div>
+                  </div>
+                </div>
+
+                <div
+                  className="rs-hud-currency-pill energy"
+                  onClick={() => {
+                    sound.playClick();
+                    setEnergy((prev) => prev + 50);
+                  }}
+                  title="Click to recharge +50 Energy"
+                >
+                  <Zap size={14} className="rs-hud-curr-icon energy-icon" />
+                  <span className="rs-hud-curr-amount">{energy.toLocaleString()}</span>
+                  <span className="rs-hud-curr-plus">+</span>
+                </div>
+
+                <div
+                  className="rs-hud-currency-pill gems"
+                  onClick={() => {
+                    sound.playClick();
+                    setGems((prev) => prev + 10);
+                  }}
+                  title="Click to add +10 Crystals"
+                >
+                  <Gem size={14} className="rs-hud-curr-icon gems-icon" />
+                  <span className="rs-hud-curr-amount">{gems.toLocaleString()}</span>
+                  <span className="rs-hud-curr-plus">+</span>
+                </div>
+
+                {/* 4K Background Mode Switcher */}
+                <button
+                  className="rs-hud-bg-toggle-btn"
+                  onClick={() => {
+                    sound.playClick();
+                    setHomeBgMode((prev) => (prev === 'heroes' ? 'arena' : 'heroes'));
+                  }}
+                  title="Toggle 4K Cinematic Scene"
+                >
+                  <span className="rs-bg-toggle-indicator">4K</span>
+                  <span>{homeBgMode === 'heroes' ? 'HEROES' : 'ARENA'}</span>
+                </button>
+
+                <button
+                  className="rs-hud-icon-btn"
+                  onClick={handleToggleMute}
+                  title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
+                >
+                  {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                </button>
+
+                <button
+                  className="rs-hud-icon-btn"
+                  onClick={handleFullscreen}
+                  title="Toggle Fullscreen"
+                >
+                  <Maximize2 size={14} />
+                </button>
+              </div>
+            </header>
+
+            {/* Main Interactive Stage Body */}
+            <main className="rs-home-main-stage">
+              {/* Left Side: High-Tech Combat Dossier & Gesture Controls */}
+              <div className="rs-home-intel-card">
+                <div className="rs-intel-glow-line"></div>
+                <div className="rs-intel-header">
+                  <span className="rs-intel-tag">OPTICAL AI COMBAT ENGINE</span>
+                  <h2 className="rs-intel-title">CHOOSE YOUR DESTINY</h2>
+                  <p className="rs-intel-desc">
+                    Control superhero combat in real-time using physical hand gestures captured through your webcam or hotkeys.
+                  </p>
+                </div>
+
+                {/* Quick Gesture Guide Mini Cards */}
+                <div className="rs-intel-gestures-grid">
+                  <div className="rs-intel-gesture-chip">
+                    <span className="rs-gesture-icon">✋</span>
+                    <div className="rs-gesture-chip-info">
+                      <span className="rs-gesture-chip-title">OPEN PALM</span>
+                      <span className="rs-gesture-chip-effect">Energy Shield Barrier</span>
+                    </div>
+                  </div>
+
+                  <div className="rs-intel-gesture-chip">
+                    <span className="rs-gesture-icon">✊</span>
+                    <div className="rs-gesture-chip-info">
+                      <span className="rs-gesture-chip-title">CLOSED FIST</span>
+                      <span className="rs-gesture-chip-effect">Heavy Kinetic Strike</span>
+                    </div>
+                  </div>
+
+                  <div className="rs-intel-gesture-chip">
+                    <span className="rs-gesture-icon">✌️</span>
+                    <div className="rs-gesture-chip-info">
+                      <span className="rs-gesture-chip-title">V-SIGN</span>
+                      <span className="rs-gesture-chip-effect">Elemental Ultimate</span>
+                    </div>
+                  </div>
+
+                  <div className="rs-intel-gesture-chip">
+                    <span className="rs-gesture-icon">💨</span>
+                    <div className="rs-gesture-chip-info">
+                      <span className="rs-gesture-chip-title">RAPID SWIPE</span>
+                      <span className="rs-gesture-chip-effect">Quantum Reality Dodge</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rs-intel-status-pill">
+                  <span className="rs-status-pulsar"></span>
+                  <span>4K GRAPHICS • 60FPS MOTOR • ZERO DELAY</span>
+                </div>
               </div>
 
-              <div
-                className="rs-hud-currency-pill gems"
-                onClick={() => {
-                  sound.playClick();
-                  setGems((prev) => prev + 10);
-                }}
-                title="Click to add +10 Crystals"
-              >
-                <Gem size={14} className="rs-hud-curr-icon gems-icon" />
-                <span className="rs-hud-curr-amount">{gems.toLocaleString()}</span>
-                <span className="rs-hud-curr-plus">+</span>
+              {/* Right Side: Sleek Chamfered Action Buttons */}
+              <div className="rs-stage-menu-group rs-stage-menu-4k">
+                <button
+                  className="rs-stage-btn play chamfered rs-play-btn-4k"
+                  onClick={handlePlayClick}
+                  onMouseEnter={() => sound.playHover()}
+                >
+                  <div className="rs-btn-neon-sweep"></div>
+                  <div className="rs-play-btn-glow"></div>
+                  <Play size={32} fill="currentColor" className="rs-play-icon" />
+                  <div className="rs-play-btn-text-wrap">
+                    <span className="rs-btn-text-play">PLAY NOW</span>
+                    <span className="rs-btn-subtext-play">ENTER RED GATE ARENA</span>
+                  </div>
+                </button>
+
+                <button
+                  className="rs-stage-btn nav chamfered"
+                  onClick={handleHowToPlayClick}
+                  onMouseEnter={() => sound.playHover()}
+                >
+                  <BookOpen size={19} className="rs-nav-icon" />
+                  <span className="rs-nav-text">HOW TO PLAY</span>
+                </button>
+
+                <button
+                  className="rs-stage-btn nav chamfered"
+                  onClick={handleSettingsClick}
+                  onMouseEnter={() => sound.playHover()}
+                >
+                  <Settings size={19} className="rs-nav-icon" />
+                  <span className="rs-nav-text">SETTINGS</span>
+                </button>
+
+                <button
+                  className="rs-stage-btn nav chamfered quit"
+                  onClick={handleQuitClick}
+                  onMouseEnter={() => sound.playHover()}
+                >
+                  <Power size={19} className="rs-nav-icon quit-icon" />
+                  <span className="rs-nav-text">QUIT</span>
+                </button>
               </div>
+            </main>
 
-              <button
-                className="rs-hud-icon-btn"
-                onClick={handleToggleMute}
-                title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
-              >
-                {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-              </button>
-
-              <button
-                className="rs-hud-icon-btn"
-                onClick={handleFullscreen}
-                title="Toggle Fullscreen"
-              >
-                <Maximize2 size={14} />
-              </button>
-            </div>
-
-            {/* Right Side Interactive Menu Buttons */}
-            <div className="rs-stage-menu-group">
-              <button
-                className="rs-stage-btn play chamfered"
-                onClick={handlePlayClick}
-                onMouseEnter={() => sound.playHover()}
-              >
-                <div className="rs-btn-neon-sweep"></div>
-                <Play size={30} fill="currentColor" className="rs-play-icon" />
-                <span className="rs-btn-text-play">PLAY</span>
-              </button>
-
-              <button
-                className="rs-stage-btn nav chamfered"
-                onClick={handleHowToPlayClick}
-                onMouseEnter={() => sound.playHover()}
-              >
-                <BookOpen size={19} className="rs-nav-icon" />
-                <span className="rs-nav-text">HOW TO PLAY</span>
-              </button>
-
-              <button
-                className="rs-stage-btn nav chamfered"
-                onClick={handleSettingsClick}
-                onMouseEnter={() => sound.playHover()}
-              >
-                <Settings size={19} className="rs-nav-icon" />
-                <span className="rs-nav-text">SETTINGS</span>
-              </button>
-
-              <button
-                className="rs-stage-btn nav chamfered quit"
-                onClick={handleQuitClick}
-                onMouseEnter={() => sound.playHover()}
-              >
-                <Power size={19} className="rs-nav-icon quit-icon" />
-                <span className="rs-nav-text">QUIT</span>
-              </button>
-            </div>
-
-            {/* Bottom Left Hero Caption */}
-            <div className="rs-home-destiny-caption">
-              <div className="rs-destiny-accent-bracket"></div>
-              <div className="rs-destiny-text-block">
-                <p className="rs-destiny-line line-1">Step into the arena.</p>
-                <p className="rs-destiny-line line-2">Choose your hero.</p>
-                <p className="rs-destiny-line line-3">Face your destiny.</p>
+            {/* Bottom Telemetry Bar */}
+            <footer className="rs-home-footer-bar">
+              <div className="rs-footer-left">
+                <span className="rs-footer-tag">SYSTEM STATUS</span>
+                <span className="rs-footer-val">READY // 4K 60HZ RESOLUTION</span>
               </div>
-            </div>
+              <div className="rs-footer-center">
+                <span>REALITY SHIFT GESTURE ARENA • MARVEL MULTIVERSE CLASH</span>
+              </div>
+              <div className="rs-footer-right">
+                <span className="rs-footer-tag">AI VISION</span>
+                <span className="rs-footer-val">STANDBY OPTICAL TRACKING</span>
+              </div>
+            </footer>
           </div>
         </div>
       )}
@@ -289,6 +384,7 @@ export function App() {
           selectedHero={selectedHero}
           onBackToHeroSelect={() => navigateWithWarp('hero-select', 'HERO SELECTION')}
           onStartBattle={handleStartBattleVillain}
+          isPaused={cameraModalOpen}
         />
       )}
 
@@ -302,8 +398,8 @@ export function App() {
         />
       )}
 
-      {/* 2. Innovative Quantum Warp Transition Overlay */}
-      <QuantumWarpTransition
+      {/* 2. Arcade Fighter Blade Slash Transition Overlay */}
+      <FighterSlashTransition
         isTransitioning={isTransitioning}
         targetTitle={warpTargetTitle}
         onMidpoint={handleWarpMidpoint}
