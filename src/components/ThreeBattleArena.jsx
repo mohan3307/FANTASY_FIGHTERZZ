@@ -151,6 +151,7 @@ export const ThreeBattleArena = ({
 
     // 1. Scene & Setup with Atmospheric Volumetric Fog
     const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050818);
     scene.fog = new THREE.FogExp2(0x050818, 0.038);
     sceneRef.current = scene;
 
@@ -160,8 +161,8 @@ export const ThreeBattleArena = ({
     camera.lookAt(0, 1.40, 0.3);
     cameraRef.current = camera;
 
-    // 3. WebGL Renderer with High-Performance Tone Mapping
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    // 3. WebGL Renderer with High-Performance Tone Mapping (alpha: false eliminates GPU compositor lag)
+    const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1093,11 +1094,11 @@ export const ThreeBattleArena = ({
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
           }
         } else if (hAnim.state === 'punch') {
-          // --- CHARACTER-SPECIFIC COMBAT COMBOS & POWERS ---
+          // --- CHARACTER-SPECIFIC COMBAT COMBOS & POWERS (Cinematic, weighted pacing) ---
           hAnim.time += delta;
           const cIdx = hAnim.comboIndex || 0;
           const isFinisher = cIdx === 2;
-          const punchDur = isFinisher ? 0.88 : (isCap && cIdx === 1) || (isThor && cIdx === 1) ? 0.72 : 0.56;
+          const punchDur = isFinisher ? 1.20 : (isCap && cIdx === 1) || (isThor && cIdx === 1) ? 1.05 : 0.85;
           const p = hAnim.time / punchDur;
 
           if (isIronMan) {
@@ -1379,9 +1380,9 @@ export const ThreeBattleArena = ({
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
           }
         } else if (hAnim.state === 'ultimate') {
-          // --- CHARACTER-SPECIFIC CATACLYSM ULTIMATE SKILLS ---
+          // --- CHARACTER-SPECIFIC CATACLYSM ULTIMATE SKILLS (Cinematic Overdrive) ---
           hAnim.time += delta;
-          const ultDur = 1.25;
+          const ultDur = 1.85;
           const p = hAnim.time / ultDur;
 
           if (isIronMan) {
@@ -1489,9 +1490,9 @@ export const ThreeBattleArena = ({
             hAnim.hasClashed = false;
           }
         } else if (hAnim.state === 'dodge') {
-          // --- CHARACTER-SPECIFIC COMBAT EVASIONS ---
+          // --- CHARACTER-SPECIFIC COMBAT EVASIONS (Smooth, athletic evasion) ---
           hAnim.time += delta;
-          const p = hAnim.time / 0.48;
+          const p = hAnim.time / 0.70;
           if (p < 0.5) {
             const f = Math.sin((p / 0.5) * (Math.PI / 2));
             hGroup.position.x = -1.8 - f * 0.9;
@@ -1536,10 +1537,10 @@ export const ThreeBattleArena = ({
           }
         }
 
-        // Natural Hit Recoil Elastic Spring Curve
+        // Natural Hit Recoil Elastic Spring Curve (smooth recovery)
         if (hAnim.recoiling) {
           hAnim.recoilTime = (hAnim.recoilTime || 0) + delta;
-          const rP = Math.min(1.0, hAnim.recoilTime / 0.38);
+          const rP = Math.min(1.0, hAnim.recoilTime / 0.52);
           hGroup.position.x = -1.8 - Math.sin(rP * Math.PI) * 0.48;
           hGroup.rotation.z = -Math.sin(rP * Math.PI) * 0.12;
           if (rP >= 1.0) {
@@ -1585,14 +1586,14 @@ export const ThreeBattleArena = ({
         if (heroId === 'ironman' && ironmanBeamRef.current) {
           const beam = ironmanBeamRef.current;
           beam.visible = true;
-          const maxDur = isUlt ? 0.72 : (cIdx === 2 ? 0.48 : 0.35);
+          const maxDur = isUlt ? 1.45 : (cIdx === 2 ? 0.95 : 0.75);
           beam.material.opacity = Math.max(0, 1.0 - t / maxDur);
           beam.scale.set(isUlt ? 3.4 : (cIdx === 2 ? 1.8 : 1.2), 1, isUlt ? 3.4 : (cIdx === 2 ? 1.8 : 1.2));
 
           if (ironmanRingsRef.current) {
             ironmanRingsRef.current.forEach((r, idx) => {
               r.visible = isUlt || cIdx === 2;
-              const rProg = (t * 3.5 + idx * 0.3) % 1.0;
+              const rProg = (t * 2.2 + idx * 0.3) % 1.0;
               r.position.set(THREE.MathUtils.lerp(-1.8, 2.0, rProg), 2.1, 0.5);
               r.scale.set(1 + rProg * 1.5, 1 + rProg * 1.5, 1);
               r.material.opacity = (1.0 - rProg) * 0.8;
@@ -1609,7 +1610,7 @@ export const ThreeBattleArena = ({
         // 2. THOR: ASGARDIAN MJOLNIR HAMMER TOSS, LIGHTNING CURRENT & SKY BOLTS
         else if (heroId === 'thor' && thorLightningRef.current) {
           const isHammerThrow = cIdx === 1 || isPoint;
-          const maxDur = isUlt ? 0.75 : (isHammerThrow ? 0.65 : 0.42);
+          const maxDur = isUlt ? 1.50 : (isHammerThrow ? 0.95 : 0.75);
           const op = Math.max(0, 1.0 - t / maxDur);
           thorLightningRef.current.material.opacity = op;
 
@@ -1666,7 +1667,7 @@ export const ThreeBattleArena = ({
 
         // 3. SPIDER-MAN: 3D HIGH-TENSILE WEB CABLE, NET BURST & MAXIMUM SPIDER DOME
         else if ((heroId === 'spiderman' || heroId === 'web-ninja' || !heroId) && spideyWebLineRef.current) {
-          const maxDur = isUlt ? 0.90 : (cIdx === 2 ? 0.65 : 0.48);
+          const maxDur = isUlt ? 1.55 : (cIdx === 2 ? 0.95 : 0.75);
           const op = Math.max(0, 1.0 - t / maxDur);
 
           if (!isUlt) {
@@ -1674,7 +1675,7 @@ export const ThreeBattleArena = ({
             if (spideyWebCableRef.current) {
               const cable = spideyWebCableRef.current;
               const isWebZip = cIdx === 0 || isPoint;
-              cable.group.visible = isWebZip && t < 0.38;
+              cable.group.visible = isWebZip && t < 0.60;
               if (cable.group.visible) {
                 cable.core.material.opacity = op;
                 cable.aura.material.opacity = op * 0.85;
@@ -1699,7 +1700,7 @@ export const ThreeBattleArena = ({
             // Web net burst on Finisher
             if (cIdx === 2 && spideyWebBurstRef.current) {
               const group = spideyWebBurstRef.current;
-              const progress = Math.min(1.0, t / 0.35);
+              const progress = Math.min(1.0, t / 0.55);
               group.children.forEach((strand, idx) => {
                 strand.material.opacity = op;
                 const arr = strand.geometry.attributes.position.array;
@@ -1715,14 +1716,14 @@ export const ThreeBattleArena = ({
             // Web snare at villain feet
             if (spideyWebTrapRef.current) {
               spideyWebTrapRef.current.visible = cIdx === 2;
-              spideyWebTrapRef.current.material.opacity = Math.max(0, 0.85 - t / 0.6);
+              spideyWebTrapRef.current.material.opacity = Math.max(0, 0.85 - t / 0.85);
               const sc = 1 + t * 2.2;
               spideyWebTrapRef.current.scale.set(sc, sc, 1);
             }
           } else if (spideyWebBurstRef.current) {
             // Maximum Spider 3D Web Dome
             const group = spideyWebBurstRef.current;
-            const progress = Math.min(1.0, t / 0.45);
+            const progress = Math.min(1.0, t / 0.65);
             group.children.forEach((strand, idx) => {
               strand.material.opacity = op;
               const arr = strand.geometry.attributes.position.array;
@@ -1745,11 +1746,11 @@ export const ThreeBattleArena = ({
         else if (heroId === 'captain-america' && capFlyingShieldRef.current) {
           const isShieldThrow = cIdx === 1 || isPoint;
           const shield = capFlyingShieldRef.current;
-          const maxDur = isUlt ? 0.72 : (isShieldThrow ? 0.58 : 0.42);
+          const maxDur = isUlt ? 1.45 : (isShieldThrow ? 0.95 : 0.75);
 
           if (isShieldThrow) {
             shield.visible = true;
-            shield.rotation.y += delta * 32;
+            shield.rotation.y += delta * 24;
             const p = t / maxDur;
             if (p < 0.5) {
               const f = p / 0.5;
@@ -1768,9 +1769,9 @@ export const ThreeBattleArena = ({
           if ((cIdx === 2 || isUlt) && capStarSlamRef.current) {
             const slam = capStarSlamRef.current;
             slam.visible = true;
-            const sc = 1 + t * 9;
+            const sc = 1 + t * 6;
             slam.scale.set(sc, sc, 1);
-            slam.material.opacity = Math.max(0, 0.95 - t / 0.65);
+            slam.material.opacity = Math.max(0, 0.95 - t / 0.95);
           }
 
           if (t > maxDur) {
@@ -1783,13 +1784,13 @@ export const ThreeBattleArena = ({
         // 5. DOCTOR STRANGE: ROTATING TAO MANDALA RINGS & MIRROR DIMENSION CRYSTAL SHARDS
         else if ((heroId === 'doctor-strange' || heroId === 'dr-strange') && strangeMandalasRef.current) {
           const isMandalaCast = cIdx === 0 || cIdx === 1 || isPoint;
-          const maxDur = isUlt ? 0.75 : (cIdx === 2 ? 0.65 : 0.48);
+          const maxDur = isUlt ? 1.50 : (cIdx === 2 ? 0.95 : 0.75);
 
           if (isMandalaCast) {
             const m = strangeMandalasRef.current;
             m.visible = true;
-            m.rotation.z += delta * 15;
-            m.position.x = THREE.MathUtils.lerp(-1.8, 1.8, t / 0.48);
+            m.rotation.z += delta * 12;
+            m.position.x = THREE.MathUtils.lerp(-1.8, 1.8, t / 0.75);
             m.position.y = 2.1;
           }
 
@@ -1837,13 +1838,13 @@ export const ThreeBattleArena = ({
         } else if (introPhaseRef.current === 'active' && bossHpRef.current > 0) {
           aiAttackTimerRef.current += delta;
 
-          // Deliberate, Strategic Combat Pacing:
-          // Phase 1 (Tactical Probe): 5.0s attack interval, 1.70s warning telegraph
-          // Phase 2 (Enraged Barrage): 4.0s attack interval, 1.35s warning telegraph
-          // Phase 3 (Desperation Overdrive): 3.2s attack interval, 1.10s warning telegraph
+          // Deliberate, Strategic Combat Pacing (Paced for smooth reaction & cinematic duels):
+          // Phase 1 (Tactical Probe): 7.5s attack interval, 2.60s warning telegraph
+          // Phase 2 (Enraged Barrage): 6.2s attack interval, 2.20s warning telegraph
+          // Phase 3 (Desperation Overdrive): 5.2s attack interval, 1.80s warning telegraph
           const isEnraged = bossPhaseRef.current >= 2;
-          const attackInterval = bossPhaseRef.current === 3 ? 3.2 : isEnraged ? 4.0 : 5.0;
-          const warningWindow = bossPhaseRef.current === 3 ? 1.10 : isEnraged ? 1.35 : 1.70;
+          const attackInterval = bossPhaseRef.current === 3 ? 5.2 : isEnraged ? 6.2 : 7.5;
+          const warningWindow = bossPhaseRef.current === 3 ? 1.80 : isEnraged ? 2.20 : 2.60;
           const warningStart = attackInterval - warningWindow;
 
           // FSM State transitions
@@ -1966,7 +1967,7 @@ export const ThreeBattleArena = ({
             const isDoom = villainId === 'doctor-doom' || villainId === 'doom-regent';
             const isLoki = villainId === 'loki';
             const isMag = villainId === 'magneto';
-            const attackDur = isThanos ? 0.95 : isGoblin ? 0.90 : isDoom ? 0.85 : isMag ? 0.85 : 0.78;
+            const attackDur = isThanos ? 1.45 : isGoblin ? 1.35 : isDoom ? 1.30 : isMag ? 1.30 : 1.25;
             const p = vAnim.time / attackDur;
 
             const checkDamageToHero = (hitColor = 0xef4444, isHeavy = false) => {

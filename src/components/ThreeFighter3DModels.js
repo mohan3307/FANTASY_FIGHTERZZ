@@ -2007,7 +2007,7 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
       }
     } else if (state === 'punch' || state === 'attack') {
       const cStep = comboIndex || 0;
-      const attackProgress = Math.sin(Math.min(1.0, (time || 0) * 1.8) * Math.PI);
+      const attackProgress = Math.sin(Math.min(1.0, (time || 0) * 1.15) * Math.PI);
 
       if (isIronMan) {
         // Iron Man Palm Repulsor Thrust & Dive-Bomb

@@ -213,7 +213,7 @@ export const RedGateArenaPage = ({
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
 
   // NEW DEEP FIGHTING GAME STATS
-  const maxHeroHp = 1000;
+  const maxHeroHp = 3500;
   const maxBossHp = 250000;
   const maxBossStagger = 30000;
 
@@ -223,13 +223,13 @@ export const RedGateArenaPage = ({
   const [isBossStaggered, setIsBossStaggered] = useState(false);
   const [bossPhase, setBossPhase] = useState(1); // 1 = Normal, 2 = Enraged (<=60%), 3 = Overdrive (<=25%)
 
-  const [heroHp, setHeroHp] = useState(1000);
+  const [heroHp, setHeroHp] = useState(3500);
   const [heroSuperEnergy, setHeroSuperEnergy] = useState(0); // 0% to 100% EX Gauge
   const [isHeroParrying, setIsHeroParrying] = useState(false);
   const [weaponCharged, setWeaponCharged] = useState(false);
 
-  // Match Details & Score
-  const [roundTime, setRoundTime] = useState(99); // Standard fighting game 99s
+  // Match Details & Score (Generous 240s timer so battle never cuts off prematurely)
+  const [roundTime, setRoundTime] = useState(240);
   const [comboCount, setComboCount] = useState(0);
   const [maxComboReached, setMaxComboReached] = useState(0);
   const [totalDamageDealt, setTotalDamageDealt] = useState(0);
@@ -294,6 +294,7 @@ export const RedGateArenaPage = ({
   const staggerTimerRef = useRef(null);
   const bannerTimerRef = useRef(null);
   const lastAttackTimeRef = useRef(0);
+  const lastHeroDamageTimeRef = useRef(0);
 
   const showBanner = (text, type = 'normal') => {
     setCombatBanner({ text, type });
@@ -308,7 +309,7 @@ export const RedGateArenaPage = ({
   };
 
   const triggerHitEffects = (dmg, isCrit) => {
-    setIsScreenShaking(true);
+    // 3D camera handles combat shake inside WebGL to avoid DOM layout stutters
     setBossHitFlash(true);
     const newPopup = {
       id: Date.now() + Math.random(),
@@ -320,7 +321,6 @@ export const RedGateArenaPage = ({
     setDamagePopups((prev) => [...prev.slice(-3), newPopup]);
 
     setTimeout(() => setBossHitFlash(false), 140);
-    setTimeout(() => setIsScreenShaking(false), 240);
     setTimeout(() => {
       setDamagePopups((prev) => prev.filter((p) => p.id !== newPopup.id));
     }, 850);
@@ -412,12 +412,10 @@ export const RedGateArenaPage = ({
     const interval = setInterval(() => {
       setRoundTime((prev) => {
         if (prev <= 1) {
-          // Time Over condition - only triggers exactly when countdown reaches zero
-          if (prev === 1 && heroHpRef.current > 0 && bossHpRef.current > 0) {
-            if (heroHpRef.current > (maxHeroHp * 0.35)) triggerVictory();
-            else triggerDefeat();
-          }
-          return 0;
+          // Never shut down battle prematurely — grant Overtime Sudden Death!
+          showBanner('⚡ OVERTIME! SUDDEN DEATH ENGAGED!', 'phase');
+          addLog('⚡ OVERTIME: Round clock extended by +120s! Finish the titan!');
+          return 120;
         }
         return prev - 1;
       });
@@ -575,7 +573,7 @@ export const RedGateArenaPage = ({
       setIntroPhase('active');
     }
     const now = Date.now();
-    if (now - lastAttackTimeRef.current < 380) return;
+    if (now - lastAttackTimeRef.current < 520) return;
     lastAttackTimeRef.current = now;
 
     setLastGestureType(gestureType);
@@ -920,8 +918,13 @@ export const RedGateArenaPage = ({
       return;
     }
 
-    const baseEnemyDmg = bossPhase === 3 ? 180 : bossPhase === 2 ? 140 : 110;
-    const dmg = baseEnemyDmg + Math.floor(Math.random() * 30);
+    const now = Date.now();
+    if (now - lastHeroDamageTimeRef.current < 1100) return; // Invulnerability frames (iframes)
+    lastHeroDamageTimeRef.current = now;
+
+    // Balanced damage so hero can survive 70+ hits with 3,500 HP
+    const baseEnemyDmg = bossPhase === 3 ? 55 : bossPhase === 2 ? 42 : 32;
+    const dmg = baseEnemyDmg + Math.floor(Math.random() * 12);
 
     setHeroHp((prev) => {
       const next = Math.max(0, prev - dmg);
@@ -929,10 +932,8 @@ export const RedGateArenaPage = ({
       return next;
     });
 
-    setIsScreenShaking(true);
-    setTimeout(() => setIsScreenShaking(false), 240);
     showBanner(`⚠️ IMPACT TAKEN! -${dmg} HP!`, 'warning');
-    addLog(`💥 ${selectedVillain?.name} slammed ${selectedHero?.name} for ${dmg} DMG!`);
+    addLog(`💥 ${selectedVillain?.name} struck ${selectedHero?.name} for ${dmg} DMG!`);
   };
 
   const triggerVictory = () => {
@@ -958,7 +959,7 @@ export const RedGateArenaPage = ({
     setHeroHp(maxHeroHp);
     setHeroSuperEnergy(0);
     setComboCount(0);
-    setRoundTime(expoMode ? 60 : 99);
+    setRoundTime(expoMode ? 60 : 240);
     setIsDefeated(false);
     setIsVictory(false);
     setIncomingAttackWarning(false);
@@ -992,20 +993,18 @@ export const RedGateArenaPage = ({
   const bossStaggerPercent = Math.max(0, (bossStaggerHp / maxBossStagger) * 100);
 
   return (
-    <div
-      className={`rs-redgate-arena-screen phase-${introPhase} ${
-        isScreenShaking ? 'screen-shake' : ''
-      }`}
-    >
-      {/* 1. Portal Atmospheric Background */}
-      <video
-        className="rs-redgate-portal-video-bg"
-        autoPlay
-        loop
-        muted
-        playsInline
-        src="/assets/red_gate_portal.mp4"
-      />
+    <div className={`rs-redgate-arena-screen phase-${introPhase}`}>
+      {/* 1. Portal Atmospheric Background (decodes only during intro to guarantee 60 FPS in combat) */}
+      {introPhase !== 'active' && (
+        <video
+          className="rs-redgate-portal-video-bg"
+          autoPlay
+          loop
+          muted
+          playsInline
+          src="/assets/red_gate_portal.mp4"
+        />
+      )}
 
       <div className="rs-redgate-blood-fog"></div>
       <div className="rs-redgate-vignette-overlay"></div>
