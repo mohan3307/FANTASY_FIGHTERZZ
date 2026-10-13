@@ -89,7 +89,7 @@ export function App() {
     }
     setTimeout(() => {
       setIsTransitioning(false);
-    }, 200);
+    }, 90);
   };
 
   // 1. Play Button on Home ➡️ Warp to Hero Selection

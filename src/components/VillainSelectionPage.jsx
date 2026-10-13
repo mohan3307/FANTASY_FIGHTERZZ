@@ -48,7 +48,7 @@ export const VillainSelectionPage = ({ selectedHero, onBackToHeroSelect, onStart
       if (onStartBattle) {
         onStartBattle(selectedHero, selectedVillain);
       }
-    }, 650);
+    }, 80);
   };
 
   const getBadgeIcon = (type) => {

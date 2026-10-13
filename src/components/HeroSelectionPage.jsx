@@ -46,7 +46,7 @@ export const HeroSelectionPage = ({ onBackToHome, onConfirmHero }) => {
     setTimeout(() => {
       setHeroConfirmed(false);
       if (onConfirmHero) onConfirmHero(selectedHero);
-    }, 650);
+    }, 80);
   };
 
   const getBadgeIcon = (type) => {

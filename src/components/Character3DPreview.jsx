@@ -31,8 +31,8 @@ export const Character3DPreview = ({ character, isVillain = false, isPaused = fa
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(38, initialWidth / initialHeight, 0.1, 100);
-    camera.position.set(0, 1.15, 3.8);
-    camera.lookAt(0, 0.95, 0);
+    camera.position.set(0, 1.10, 4.3);
+    camera.lookAt(0, 1.05, 0);
 
     // 2. High-Performance WebGL Renderer (Capped DPI for 60+ FPS responsiveness)
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });

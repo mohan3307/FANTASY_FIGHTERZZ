@@ -105,12 +105,12 @@ export const HERO_CONFIGS = {
     accentColor: '#fbbf24',
     metalness: 0.78,
     roughness: 0.28,
-    scale: 1.02,
+    scale: 1.04,
     hasCapShield: true,
     hasCapHelmet: true,
     hasStarHarness: true,
     weaponType: 'shield',
-    modelUrl: '/heros/captain_america_-_marvel_cinematic_universe.glb',
+    modelUrl: '/heros/captain_america.glb',
     isAuthenticGlb: true
   },
   'captain-america': {
@@ -125,12 +125,12 @@ export const HERO_CONFIGS = {
     accentColor: '#fbbf24',
     metalness: 0.78,
     roughness: 0.28,
-    scale: 1.02,
+    scale: 1.04,
     hasCapShield: true,
     hasCapHelmet: true,
     hasStarHarness: true,
     weaponType: 'shield',
-    modelUrl: '/heros/captain_america_-_marvel_cinematic_universe.glb',
+    modelUrl: '/heros/captain_america.glb',
     isAuthenticGlb: true
   },
 
@@ -281,7 +281,7 @@ export const VILLAIN_CONFIGS = {
     accentColor: '#d946ef',
     metalness: 0.92,
     roughness: 0.22,
-    scale: 1.25, // Colossal Titan Scale
+    scale: 1.0, // Balanced Titan Scale (2.15m full screen fit)
     hasInfinityGauntlet: true,
     hasThanosArmor: true,
     hasThanosChin: true,
@@ -302,7 +302,7 @@ export const VILLAIN_CONFIGS = {
     accentColor: '#d946ef',
     metalness: 0.92,
     roughness: 0.22,
-    scale: 1.25,
+    scale: 1.0,
     hasInfinityGauntlet: true,
     hasThanosArmor: true,
     hasThanosChin: true,
@@ -406,7 +406,7 @@ export const VILLAIN_CONFIGS = {
     accentColor: '#8b5cf6',
     metalness: 0.94,
     roughness: 0.16,
-    scale: 1.25,
+    scale: 1.0,
     hasVoidCore: true,
     hasVoidGauntlets: true,
     hasVoidCrest: true,
@@ -454,25 +454,26 @@ function loadGLTFModel(url) {
 }
 
 export function preloadFighterModels() {
-  const urls = [
+  const priorityUrls = [
     '/heros/iron_man.glb',
-    '/heros/thor_odinson.glb',
-    '/heros/captain_america_-_marvel_cinematic_universe.glb',
+    '/heros/captain_america.glb',
     '/heros/spider-man.glb',
-    '/heros/doctor_strange_illuminati_textured_no_rig.glb',
-    '/villans/doctor_doom_skin__fortnite_chapter_2_-_bp_skin.glb',
     '/villans/thanos_4k_retextured.glb',
-    '/villans/loki.glb',
-    '/villans/green_globin_hd_3d_model_ftu.glb',
-    '/villans/max_eisenhardt_-_magneto.glb'
+    '/villans/doctor_doom_skin__fortnite_chapter_2_-_bp_skin.glb'
   ];
-  let delay = 100;
-  urls.forEach((url) => {
-    setTimeout(() => {
-      loadGLTFModel(url).catch(() => {});
-    }, delay);
-    delay += 200;
-  });
+  const startPreload = () => {
+    priorityUrls.forEach((url, i) => {
+      setTimeout(() => {
+        loadGLTFModel(url).catch(() => {});
+      }, i * 600);
+    });
+  };
+
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    window.requestIdleCallback(startPreload);
+  } else {
+    setTimeout(startPreload, 500);
+  }
 }
 
 // Visible 3D Holographic Asset-Loading Error Display
@@ -547,90 +548,190 @@ function createPosTrack(name, times, posArrays) {
   return new THREE.VectorKeyframeTrack(name + '.position', times, vals);
 }
 
-function buildSynthesizedMixamoClips() {
+function buildSynthesizedMixamoClips(characterId = '') {
+  const isSpidey = characterId === 'spiderman' || characterId === 'web-ninja';
+
+  if (isSpidey) {
+    return [
+      // 0. Clean, Upright Athletic Martial Stance (2.0s seamless loop)
+      new THREE.AnimationClip('idle', 2.0, [
+        createQuatTrack('mixamorigSpine2', [0, 1.0, 2.0], [[0.06, 0, 0], [0.03, 0, 0], [0.06, 0, 0]]),
+        createQuatTrack('mixamorigHead', [0, 1.0, 2.0], [[-0.04, 0, 0], [-0.02, 0, 0], [-0.04, 0, 0]]),
+        createQuatTrack('mixamorigLeftArm', [0, 1.0, 2.0], [[-0.35, 0.15, 0.20], [-0.32, 0.18, 0.22], [-0.35, 0.15, 0.20]]),
+        createQuatTrack('mixamorigLeftForeArm', [0, 1.0, 2.0], [[-0.95, 0, 0], [-0.98, 0, 0], [-0.95, 0, 0]]),
+        createQuatTrack('mixamorigRightArm', [0, 1.0, 2.0], [[-0.35, -0.15, -0.20], [-0.32, -0.18, -0.22], [-0.35, -0.15, -0.20]]),
+        createQuatTrack('mixamorigRightForeArm', [0, 1.0, 2.0], [[-0.95, 0, 0], [-0.98, 0, 0], [-0.95, 0, 0]])
+      ]),
+
+      // 1. Acrobatic Web-Zip Strike (0.58s)
+      new THREE.AnimationClip('attack', 0.58, [
+        createQuatTrack('mixamorigSpine2', [0, 0.25, 0.58], [[0.06, 0, 0], [0.15, 0.35, 0], [0.06, 0, 0]]),
+        createQuatTrack('mixamorigRightArm', [0, 0.25, 0.58], [[-0.35, -0.15, -0.20], [-1.45, 0, -0.15], [-0.35, -0.15, -0.20]]),
+        createQuatTrack('mixamorigRightForeArm', [0, 0.25, 0.58], [[-0.95, 0, 0], [-0.10, 0, 0], [-0.95, 0, 0]]),
+        createQuatTrack('mixamorigLeftArm', [0, 0.25, 0.58], [[-0.35, 0.15, 0.20], [0.35, 0, 0.25], [-0.35, 0.15, 0.20]])
+      ]),
+
+      // 2. Maximum Spider Web Blitz (0.95s)
+      new THREE.AnimationClip('special_cast', 0.95, [
+        createQuatTrack('mixamorigSpine2', [0, 0.45, 0.95], [[0.06, 0, 0], [-0.25, 0, 0], [0.06, 0, 0]]),
+        createQuatTrack('mixamorigLeftArm', [0, 0.45, 0.95], [[-0.35, 0.15, 0.20], [-2.15, 0, 0.35], [-0.35, 0.15, 0.20]]),
+        createQuatTrack('mixamorigRightArm', [0, 0.45, 0.95], [[-0.35, -0.15, -0.20], [-2.15, 0, -0.35], [-0.35, -0.15, -0.20]])
+      ]),
+
+      // 3. Spider Cross-Arm Web Guard (0.60s)
+      new THREE.AnimationClip('block', 0.60, [
+        createQuatTrack('mixamorigSpine2', [0, 0.20, 0.60], [[0.06, 0, 0], [0.12, 0, 0], [0.06, 0, 0]]),
+        createQuatTrack('mixamorigLeftArm', [0, 0.20, 0.60], [[-0.35, 0.15, 0.20], [-0.75, 0, 0.35], [-0.35, 0.15, 0.20]]),
+        createQuatTrack('mixamorigLeftForeArm', [0, 0.20, 0.60], [[-0.95, 0, 0], [-1.35, 0, 0], [-0.95, 0, 0]]),
+        createQuatTrack('mixamorigRightArm', [0, 0.20, 0.60], [[-0.35, -0.15, -0.20], [-0.75, 0, -0.35], [-0.35, -0.15, -0.20]]),
+        createQuatTrack('mixamorigRightForeArm', [0, 0.20, 0.60], [[-0.95, 0, 0], [-1.35, 0, 0], [-0.95, 0, 0]])
+      ]),
+
+      // 4. Acrobatic Dodge Left (0.45s)
+      new THREE.AnimationClip('dodge_left', 0.45, [
+        createQuatTrack('mixamorigSpine2', [0, 0.22, 0.45], [[0.06, 0, 0], [0, 0, -0.35], [0.06, 0, 0]]),
+        createQuatTrack('mixamorigLeftArm', [0, 0.22, 0.45], [[-0.35, 0.15, 0.20], [0.45, 0, 0], [-0.35, 0.15, 0.20]]),
+        createQuatTrack('mixamorigRightArm', [0, 0.22, 0.45], [[-0.35, -0.15, -0.20], [0.45, 0, 0], [-0.35, -0.15, -0.20]])
+      ]),
+
+      // 5. Acrobatic Dodge Right (0.45s)
+      new THREE.AnimationClip('dodge_right', 0.45, [
+        createQuatTrack('mixamorigSpine2', [0, 0.22, 0.45], [[0.06, 0, 0], [0, 0, 0.35], [0.06, 0, 0]]),
+        createQuatTrack('mixamorigLeftArm', [0, 0.22, 0.45], [[-0.35, 0.15, 0.20], [0.45, 0, 0], [-0.35, 0.15, 0.20]]),
+        createQuatTrack('mixamorigRightArm', [0, 0.22, 0.45], [[-0.35, -0.15, -0.20], [0.45, 0, 0], [-0.35, -0.15, -0.20]])
+      ]),
+
+      // 6. Acrobatic Leap (0.65s)
+      new THREE.AnimationClip('jump', 0.65, [
+        createQuatTrack('mixamorigSpine2', [0, 0.32, 0.65], [[0.06, 0, 0], [-0.15, 0, 0], [0.06, 0, 0]])
+      ]),
+
+      // 7. Hit Reaction (0.42s)
+      new THREE.AnimationClip('hit_reaction', 0.42, [
+        createQuatTrack('mixamorigSpine2', [0, 0.18, 0.42], [[0.06, 0, 0], [-0.28, 0, 0], [0.06, 0, 0]]),
+        createQuatTrack('mixamorigHead', [0, 0.18, 0.42], [[-0.04, 0, 0], [0.35, 0, 0], [-0.04, 0, 0]])
+      ]),
+
+      // 8. Combat-Ready Stance
+      new THREE.AnimationClip('combat_stance', 1.0, [
+        createQuatTrack('mixamorigSpine2', [0, 0.5, 1.0], [[0.06, 0, 0], [0.04, 0, 0], [0.06, 0, 0]]),
+        createQuatTrack('mixamorigLeftArm', [0, 0.5, 1.0], [[-0.35, 0.15, 0.20], [-0.35, 0.15, 0.20], [-0.35, 0.15, 0.20]]),
+        createQuatTrack('mixamorigRightArm', [0, 0.5, 1.0], [[-0.35, -0.15, -0.20], [-0.35, -0.15, -0.20], [-0.35, -0.15, -0.20]])
+      ]),
+
+      // 9. Iconic Web-Slinging Victory Pose (1.2s)
+      new THREE.AnimationClip('victory', 1.2, [
+        createQuatTrack('mixamorigRightArm', [0, 0.4, 1.2], [[0, 0, 0], [-2.85, 0, -0.25], [-2.85, 0, -0.25]]),
+        createQuatTrack('mixamorigRightForeArm', [0, 0.4, 1.2], [[0, 0, 0], [-0.1, 0, 0], [-0.1, 0, 0]]),
+        createQuatTrack('mixamorigLeftArm', [0, 0.4, 1.2], [[0, 0, 0], [0.45, 0, 0.45], [0.45, 0, 0.45]]),
+        createQuatTrack('mixamorigSpine2', [0, 0.4, 1.2], [[0, 0, 0], [0.25, 0, 0], [0.25, 0, 0]]),
+        createQuatTrack('mixamorigHead', [0, 0.4, 1.2], [[0, 0, 0], [0.25, 0, 0], [0.25, 0, 0]])
+      ]),
+
+      // 10. Defeat Pose (1.0s)
+      new THREE.AnimationClip('defeat', 1.0, [
+        createQuatTrack('mixamorigSpine2', [0, 0.5, 1.0], [[0, 0, 0], [-0.65, 0, 0], [-0.65, 0, 0]])
+      ])
+    ];
+  }
+
   return [
-    // 1. Energy Attack (Punch & Lunge) - Accelerated to 0.26s
-    new THREE.AnimationClip('attack', 0.26, [
-      createPosTrack('mixamorigHips', [0, 0.11, 0.26], [[0, 0, 0], [0, 0, 0.32], [0, 0, 0]]),
-      createQuatTrack('mixamorigSpine2', [0, 0.11, 0.26], [[0, 0, 0], [0, 0.38, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigRightArm', [0, 0.11, 0.26], [[0, 0, 0], [-1.45, 0, -0.2], [0, 0, 0]]),
-      createQuatTrack('mixamorigRightForeArm', [0, 0.11, 0.26], [[0, 0, 0], [-0.15, 0, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigLeftArm', [0, 0.11, 0.26], [[0, 0, 0], [0.5, 0, 0.4], [0, 0, 0]]),
-      createQuatTrack('mixamorigLeftForeArm', [0, 0.11, 0.26], [[0, 0, 0], [-1.2, 0, 0], [0, 0, 0]])
+    // 0. Authentic Combat Idle Fighting Stance (2.0s seamless loop)
+    new THREE.AnimationClip('idle', 2.0, [
+      createQuatTrack('mixamorigSpine2', [0, 1.0, 2.0], [[0.18, 0, 0], [0.14, 0, 0], [0.18, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 1.0, 2.0], [[-0.12, 0, 0], [-0.08, 0, 0], [-0.12, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 1.0, 2.0], [[-0.75, 0.25, 0.55], [-0.70, 0.28, 0.58], [-0.75, 0.25, 0.55]]),
+      createQuatTrack('mixamorigLeftForeArm', [0, 1.0, 2.0], [[-1.25, 0, 0], [-1.30, 0, 0], [-1.25, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 1.0, 2.0], [[-0.45, -0.22, -0.45], [-0.42, -0.24, -0.48], [-0.45, -0.22, -0.45]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 1.0, 2.0], [[-1.15, 0, 0], [-1.20, 0, 0], [-1.15, 0, 0]]),
+      createQuatTrack('mixamorigLeftUpLeg', [0, 1.0, 2.0], [[-0.15, 0, -0.05], [-0.18, 0, -0.05], [-0.15, 0, -0.05]]),
+      createQuatTrack('mixamorigLeftLeg', [0, 1.0, 2.0], [[0.28, 0, 0], [0.32, 0, 0], [0.28, 0, 0]]),
+      createQuatTrack('mixamorigRightUpLeg', [0, 1.0, 2.0], [[-0.05, 0, 0.08], [-0.08, 0, 0.08], [-0.05, 0, 0.08]]),
+      createQuatTrack('mixamorigRightLeg', [0, 1.0, 2.0], [[0.22, 0, 0], [0.26, 0, 0], [0.22, 0, 0]])
     ]),
 
-    // 2. Special-Power Cast (Cosmic Channeling & Forward Blast) - Accelerated to 0.45s
-    new THREE.AnimationClip('special_cast', 0.45, [
-      createPosTrack('mixamorigHips', [0, 0.22, 0.45], [[0, 0, 0], [0, 0.35, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigSpine2', [0, 0.22, 0.45], [[0, 0, 0], [-0.25, 0, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigHead', [0, 0.22, 0.45], [[0, 0, 0], [-0.35, 0, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigLeftArm', [0, 0.22, 0.45], [[0, 0, 0], [-2.2, 0, 0.45], [0, 0, 0]]),
-      createQuatTrack('mixamorigRightArm', [0, 0.22, 0.45], [[0, 0, 0], [-2.2, 0, -0.45], [0, 0, 0]])
+    // 1. Kinetic Attack Strike (0.58s deliberate wind-up, impact & recovery)
+    new THREE.AnimationClip('attack', 0.58, [
+      createPosTrack('mixamorigHips', [0, 0.24, 0.58], [[0, 0, 0], [0, 0, 0.32], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.24, 0.58], [[0, 0, 0], [0, 0.38, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.24, 0.58], [[0, 0, 0], [-1.45, 0, -0.2], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 0.24, 0.58], [[0, 0, 0], [-0.15, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.24, 0.58], [[0, 0, 0], [0.5, 0, 0.4], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftForeArm', [0, 0.24, 0.58], [[0, 0, 0], [-1.2, 0, 0], [0, 0, 0]])
     ]),
 
-    // 3. Block or Shield (Braced Dual-Arm Defense) - Accelerated to 0.32s
-    new THREE.AnimationClip('block', 0.32, [
-      createQuatTrack('mixamorigSpine2', [0, 0.08, 0.32], [[0, 0, 0], [-0.15, 0, 0], [-0.15, 0, 0]]),
-      createQuatTrack('mixamorigLeftArm', [0, 0.08, 0.32], [[0, 0, 0], [-0.85, 0, 0.45], [-0.85, 0, 0.45]]),
-      createQuatTrack('mixamorigLeftForeArm', [0, 0.08, 0.32], [[0, 0, 0], [-1.55, 0, 0], [-1.55, 0, 0]]),
-      createQuatTrack('mixamorigRightArm', [0, 0.08, 0.32], [[0, 0, 0], [-0.75, 0, -0.35], [-0.75, 0, -0.35]]),
-      createQuatTrack('mixamorigRightForeArm', [0, 0.08, 0.32], [[0, 0, 0], [-1.45, 0, 0], [-1.45, 0, 0]])
+    // 2. Special-Power Cast (0.95s cosmic channeling & forward blast)
+    new THREE.AnimationClip('special_cast', 0.95, [
+      createPosTrack('mixamorigHips', [0, 0.42, 0.95], [[0, 0, 0], [0, 0.35, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.42, 0.95], [[0, 0, 0], [-0.25, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 0.42, 0.95], [[0, 0, 0], [-0.35, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.42, 0.95], [[0, 0, 0], [-2.2, 0, 0.45], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.42, 0.95], [[0, 0, 0], [-2.2, 0, -0.45], [0, 0, 0]])
     ]),
 
-    // 4. Dodge Left (Lateral Evasion) - Accelerated to 0.22s
-    new THREE.AnimationClip('dodge_left', 0.22, [
-      createPosTrack('mixamorigHips', [0, 0.10, 0.22], [[0, 0, 0], [-0.45, -0.15, -0.2], [0, 0, 0]]),
-      createQuatTrack('mixamorigSpine2', [0, 0.10, 0.22], [[0, 0, 0], [0, 0, -0.35], [0, 0, 0]]),
-      createQuatTrack('mixamorigLeftArm', [0, 0.10, 0.22], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigRightArm', [0, 0.10, 0.22], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]])
+    // 3. Block or Shield (0.60s braced dual-arm defense)
+    new THREE.AnimationClip('block', 0.60, [
+      createQuatTrack('mixamorigSpine2', [0, 0.18, 0.60], [[0, 0, 0], [-0.15, 0, 0], [-0.15, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.18, 0.60], [[0, 0, 0], [-0.85, 0, 0.45], [-0.85, 0, 0.45]]),
+      createQuatTrack('mixamorigLeftForeArm', [0, 0.18, 0.60], [[0, 0, 0], [-1.55, 0, 0], [-1.55, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.18, 0.60], [[0, 0, 0], [-0.75, 0, -0.35], [-0.75, 0, -0.35]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 0.18, 0.60], [[0, 0, 0], [-1.45, 0, 0], [-1.45, 0, 0]])
     ]),
 
-    // 5. Dodge Right (Lateral Evasion) - Accelerated to 0.22s
-    new THREE.AnimationClip('dodge_right', 0.22, [
-      createPosTrack('mixamorigHips', [0, 0.10, 0.22], [[0, 0, 0], [0.45, -0.15, -0.2], [0, 0, 0]]),
-      createQuatTrack('mixamorigSpine2', [0, 0.10, 0.22], [[0, 0, 0], [0, 0, 0.35], [0, 0, 0]]),
-      createQuatTrack('mixamorigLeftArm', [0, 0.10, 0.22], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigRightArm', [0, 0.10, 0.22], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]])
+    // 4. Dodge Left (0.45s lateral evasion)
+    new THREE.AnimationClip('dodge_left', 0.45, [
+      createPosTrack('mixamorigHips', [0, 0.22, 0.45], [[0, 0, 0], [-0.45, -0.15, -0.2], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.22, 0.45], [[0, 0, 0], [0, 0, -0.35], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.22, 0.45], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.22, 0.45], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]])
     ]),
 
-    // 6. Jump and Land - Accelerated to 0.45s
-    new THREE.AnimationClip('jump', 0.45, [
-      createPosTrack('mixamorigHips', [0, 0.08, 0.22, 0.36, 0.45], [[0, 0, 0], [0, -0.15, 0], [0, 0.85, 0], [0, -0.1, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigLeftLeg', [0, 0.08, 0.22, 0.36, 0.45], [[0, 0, 0], [0.4, 0, 0], [0.8, 0, 0], [0.3, 0, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigRightLeg', [0, 0.08, 0.22, 0.36, 0.45], [[0, 0, 0], [0.4, 0, 0], [0.8, 0, 0], [0.3, 0, 0], [0, 0, 0]])
+    // 5. Dodge Right (0.45s lateral evasion)
+    new THREE.AnimationClip('dodge_right', 0.45, [
+      createPosTrack('mixamorigHips', [0, 0.22, 0.45], [[0, 0, 0], [0.45, -0.15, -0.2], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.22, 0.45], [[0, 0, 0], [0, 0, 0.35], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.22, 0.45], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.22, 0.45], [[0, 0, 0], [0.6, 0, 0], [0, 0, 0]])
     ]),
 
-    // 7. Hit Reaction (Kinetic Whiplash) - Accelerated to 0.22s
-    new THREE.AnimationClip('hit_reaction', 0.22, [
-      createPosTrack('mixamorigHips', [0, 0.08, 0.22], [[0, 0, 0], [0, 0, -0.3], [0, 0, 0]]),
-      createQuatTrack('mixamorigSpine2', [0, 0.08, 0.22], [[0, 0, 0], [-0.42, 0, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigHead', [0, 0.08, 0.22], [[0, 0, 0], [0.55, 0, 0], [0, 0, 0]])
+    // 6. Jump and Land (0.65s)
+    new THREE.AnimationClip('jump', 0.65, [
+      createPosTrack('mixamorigHips', [0, 0.16, 0.38, 0.52, 0.65], [[0, 0, 0], [0, -0.15, 0], [0, 0.85, 0], [0, -0.1, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftLeg', [0, 0.16, 0.38, 0.52, 0.65], [[0, 0, 0], [0.4, 0, 0], [0.8, 0, 0], [0.3, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigRightLeg', [0, 0.16, 0.38, 0.52, 0.65], [[0, 0, 0], [0.4, 0, 0], [0.8, 0, 0], [0.3, 0, 0], [0, 0, 0]])
     ]),
 
-    // 8. Combat-Ready Stance
-    new THREE.AnimationClip('combat_stance', 1.0, [
-      createQuatTrack('mixamorigLeftArm', [0, 0.5, 1.0], [[-0.65, 0, 0.35], [-0.6, 0, 0.38], [-0.65, 0, 0.35]]),
-      createQuatTrack('mixamorigLeftForeArm', [0, 0.5, 1.0], [[-1.2, 0, 0], [-1.25, 0, 0], [-1.2, 0, 0]]),
-      createQuatTrack('mixamorigRightArm', [0, 0.5, 1.0], [[-0.45, 0, -0.25], [-0.5, 0, -0.28], [-0.45, 0, -0.25]]),
-      createQuatTrack('mixamorigRightForeArm', [0, 0.5, 1.0], [[-0.95, 0, 0], [-1.0, 0, 0], [-0.95, 0, 0]])
+    // 7. Hit Reaction (0.42s kinetic whiplash)
+    new THREE.AnimationClip('hit_reaction', 0.42, [
+      createPosTrack('mixamorigHips', [0, 0.18, 0.42], [[0, 0, 0], [0, 0, -0.3], [0, 0, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.18, 0.42], [[0, 0, 0], [-0.42, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 0.18, 0.42], [[0, 0, 0], [0.55, 0, 0], [0, 0, 0]])
     ]),
 
-    // 9. Victory Pose
-    new THREE.AnimationClip('victory', 1.0, [
-      createQuatTrack('mixamorigRightArm', [0, 0.3, 1.0], [[0, 0, 0], [-2.7, 0, -0.2], [-2.7, 0, -0.2]]),
-      createQuatTrack('mixamorigRightForeArm', [0, 0.3, 1.0], [[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
-      createQuatTrack('mixamorigLeftArm', [0, 0.3, 1.0], [[0, 0, 0], [0.35, 0, 0.35], [0.35, 0, 0.35]]),
-      createQuatTrack('mixamorigSpine2', [0, 0.3, 1.0], [[0, 0, 0], [-0.15, 0, 0], [-0.15, 0, 0]]),
-      createQuatTrack('mixamorigHead', [0, 0.3, 1.0], [[0, 0, 0], [0.15, 0, 0], [0.15, 0, 0]])
+    // 8. Combat-Ready Stance (1.2s)
+    new THREE.AnimationClip('combat_stance', 1.2, [
+      createQuatTrack('mixamorigLeftArm', [0, 0.6, 1.2], [[-0.65, 0, 0.35], [-0.6, 0, 0.38], [-0.65, 0, 0.35]]),
+      createQuatTrack('mixamorigLeftForeArm', [0, 0.6, 1.2], [[-1.2, 0, 0], [-1.25, 0, 0], [-1.2, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.6, 1.2], [[-0.45, 0, -0.25], [-0.5, 0, -0.28], [-0.45, 0, -0.25]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 0.6, 1.2], [[-0.95, 0, 0], [-1.0, 0, 0], [-0.95, 0, 0]])
     ]),
 
-    // 10. Defeat Pose
-    new THREE.AnimationClip('defeat', 0.9, [
-      createPosTrack('mixamorigHips', [0, 0.5, 0.9], [[0, 0, 0], [0, -0.45, 0], [0, -0.55, 0]]),
-      createQuatTrack('mixamorigSpine2', [0, 0.5, 0.9], [[0, 0, 0], [0.55, 0, 0], [0.65, 0, 0]]),
-      createQuatTrack('mixamorigHead', [0, 0.5, 0.9], [[0, 0, 0], [0.6, 0, 0], [0.7, 0, 0]]),
-      createQuatTrack('mixamorigLeftArm', [0, 0.5, 0.9], [[0, 0, 0], [-0.2, 0, 0], [-0.2, 0, 0]]),
-      createQuatTrack('mixamorigRightArm', [0, 0.5, 0.9], [[0, 0, 0], [0.6, 0, 0], [0.6, 0, 0]])
+    // 9. Victory Pose (1.2s)
+    new THREE.AnimationClip('victory', 1.2, [
+      createQuatTrack('mixamorigRightArm', [0, 0.4, 1.2], [[0, 0, 0], [-2.7, 0, -0.2], [-2.7, 0, -0.2]]),
+      createQuatTrack('mixamorigRightForeArm', [0, 0.4, 1.2], [[0, 0, 0], [0, 0, 0], [0, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.4, 1.2], [[0, 0, 0], [0.35, 0, 0.35], [0.35, 0, 0.35]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.4, 1.2], [[0, 0, 0], [-0.15, 0, 0], [-0.15, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 0.4, 1.2], [[0, 0, 0], [0.15, 0, 0], [0.15, 0, 0]])
+    ]),
+
+    // 10. Defeat Pose (1.0s)
+    new THREE.AnimationClip('defeat', 1.0, [
+      createPosTrack('mixamorigHips', [0, 0.5, 1.0], [[0, 0, 0], [0, -0.45, 0], [0, -0.55, 0]]),
+      createQuatTrack('mixamorigSpine2', [0, 0.5, 1.0], [[0, 0, 0], [0.55, 0, 0], [0.65, 0, 0]]),
+      createQuatTrack('mixamorigHead', [0, 0.5, 1.0], [[0, 0, 0], [0.6, 0, 0], [0.7, 0, 0]]),
+      createQuatTrack('mixamorigLeftArm', [0, 0.5, 1.0], [[0, 0, 0], [-0.2, 0, 0], [-0.2, 0, 0]]),
+      createQuatTrack('mixamorigRightArm', [0, 0.5, 1.0], [[0, 0, 0], [0.6, 0, 0], [0.6, 0, 0]])
     ])
   ];
 }
@@ -739,20 +840,49 @@ export function createArticulated3DFighter(character, isVillain = false) {
       const clonedModel = SkeletonUtils.clone(cachedGltf.scene);
 
       if (config.isAuthenticGlb) {
+        if (config.id === 'captain-america' || config.id === 'shield-sentinel') {
+          // Remove rogue Thor hammer/weapon node embedded in raw sketchfab GLTF
+          const rogueNodes = [];
+          clonedModel.traverse((child) => {
+            if (child.name && (child.name.toLowerCase().includes('thor') || child.name.toLowerCase().includes('wp02'))) {
+              rogueNodes.push(child);
+            }
+            if (child.isMesh && (child.name.includes('WP001') || child.name.toLowerCase().includes('shield'))) {
+              rig.shieldMesh = child;
+            }
+          });
+          rogueNodes.forEach((node) => {
+            if (node.parent) node.parent.remove(node);
+          });
+        }
+
         // Auto-normalize scale and grounding based on exact 3D geometry bounds
         clonedModel.updateMatrixWorld(true);
         const rawBox = new THREE.Box3().setFromObject(clonedModel);
         const rawSize = new THREE.Vector3();
         rawBox.getSize(rawSize);
 
-        // Realistic heights in meters: Titans (Thanos) 2.35m, Bosses (Doctor Doom) 2.15m, Standard warriors 1.95m
+        // Realistic heights in meters: Titans (Thanos) 2.15m, Bosses (Doctor Doom) 2.05m, Standard warriors 1.95m
         const isColossal = config.id === 'thanos' || config.id === 'mech-destroyer' || config.id === 'void-titan';
         const isBoss = isColossal || config.id === 'doom-regent' || config.id === 'doctor-doom';
-        const targetHeightMeters = (isColossal ? 2.35 : (isBoss ? 2.15 : 1.95)) * (config.scale || 1.0);
+        const targetHeightMeters = (isColossal ? 2.15 : (isBoss ? 2.05 : 1.95)) * (config.scale || 1.0);
 
         const modelHeight = rawSize.y > 0.001 ? rawSize.y : 1.0;
         const normScale = targetHeightMeters / modelHeight;
-        clonedModel.scale.set(normScale, normScale, normScale);
+
+        // AUTHENTIC CHARACTER BODY PROPORTIONS
+        if (config.id === 'thanos' || config.id === 'mech-destroyer' || config.id === 'void-titan') {
+          // Thanos: Broad Titan build - 18% wider shoulder-span, 12% thicker chest, muscular wide stance
+          clonedModel.scale.set(normScale * 1.18, normScale, normScale * 1.12);
+        } else if (config.id === 'spiderman' || config.id === 'web-ninja') {
+          // Spider-Man: Lean, nimble, athletic acrobat build - streamlined waist, lithe limbs
+          clonedModel.scale.set(normScale * 0.96, normScale, normScale * 0.96);
+        } else if (config.id === 'captain-america' || config.id === 'shield-sentinel') {
+          // Captain America: Peak super soldier athletic V-taper build
+          clonedModel.scale.set(normScale * 1.06, normScale, normScale * 1.04);
+        } else {
+          clonedModel.scale.set(normScale, normScale, normScale);
+        }
         clonedModel.updateMatrixWorld(true);
 
         // Ground feet perfectly at arena floor (Y = 0) and center on X and Z
@@ -778,21 +908,27 @@ export function createArticulated3DFighter(character, isVillain = false) {
       const bones = {};
       clonedModel.traverse((node) => {
         if (node.isBone) {
-          node.name = node.name.replace(/:/g, '');
-          bones[node.name] = node;
-          bones[node.name.replace('mixamorig', '')] = node;
-          bones[node.name.toLowerCase()] = node;
+          const rawName = node.name;
+          const cleanName = rawName.replace(/:/g, '').replace(/_\d+$/, '');
+          node.name = cleanName; // Sync node name so AnimationMixer tracks match!
+          bones[cleanName] = node;
+          bones[cleanName.toLowerCase()] = node;
+          bones[cleanName.replace(/^mixamorig/i, '')] = node;
+          bones[cleanName.replace(/^mixamorig/i, '').toLowerCase()] = node;
+          bones[rawName] = node;
+          bones[rawName.toLowerCase()] = node;
         }
       });
       rig.bones = bones;
 
       const getBone = (name) => {
-        const clean = name.replace(/:/g, '');
+        const clean = name.replace(/:/g, '').replace(/_\d+$/, '');
         return (
           bones[clean] ||
           bones['mixamorig' + clean] ||
           bones[clean.toLowerCase()] ||
           bones['mixamorig' + clean.toLowerCase()] ||
+          bones['mixamorig:' + clean] ||
           null
         );
       };
@@ -821,7 +957,7 @@ export function createArticulated3DFighter(character, isVillain = false) {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-          child.frustumCulled = true;
+          child.frustumCulled = false; // Disable frustum culling so characters never glitch or vanish
           if (child.material) {
             const mats = Array.isArray(child.material) ? child.material : [child.material];
             if (config.isAuthenticGlb) {
@@ -831,20 +967,30 @@ export function createArticulated3DFighter(character, isVillain = false) {
                 mat.side = isCloth ? THREE.DoubleSide : THREE.FrontSide;
                 if (mat.map) {
                   mat.map.colorSpace = THREE.SRGBColorSpace;
-                  mat.map.anisotropy = 2;
+                  mat.map.anisotropy = 4;
                   mat.map.generateMipmaps = true;
                   mat.map.minFilter = THREE.LinearMipmapLinearFilter;
                 }
-                if (mat.normalMap) {
-                  mat.normalMap.anisotropy = 2;
-                }
-                if (mat.roughnessMap) {
-                  mat.roughnessMap.anisotropy = 2;
-                }
-                if (mat.metalnessMap) {
-                  mat.metalnessMap.anisotropy = 2;
-                }
-                if (mat.roughness !== undefined && mat.roughness > 0.6) {
+                if (config.id === 'thanos' || config.id === 'mech-destroyer' || config.id === 'void-titan') {
+                  mat.metalness = 0.55;
+                  mat.roughness = 0.35;
+                  if (!mat.map) {
+                    if (meshName.includes('head') || meshName.includes('skin') || meshName.includes('face')) {
+                      mat.color.setHex(0x581c87); // Deep Titan Purple
+                    } else if (meshName.includes('gauntlet') || meshName.includes('arm')) {
+                      mat.color.setHex(0xd97706); // Golden Infinity Gauntlet
+                    } else {
+                      mat.color.setHex(0x3b0764); // Dark Titan Armor
+                    }
+                  }
+                } else if (config.id === 'spiderman' || config.id === 'web-ninja') {
+                  if (mat.map) {
+                    mat.map.colorSpace = THREE.SRGBColorSpace;
+                    mat.map.anisotropy = 4;
+                  }
+                  mat.metalness = 0.35;
+                  mat.roughness = 0.40;
+                } else if (mat.roughness !== undefined && mat.roughness > 0.6) {
                   mat.roughness = 0.38;
                 }
                 mat.needsUpdate = true;
@@ -868,6 +1014,8 @@ export function createArticulated3DFighter(character, isVillain = false) {
 
       if (cachedGltf.animations && cachedGltf.animations.length > 0) {
         cachedGltf.animations.forEach((clip) => {
+          // Strictly reject empty, 0-duration dummy tracks or camera calibrations
+          if (!clip || clip.duration < 0.05 || !clip.tracks || clip.tracks.length < 5) return;
           const action = mixer.clipAction(clip);
           const lowerName = clip.name.toLowerCase();
           actions[lowerName] = action;
@@ -881,24 +1029,23 @@ export function createArticulated3DFighter(character, isVillain = false) {
             actions['walk'] = action;
           }
         });
-        if (!actions['idle']) {
-          actions['idle'] = mixer.clipAction(cachedGltf.animations[0]);
-        }
       }
 
       // Add synthesized clips if model possesses Mixamo-compatible bones
       if (bones['hips'] || bones['mixamorighips']) {
-        const synthClips = buildSynthesizedMixamoClips();
+        const synthClips = buildSynthesizedMixamoClips(config?.id || '');
         synthClips.forEach((clip) => {
-          if (!actions[clip.name.toLowerCase()]) {
-            const action = mixer.clipAction(clip);
-            actions[clip.name.toLowerCase()] = action;
+          const action = mixer.clipAction(clip);
+          const cName = clip.name.toLowerCase();
+          if (!actions[cName] || config?.id === 'spiderman' || config?.id === 'web-ninja') {
+            actions[cName] = action;
           }
         });
       }
-      if (!actions['dodge']) actions['dodge'] = actions['dodge_left'] || actions['idle'];
+      if (!actions['idle']) actions['idle'] = actions['combat_stance'] || actions['attack'];
       if (!actions['combat_stance']) actions['combat_stance'] = actions['idle'];
       if (!actions['attack']) actions['attack'] = actions['idle'];
+      if (!actions['dodge']) actions['dodge'] = actions['dodge_left'] || actions['idle'];
       if (!actions['special_cast']) actions['special_cast'] = actions['attack'];
 
       rig.actions = actions;
@@ -1642,6 +1789,113 @@ export function createArticulated3DFighter(character, isVillain = false) {
         }
       }
 
+      // 8. GUARANTEE AUTHENTIC WEAPONS & GEAR FOR CAPTAIN AMERICA, THANOS & SPIDER-MAN
+      // A. CAPTAIN AMERICA: Indestructible Vibranium Kinetic Shield (Only for procedural mannequins - authentic GLB already has authentic Civil War shield!)
+      if ((config.hasCapShield || config.id === 'captain-america' || config.id === 'shield-sentinel') && !rig.shieldMesh && !config.isAuthenticGlb) {
+        const shieldParent = rig.leftElbow || rig.leftForeArm || rig.leftWrist || clonedModel;
+        const sGroup = new THREE.Group();
+        sGroup.name = 'vibranium-shield';
+        const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.04, 28), createPbrMaterial(0xb91c1c, 0.92, 0.16));
+        disc.rotation.x = Math.PI / 2;
+        sGroup.add(disc);
+
+        const silverRing = new THREE.Mesh(new THREE.RingGeometry(0.26, 0.35, 28), createPbrMaterial(0xe2e8f0, 0.95, 0.12));
+        silverRing.position.z = 0.025;
+        sGroup.add(silverRing);
+
+        const innerCrimson = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.26, 28), createPbrMaterial(0xb91c1c, 0.92, 0.16));
+        innerCrimson.position.z = 0.026;
+        sGroup.add(innerCrimson);
+
+        const blueDisc = new THREE.Mesh(new THREE.CircleGeometry(0.16, 28), createPbrMaterial(0x1d4ed8, 0.9, 0.18));
+        blueDisc.position.z = 0.027;
+        sGroup.add(blueDisc);
+
+        const centerStar = new THREE.Mesh(new THREE.CircleGeometry(0.09, 5), createPbrMaterial(0xffffff, 0.96, 0.08));
+        centerStar.position.z = 0.03;
+        sGroup.add(centerStar);
+
+        // Position shield facing outwards on Captain America's forearm
+        sGroup.position.set(-0.06, -0.12, 0.14);
+        sGroup.rotation.set(0.1, 0.3, -0.2);
+        shieldParent.add(sGroup);
+        rig.shieldMesh = sGroup;
+      }
+
+      // B. THANOS: All 6 Cosmic Infinity Stones & Golden Infinity Gauntlet
+      if (config.hasInfinityGauntlet || config.id === 'thanos' || config.id === 'mech-destroyer') {
+        let stonesFound = 0;
+        const stoneColors = {
+          orange: 0xf97316, // Soul Stone
+          red: 0xef4444,    // Reality Stone
+          blue: 0x38bdf8,   // Space Stone
+          purple: 0xa855f7, // Power Stone
+          green: 0x10b981,  // Time Stone
+          yellow: 0xfacc15  // Mind Stone
+        };
+
+        clonedModel.traverse((child) => {
+          if (child.isMesh && child.name) {
+            const lower = child.name.toLowerCase();
+            for (const [sKey, sColor] of Object.entries(stoneColors)) {
+              if (lower.includes(`stone_${sKey}`) || lower.includes(`stone_${sKey.substring(0, 3)}`)) {
+                child.material = new THREE.MeshBasicMaterial({ color: sColor });
+                const stoneLight = new THREE.PointLight(sColor, sKey === 'yellow' ? 3.0 : 1.6, 2.5);
+                child.add(stoneLight);
+                stonesFound++;
+              }
+            }
+          }
+        });
+
+        // Fallback: If stone meshes weren't directly embedded in this GLB clone, attach glowing gauntlet on left wrist
+        if (stonesFound === 0 && rig.leftWrist && !config.isAuthenticGlb) {
+          const gauntGroup = new THREE.Group();
+          gauntGroup.name = 'infinity-gauntlet';
+          const gauntMat = createPbrMaterial(0xd97706, 0.94, 0.16);
+          const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.32, 0.20), gauntMat);
+          gBody.position.set(0, -0.08, 0.02);
+          gauntGroup.add(gBody);
+
+          const stones = [
+            { color: 0xa855f7, pos: [-0.07, 0.05, 0.12] },  // Power (Purple)
+            { color: 0x38bdf8, pos: [-0.025, 0.06, 0.12] }, // Space (Blue)
+            { color: 0xef4444, pos: [0.025, 0.06, 0.12] },  // Reality (Red)
+            { color: 0xf97316, pos: [0.07, 0.05, 0.12] },   // Soul (Orange)
+            { color: 0x10b981, pos: [-0.09, -0.02, 0.11] }, // Time (Green)
+            { color: 0xfacc15, pos: [0.0, -0.02, 0.125], isMind: true } // Mind (Yellow)
+          ];
+          stones.forEach((st) => {
+            const gem = new THREE.Mesh(
+              new THREE.SphereGeometry(st.isMind ? 0.038 : 0.026, 12, 12),
+              new THREE.MeshBasicMaterial({ color: st.color })
+            );
+            gem.position.set(...st.pos);
+            gauntGroup.add(gem);
+            const gemL = new THREE.PointLight(st.color, st.isMind ? 3.2 : 1.5, 2.2);
+            gemL.position.set(...st.pos);
+            gauntGroup.add(gemL);
+          });
+          rig.leftWrist.add(gauntGroup);
+          rig.infinityGauntlet = gauntGroup;
+        }
+      }
+
+      // C. SPIDER-MAN: High-Tensile Dual Web-Shooters (Only for procedural mannequins - authentic GLB has built-in web-shooters)
+      if ((config.hasWebshooters || config.id === 'spiderman' || config.id === 'web-ninja') && !config.isAuthenticGlb && rig.leftWrist && rig.rightWrist) {
+        const webShootMat = createPbrMaterial(0x0f172a, 0.85, 0.2);
+        const nozzleMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+
+        [rig.leftWrist, rig.rightWrist].forEach((wrist) => {
+          const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.07, 0.06, 12), webShootMat);
+          const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.03, 8), nozzleMat);
+          nozzle.position.set(0, -0.03, 0.065);
+          nozzle.rotation.x = Math.PI / 2;
+          cuff.add(nozzle);
+          wrist.add(cuff);
+        });
+      }
+
       // Mount cloned rigged model to root group
       group.add(clonedModel);
       rig.model = clonedModel;
@@ -1700,34 +1954,120 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
   if (rig.model && rig.baseModelPos) {
     const bPos = rig.baseModelPos;
     const bRot = rig.baseModelRot || new THREE.Euler(0, 0, 0);
+    const charId = rig.config?.id || rig.config?.marvelId || (isHero ? 'hero' : 'villain');
+
+    const isIronMan = charId === 'ironman' || charId === 'plasma-ranger';
+    const isThor = charId === 'thor' || charId === 'storm-guardian';
+    const isSpidey = charId === 'spiderman' || charId === 'web-ninja';
+    const isCap = charId === 'captain-america' || charId === 'shield-sentinel';
+    const isStrange = charId === 'doctor-strange' || charId === 'arcane-sorcerer' || charId === 'dr-strange';
+
+    const isThanos = charId === 'thanos' || charId === 'mech-destroyer';
+    const isDoom = charId === 'doctor-doom' || charId === 'doom-regent';
+    const isGoblin = charId === 'green-goblin';
+    const isLoki = charId === 'loki' || charId === 'shadow-assassin';
+    const isMag = charId === 'magneto';
 
     if (state === 'idle') {
-      // Smooth breathing respiration and weight shift
-      const breath = Math.sin(elapsed * 2.6 + (isHero ? 0 : 1.4)) * 0.016;
-      const sway = Math.cos(elapsed * 1.5 + (isHero ? 0 : 0.7)) * 0.012;
-      rig.model.position.y = bPos.y + breath;
-      rig.model.position.x = bPos.x + sway * 0.4;
-      rig.model.rotation.y = bRot.y + sway * 0.7;
+      // Smooth breathing respiration and weight shift tailored per character
+      if (isIronMan) {
+        // High-tech hovering respiration
+        const hoverRespir = Math.sin(elapsed * 3.6) * 0.018;
+        rig.model.position.y = bPos.y + hoverRespir;
+        rig.model.rotation.x = bRot.x + 0.03;
+      } else if (isStrange) {
+        // Mystical floating weightlessness
+        const mysticFloat = Math.sin(elapsed * 2.0) * 0.025;
+        rig.model.position.y = bPos.y + mysticFloat;
+        rig.model.rotation.y = bRot.y + Math.sin(elapsed * 1.5) * 0.02;
+      } else if (isGoblin) {
+        // Supersonic razor glider engine rumble
+        rig.model.position.y = bPos.y + Math.sin(elapsed * 3.2) * 0.02;
+        rig.model.rotation.z = bRot.z + Math.sin(elapsed * 2.2) * 0.04;
+      } else if (isMag) {
+        // Magnetic levitation drift
+        rig.model.position.y = bPos.y + Math.sin(elapsed * 2.4) * 0.022;
+        rig.model.rotation.y = bRot.y + Math.cos(elapsed * 1.6) * 0.02;
+      } else if (isThanos) {
+        // Imposing Mad Titan stance (left arm forward with Infinity Gauntlet)
+        const titanBreath = Math.sin(elapsed * 2.0) * 0.012;
+        rig.model.position.y = bPos.y + titanBreath;
+        rig.model.rotation.y = bRot.y - 0.08;
+      } else if (isDoom) {
+        // Monarch of Latveria regal upright posture
+        const doomBreath = Math.sin(elapsed * 2.2) * 0.012;
+        rig.model.position.y = bPos.y + doomBreath;
+        rig.model.rotation.x = bRot.x - 0.05;
+      } else {
+        const breath = Math.sin(elapsed * 2.6 + (isHero ? 0 : 1.4)) * 0.016;
+        const sway = Math.cos(elapsed * 1.5 + (isHero ? 0 : 0.7)) * 0.012;
+        rig.model.position.y = bPos.y + breath;
+        rig.model.position.x = bPos.x + sway * 0.4;
+        rig.model.rotation.y = bRot.y + sway * 0.7;
+      }
     } else if (state === 'punch' || state === 'attack') {
       const cStep = comboIndex || 0;
-      const attackProgress = Math.sin(Math.min(1.0, (time || 0) * 4.5) * Math.PI);
-      if (cStep === 2) {
-        // Heavy Finisher Slam / Launcher rotation
-        rig.model.position.z = bPos.z + attackProgress * 0.28;
-        rig.model.position.y = bPos.y + Math.sin(Math.min(1.0, (time || 0) * 3.5) * Math.PI) * 0.45;
-        rig.model.rotation.x = bRot.x - attackProgress * 0.45;
-        rig.model.rotation.y = bRot.y + (isHero ? 0.35 : -0.35) * attackProgress;
-      } else if (cStep === 1) {
-        // Heavy Body Hook Torso Twist
-        rig.model.position.z = bPos.z + attackProgress * 0.20;
-        rig.model.position.y = bPos.y - attackProgress * 0.05;
-        rig.model.rotation.y = bRot.y + (isHero ? 0.38 : -0.38) * attackProgress;
-        rig.model.rotation.z = bRot.z + (isHero ? 0.12 : -0.12) * attackProgress;
-      } else {
-        // Fast Kinetic Jab Snap
+      const attackProgress = Math.sin(Math.min(1.0, (time || 0) * 1.8) * Math.PI);
+
+      if (isIronMan) {
+        // Iron Man Palm Repulsor Thrust & Dive-Bomb
+        rig.model.position.z = bPos.z + attackProgress * 0.24;
+        rig.model.rotation.x = bRot.x + attackProgress * 0.22;
+        rig.model.rotation.y = bRot.y + 0.28 * attackProgress;
+      } else if (isThor) {
+        // Thor Heavy Mjolnir Uppercut & Hammer Throw
+        rig.model.position.z = bPos.z + attackProgress * 0.26;
+        rig.model.position.y = bPos.y + (cStep === 2 ? attackProgress * 0.38 : 0);
+        rig.model.rotation.y = bRot.y + (cStep === 1 ? -0.45 : 0.45) * attackProgress;
+        rig.model.rotation.x = bRot.x - (cStep === 2 ? 0.35 : 0.15) * attackProgress;
+      } else if (isCap) {
+        // Captain America Shield Bash & Ricochet Toss
+        rig.model.position.z = bPos.z + attackProgress * 0.24;
+        rig.model.rotation.y = bRot.y + 0.32 * attackProgress;
+        rig.model.rotation.x = bRot.x - (cStep === 2 ? 0.38 : 0.08) * attackProgress;
+      } else if (isStrange) {
+        // Doctor Strange Tao Mandala Wave
+        rig.model.position.y = bPos.y + attackProgress * 0.14;
+        rig.model.rotation.y = bRot.y + attackProgress * 0.22;
+        rig.model.rotation.z = bRot.z - attackProgress * 0.08;
+      } else if (isThanos) {
+        // Thanos Infinity Gauntlet Power Slam
+        rig.model.position.z = bPos.z + attackProgress * 0.34;
+        rig.model.rotation.y = bRot.y - attackProgress * 0.42;
+        rig.model.rotation.x = bRot.x + attackProgress * 0.28;
+      } else if (isDoom) {
+        // Doctor Doom Technomancy Siphon Command
         rig.model.position.z = bPos.z + attackProgress * 0.16;
-        rig.model.position.y = bPos.y - attackProgress * 0.02;
-        rig.model.rotation.y = bRot.y + (isHero ? 0.22 : -0.22) * attackProgress;
+        rig.model.rotation.y = bRot.y - attackProgress * 0.26;
+        rig.model.rotation.x = bRot.x - 0.06;
+      } else if (isGoblin) {
+        // Green Goblin Pumpkin Bomb Throw
+        rig.model.position.z = bPos.z + attackProgress * 0.30;
+        rig.model.rotation.x = bRot.x + attackProgress * 0.38;
+      } else if (isLoki) {
+        // Loki Dual Asgardian Dagger Cross-Slash
+        rig.model.position.z = bPos.z + attackProgress * 0.32;
+        rig.model.rotation.y = bRot.y - attackProgress * 0.55;
+      } else if (isMag) {
+        // Magneto Electromagnetic Railgun Command
+        rig.model.position.y = bPos.y + attackProgress * 0.20;
+        rig.model.rotation.x = bRot.x - attackProgress * 0.15;
+      } else {
+        if (cStep === 2) {
+          rig.model.position.z = bPos.z + attackProgress * 0.28;
+          rig.model.position.y = bPos.y + Math.sin(Math.min(1.0, (time || 0) * 1.2) * Math.PI) * 0.45;
+          rig.model.rotation.x = bRot.x - attackProgress * 0.45;
+          rig.model.rotation.y = bRot.y + (isHero ? 0.35 : -0.35) * attackProgress;
+        } else if (cStep === 1) {
+          rig.model.position.z = bPos.z + attackProgress * 0.20;
+          rig.model.position.y = bPos.y - attackProgress * 0.05;
+          rig.model.rotation.y = bRot.y + (isHero ? 0.38 : -0.38) * attackProgress;
+          rig.model.rotation.z = bRot.z + (isHero ? 0.12 : -0.12) * attackProgress;
+        } else {
+          rig.model.position.z = bPos.z + attackProgress * 0.16;
+          rig.model.position.y = bPos.y - attackProgress * 0.02;
+          rig.model.rotation.y = bRot.y + (isHero ? 0.22 : -0.22) * attackProgress;
+        }
       }
     } else if (state === 'palm' || state === 'block') {
       // Defensive guard crouch
@@ -1735,13 +2075,13 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
       rig.model.rotation.x = bRot.x + 0.08;
     } else if (state === 'ultimate' || state === 'special_cast') {
       // Floating cataclysm elevation
-      const hover = Math.sin(elapsed * 4.2) * 0.06 + 0.10;
+      const hover = Math.sin(elapsed * 2.8) * 0.06 + 0.10;
       rig.model.position.y = bPos.y + hover;
-      rig.model.rotation.y = bRot.y + Math.sin(elapsed * 5) * 0.06;
+      rig.model.rotation.y = bRot.y + Math.sin(elapsed * 3.5) * 0.06;
     } else if (state === 'staggered' || state === 'hit_reaction') {
       // Authentic arcade hit recoil with visceral head/torso snap
-      const snap = Math.sin(Math.min(1.0, (time || 0) * 8.0) * Math.PI);
-      const shake = Math.sin(elapsed * 28) * 0.035 * snap;
+      const snap = Math.sin(Math.min(1.0, (time || 0) * 2.5) * Math.PI);
+      const shake = Math.sin(elapsed * 18) * 0.035 * snap;
       rig.model.position.x = bPos.x + shake;
       rig.model.position.z = bPos.z - snap * 0.18;
       rig.model.position.y = bPos.y - snap * 0.04;

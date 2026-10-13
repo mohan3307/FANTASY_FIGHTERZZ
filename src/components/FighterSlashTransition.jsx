@@ -20,12 +20,12 @@ export const FighterSlashTransition = ({ isTransitioning, targetTitle, onMidpoin
       setPhase('impact');
       sound.playCounterHit();
       if (onMidpoint) onMidpoint();
-    }, 180);
+    }, 80);
 
     // Phase 3: Blades violently slice apart with particle dissipation
     const sliceTimer = setTimeout(() => {
       setPhase('slice-apart');
-    }, 300);
+    }, 160);
 
     return () => {
       clearTimeout(impactTimer);

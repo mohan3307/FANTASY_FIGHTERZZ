@@ -21,6 +21,184 @@ import { ComputerVisionGestureEngine } from '../utils/gestureDetector';
 import { ThreeBattleArena } from './ThreeBattleArena';
 import { sound } from '../utils/audio';
 
+export const getHeroCombatKit = (hero) => {
+  const code = hero?.heroCode || hero?.id || '';
+  if (code === 'ironman' || code === 'plasma-ranger') {
+    return {
+      parry: { title: 'NANOTECH GUARD', desc: 'OPEN PALM' },
+      charge: { title: 'ARC OVERDRIVE', desc: 'CLOSED FIST' },
+      aim: { title: 'REPULSOR BEAM', desc: 'POINT INDEX' },
+      strike: { title: 'PLASMA DASH', desc: 'FORWARD PUSH' },
+      special: { title: 'UNIBEAM BLAST', desc: 'RAISE BOTH HANDS' },
+      dodge: { title: 'JET EVASION', desc: 'SWIPE HAND' },
+      parryDeflect: '🛡️ NANOTECH PARRY! 100% DEFLECTED',
+      parryBrace: '🖐️ NANOTECH DEFLECTOR SHIELD BRACED',
+      fistStrike: '⚡ ARC PLASMA REPULSOR JET BARRAGE',
+      aimBeam: '☝️ MARK 85 PRECISION REPULSOR BEAM',
+      aimHitLog: 'plasma repulsor core beam',
+      aimBanner: '🎯 DIRECT HIT! PLASMA REPULSOR CORE PENETRATION!',
+      forwardStrike: '💥 ROCKET DASH REPULSOR THRUST',
+      comboFinisher: '💥 3-HIT COMBO: DIVE-BOMB THRUSTER SLAM!',
+      specialName: hero?.special || 'Arc Reactor Unibeam Overdrive',
+      specialGesture: '🔥 ARC REACTOR UNIBEAM OVERDRIVE',
+      dodgeGesture: '🚀 JET THRUSTER AFTERBURNER EVASION',
+      dodgeLog: 'evaded through jet thrusters'
+    };
+  }
+  if (code === 'thor' || code === 'storm-guardian') {
+    return {
+      parry: { title: 'MJOLNIR GUARD', desc: 'OPEN PALM' },
+      charge: { title: 'THUNDER CHARGE', desc: 'CLOSED FIST' },
+      aim: { title: 'SKY LIGHTNING', desc: 'POINT INDEX' },
+      strike: { title: 'HAMMER STRIKE', desc: 'FORWARD PUSH' },
+      special: { title: 'LIGHTNING CATACLYSM', desc: 'RAISE BOTH HANDS' },
+      dodge: { title: 'STORM EVASION', desc: 'SWIPE HAND' },
+      parryDeflect: '⚡ MJOLNIR PARRY! DIVINE LIGHTNING DEFLECTION',
+      parryBrace: '🖐️ ASGARDIAN URU HAMMER GUARD BRACED',
+      fistStrike: '⚡ MJOLNIR RETURNING HAMMER THROW',
+      aimBeam: '☝️ ASGARDIAN SKYWARD LIGHTNING BOLT',
+      aimHitLog: 'Asgardian lightning strike',
+      aimBanner: '⚡ DIRECT HIT! DIVINE LIGHTNING BOLT!',
+      forwardStrike: '⚡ MJOLNIR ELECTRIC UPPERCUT SMASH',
+      comboFinisher: '⚡ 3-HIT COMBO: SKYWARD HAMMER THUNDER SLAM!',
+      specialName: hero?.special || 'Mjolnir Lightning Cataclysm',
+      specialGesture: '⚡ ASGARDIAN LIGHTNING CATACLYSM',
+      dodgeGesture: '⚡ DIVINE STORM STEP EVASION',
+      dodgeLog: 'evaded with divine lightning speed'
+    };
+  }
+  if (code === 'spiderman' || code === 'web-ninja' || !code) {
+    return {
+      parry: { title: 'WEB PARRY', desc: 'OPEN PALM' },
+      charge: { title: 'WEB WEAVE', desc: 'CLOSED FIST' },
+      aim: { title: 'WEB SNIPER', desc: 'POINT INDEX' },
+      strike: { title: 'SLINGSHOT KICK', desc: 'FORWARD PUSH' },
+      special: { title: 'MAXIMUM SPIDER', desc: 'RAISE BOTH HANDS' },
+      dodge: { title: 'SPIDER EVADE', desc: 'SWIPE HAND' },
+      parryDeflect: '🕸️ WEB PARRY! HIGH-TENSILE DEFLECTION',
+      parryBrace: '🖐️ SYNTHETIC WEB BARRIER BRACED',
+      fistStrike: '🕸️ ACROBATIC WINDMILL ROUNDHOUSE KICK',
+      aimBeam: '☝️ HIGH-VELOCITY WEB-SNIPER SHOT',
+      aimHitLog: 'high-tensile web-sniper round',
+      aimBanner: '🕸️ DIRECT HIT! HIGH-TENSILE WEB SNIPER SHOT!',
+      forwardStrike: '🕸️ WEB-ZIP SLINGSHOT DROPKICK',
+      comboFinisher: '🕸️ 3-HIT COMBO: 360° WEB SOMERSAULT FLIP SLAM!',
+      specialName: hero?.special || 'Maximum Spider Web Blitz',
+      specialGesture: '🕸️ MAXIMUM SPIDER 3D WEB BLITZ',
+      dodgeGesture: '🕷️ SPIDER-SENSE ACROBATIC EVASION',
+      dodgeLog: 'dodged with hyper-agile Spider-Sense'
+    };
+  }
+  if (code === 'captain-america' || code === 'shield-sentinel') {
+    return {
+      parry: { title: 'VIBRANIUM BLOCK', desc: 'OPEN PALM' },
+      charge: { title: 'KINETIC ABSORB', desc: 'CLOSED FIST' },
+      aim: { title: 'RICOCHET TOSS', desc: 'POINT INDEX' },
+      strike: { title: 'SHIELD BASH', desc: 'FORWARD PUSH' },
+      special: { title: 'KINETIC BASTION', desc: 'RAISE BOTH HANDS' },
+      dodge: { title: 'COMBAT ROLL', desc: 'SWIPE HAND' },
+      parryDeflect: '🛡️ VIBRANIUM PARRY! 100% KINETIC REFLECTION',
+      parryBrace: '🖐️ VIBRANIUM HIGH GUARD BRACED',
+      fistStrike: '🛡️ SPINNING RICOCHET SHIELD TOSS',
+      aimBeam: '☝️ TACTICAL VIBRANIUM SHIELD RICOCHET',
+      aimHitLog: 'vibranium shield ricochet',
+      aimBanner: '🛡️ DIRECT HIT! VIBRANIUM SHIELD RICOCHET!',
+      forwardStrike: '🛡️ VIBRANIUM KINETIC SHIELD BASH',
+      comboFinisher: '🛡️ 3-HIT COMBO: LEAPING SHIELD RIM CRUSH!',
+      specialName: hero?.special || 'Vibranium Kinetic Bastion',
+      specialGesture: '🛡️ VIBRANIUM KINETIC BASTION STAR SLAM',
+      dodgeGesture: '🌀 TACTICAL VIBRANIUM COMBAT ROLL',
+      dodgeLog: 'evaded through tactical combat roll'
+    };
+  }
+  if (code === 'doctor-strange' || code === 'dr-strange' || code === 'arcane-sorcerer') {
+    return {
+      parry: { title: 'TAO MANDALA', desc: 'OPEN PALM' },
+      charge: { title: 'ELDRITCH FOCUS', desc: 'CLOSED FIST' },
+      aim: { title: 'MYSTIC RAY', desc: 'POINT INDEX' },
+      strike: { title: 'MANDALA BLAST', desc: 'FORWARD PUSH' },
+      special: { title: 'MIRROR DIMENSION', desc: 'RAISE BOTH HANDS' },
+      dodge: { title: 'ASTRAL PHASE', desc: 'SWIPE HAND' },
+      parryDeflect: '✨ TAO MANDALA PARRY! MYSTIC WARD',
+      parryBrace: '🖐️ ELDRITCH TAO MANDALA BARRIER BRACED',
+      fistStrike: '✨ DUAL TAO MANDALA CONTINUOUS RAY',
+      aimBeam: '☝️ ELDRITCH MANDALA CONTINUOUS BEAM',
+      aimHitLog: 'eldritch mystic mandala beam',
+      aimBanner: '✨ DIRECT HIT! ELDRITCH TAO MANDALA BEAM!',
+      forwardStrike: '✨ FLOATING ELDRITCH MANDALA DISK CAST',
+      comboFinisher: '✨ 3-HIT COMBO: TAO GLYPH BURST SLAM!',
+      specialName: hero?.special || 'Astral Mirror Dimension Shift',
+      specialGesture: '✨ ASTRAL MIRROR DIMENSION SHARD SHIFT',
+      dodgeGesture: '✨ ASTRAL PHASE SHIFT DRIFT',
+      dodgeLog: 'phased through astral plane'
+    };
+  }
+  return {
+    parry: { title: 'PARRY GUARD', desc: 'OPEN PALM' },
+    charge: { title: 'WEAPON CHARGE', desc: 'CLOSED FIST' },
+    aim: { title: 'AIM BEAM', desc: 'POINT INDEX' },
+    strike: { title: 'KINETIC STRIKE', desc: 'FORWARD PUSH' },
+    special: { title: 'SPECIAL OVERDRIVE', desc: 'RAISE BOTH HANDS' },
+    dodge: { title: 'WARP DODGE', desc: 'SWIPE HAND' },
+    parryDeflect: '🛡️ PERFECT PARRY! 100% DEFLECTED',
+    parryBrace: '🖐️ ENERGY SHIELD BRACED',
+    fistStrike: '✊ HEAVY KINETIC STRIKE',
+    aimBeam: `☝️ TARGETED CORE AIM // ${hero?.weaponName || 'BEAM'}`,
+    aimHitLog: 'energy beam',
+    aimBanner: '🎯 DIRECT HIT! CORE PENETRATION!',
+    forwardStrike: '🥊 KINETIC COMBO STRIKE',
+    comboFinisher: '💥 3-HIT COMBO FINISHER! AIRBORNE SLAM!',
+    specialName: hero?.special || 'SPECIAL CATACLYSM',
+    specialGesture: `🙌 ${hero?.special || 'CATACLYSM SPECIAL ATTACK'}`,
+    dodgeGesture: '↔️ QUANTUM WARP DODGE',
+    dodgeLog: 'phased through attack zone'
+  };
+};
+
+export const getVillainCombatKit = (villain) => {
+  const code = villain?.villainCode || villain?.id || '';
+  if (code === 'thanos') {
+    return {
+      incomingWarning: 'INFINITY GAUNTLET 6-STONE BEAM',
+      weaponName: 'THE INFINITY GAUNTLET (6 STONES)',
+      counterHitText: "interrupted Thanos's 6-Stone Gauntlet channel!"
+    };
+  }
+  if (code === 'green-goblin') {
+    return {
+      incomingWarning: 'RAZOR GLIDER PUMPKIN BOMB DIVE',
+      weaponName: 'RAZOR GLIDER & PUMPKIN BOMBS',
+      counterHitText: "interrupted Green Goblin's Glider dive!"
+    };
+  }
+  if (code === 'doctor-doom' || code === 'doom-regent') {
+    return {
+      incomingWarning: 'ORBITAL LATVERIAN SIPHON RAY',
+      weaponName: 'ELDRITCH TECHNOMANCY GAUNTLETS',
+      counterHitText: "interrupted Doctor Doom's orbital siphon!"
+    };
+  }
+  if (code === 'loki') {
+    return {
+      incomingWarning: 'PHANTOM ILLUSION DAGGER AMBUSH',
+      weaponName: 'DUAL ASGARDIAN ENCHANTED DAGGERS',
+      counterHitText: "interrupted Loki's phantom illusion ambush!"
+    };
+  }
+  if (code === 'magneto') {
+    return {
+      incomingWarning: 'ELECTROMAGNETIC RAILGUN STORM',
+      weaponName: 'ELECTROMAGNETIC FORCE MANIPULATION',
+      counterHitText: "interrupted Magneto's magnetic railgun barrage!"
+    };
+  }
+  return {
+    incomingWarning: `${villain?.name || 'BOSS'}'S LETHAL STRIKE`,
+    weaponName: villain?.weaponName || 'DARK VOID GAUNTLETS',
+    counterHitText: `interrupted ${villain?.name || 'boss'}'s attack startup!`
+  };
+};
+
 export const RedGateArenaPage = ({
   selectedHero,
   selectedVillain,
@@ -68,6 +246,17 @@ export const RedGateArenaPage = ({
   const [damagePopups, setDamagePopups] = useState([]);
   const [incomingAttackWarning, setIncomingAttackWarning] = useState(false);
   const [heroActionTrigger, setHeroActionTrigger] = useState(null);
+
+  const heroKit = getHeroCombatKit(selectedHero);
+  const villainKit = getVillainCombatKit(selectedVillain);
+
+  // Incoming Attack Warning Telegraph with canonical villain skill
+  useEffect(() => {
+    if (incomingAttackWarning && introPhase === 'active' && !isVictory && !isDefeated) {
+      showBanner(`⚠️ DANGER: ${villainKit.incomingWarning}!`, 'warning');
+      addLog(`🚨 WARNING: ${selectedVillain?.name || 'BOSS'} charging ${villainKit.incomingWarning}! Raise Palm [1] or Swipe!`);
+    }
+  }, [incomingAttackWarning, introPhase, isVictory, isDefeated]);
 
   // References to keep event handlers synced without resetting CV engine
   const introPhaseRef = useRef(introPhase);
@@ -354,14 +543,19 @@ export const RedGateArenaPage = ({
 
   // Keyboard Hotkeys Fallback Controls:
   // [1] = Parry / Shield (Open Palm)
-  // [2] = Weapon Charge (Closed Fist)
+  // [2] = Kinetic Strike (Closed Fist)
   // [3] or [E] = Aim Beam (Pointing)
   // [Space] or [F] = Kinetic Strike (Forward Push)
   // [4] or [R] = Special Ability (Both Hands)
   // [A] / [D] / [W] = Warp Dodge (Sideways)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (introPhase !== 'active' || isVictory || isDefeated) return;
+      if (isVictory || isDefeated) return;
+      if (introPhaseRef.current !== 'active') {
+        if (['1', '2', '3', '4', ' ', 'Enter', 'e', 'E', 'f', 'F', 'r', 'R', 'a', 'A', 'd', 'D', 'w', 'W'].includes(e.key)) {
+          setIntroPhase('active');
+        }
+      }
       if (e.key === '1') handleTriggerGesture('palm', false);
       if (e.key === '2') handleTriggerGesture('fist', false);
       if (e.key === '3' || e.key.toLowerCase() === 'e') handleTriggerGesture('point', false);
@@ -377,8 +571,11 @@ export const RedGateArenaPage = ({
 
   // COMBAT GESTURE TRIGGER (Full 6 Hand Controls & Reaction Logic)
   const handleTriggerGesture = (gestureType, fromCV = false) => {
+    if (introPhaseRef.current !== 'active') {
+      setIntroPhase('active');
+    }
     const now = Date.now();
-    if (now - lastAttackTimeRef.current < 150) return;
+    if (now - lastAttackTimeRef.current < 380) return;
     lastAttackTimeRef.current = now;
 
     setLastGestureType(gestureType);
@@ -392,7 +589,7 @@ export const RedGateArenaPage = ({
       if (incomingAttackWarning) {
         // == PERFECT PARRY! ==
         setIsHeroParrying(true);
-        setActiveGesture('🛡️ PERFECT PARRY! 100% DEFLECTED');
+        setActiveGesture(heroKit.parryDeflect);
         sound.playShieldBlock();
         setHeroActionTrigger({ type: 'palm', id: Date.now() });
 
@@ -402,15 +599,15 @@ export const RedGateArenaPage = ({
           return next;
         });
         setHeroSuperEnergy((prev) => Math.min(100, prev + 28));
-        showBanner('🛡️ PERFECT PARRY! +28% SUPER ENERGY!', 'parry');
-        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🛡️ PERFECT PARRY! Deflected attack with 0 damage & gained +28% Energy!`);
+        showBanner(`${heroKit.parryDeflect}! +28% SUPER ENERGY!`, 'parry');
+        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🛡️ ${heroKit.parryDeflect}! Deflected attack with 0 damage & gained +28% Energy!`);
 
         setTimeout(() => setIsHeroParrying(false), 900);
       } else {
-        setActiveGesture('🖐️ ENERGY SHIELD BRACED');
+        setActiveGesture(heroKit.parryBrace);
         sound.playHover();
         setHeroActionTrigger({ type: 'palm', id: Date.now() });
-        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🛡️ Raised Energy Shield Guard!`);
+        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${heroKit.parryBrace}!`);
       }
 
       gestureTimeoutRef.current = setTimeout(() => {
@@ -426,10 +623,10 @@ export const RedGateArenaPage = ({
         setIncomingAttackWarning(false);
         sound.playCounterHit();
         showBanner('⚡ COUNTER HIT! +75% CRUSH DMG!', 'counter');
-        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER HIT! Interrupted ${selectedVillain?.name}'s attack startup!`);
+        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER HIT! ${villainKit.counterHitText}`);
       }
 
-      setActiveGesture(isCounterHit ? '⚡ COUNTER HIT CRUSH!' : '✊ HEAVY KINETIC STRIKE');
+      setActiveGesture(isCounterHit ? '⚡ COUNTER HIT CRUSH!' : heroKit.fistStrike);
 
       // Combo count handling
       let currentComboStep = 1;
@@ -443,7 +640,7 @@ export const RedGateArenaPage = ({
       });
 
       if (!isCounterHit && currentComboStep % 3 === 0) {
-        showBanner('💥 3-HIT COMBO FINISHER! AIRBORNE SLAM!', 'combo');
+        showBanner(heroKit.comboFinisher, 'combo');
       }
 
       let baseDmg = Math.floor(Math.random() * 800) + 3800;
@@ -479,14 +676,14 @@ export const RedGateArenaPage = ({
         const gain = isCounterHit ? 24 : isBossStaggered ? 18 : 12;
         const next = Math.min(100, prev + gain);
         if (next === 100 && prev < 100) {
-          showBanner('⚡ SPECIAL ABILITY READY! (RAISE BOTH HANDS / 4)', 'ready');
+          showBanner(`⚡ ${heroKit.specialName} READY! (RAISE BOTH HANDS / 4)`, 'ready');
         }
         return next;
       });
 
       triggerHitEffects(finalDmg, isCounterHit || isBossStaggered);
       setHeroActionTrigger({ type: 'fist', id: Date.now(), isCounterHit });
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${isCounterHit ? '⚡ Counter Strike' : '✊ Heavy Strike'} struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${isCounterHit ? '⚡ Counter Strike' : heroKit.fistStrike} struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
@@ -501,12 +698,12 @@ export const RedGateArenaPage = ({
         setIncomingAttackWarning(false);
         sound.playCounterHit();
         showBanner('⚡ COUNTER SNIPE! +75% CRUSH DMG!', 'counter');
-        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER SNIPE! Interrupted ${selectedVillain?.name}!`);
+        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER SNIPE! ${villainKit.counterHitText}`);
       } else {
         sound.playLaserBeam(true);
       }
 
-      setActiveGesture(isCounterHit ? '⚡ COUNTER SNIPE HIT!' : `☝️ TARGETED CORE AIM // ${selectedHero?.weaponName || 'BEAM'}`);
+      setActiveGesture(isCounterHit ? '⚡ COUNTER SNIPE HIT!' : heroKit.aimBeam);
 
       let baseDmg = weaponCharged ? 6500 : 4200;
       setWeaponCharged(false);
@@ -524,9 +721,9 @@ export const RedGateArenaPage = ({
       triggerHitEffects(baseDmg, true);
       setHeroActionTrigger({ type: 'point', id: Date.now(), isCounterHit });
       if (!isCounterHit) {
-        showBanner(`🎯 DIRECT HIT! -${baseDmg.toLocaleString()} DMG!`, 'info');
+        showBanner(heroKit.aimBanner, 'info');
       }
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🎯 Aim beam penetrated ${selectedVillain?.name}'s core for ${baseDmg.toLocaleString()} DMG!`);
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🎯 ${selectedHero?.name}'s ${heroKit.aimHitLog} penetrated ${selectedVillain?.name}'s core for ${baseDmg.toLocaleString()} DMG!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
@@ -541,10 +738,10 @@ export const RedGateArenaPage = ({
         setIncomingAttackWarning(false);
         sound.playCounterHit();
         showBanner('⚡ COUNTER HIT! +75% CRUSH DMG!', 'counter');
-        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER HIT! Interrupted ${selectedVillain?.name}'s attack startup!`);
+        addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER HIT! ${villainKit.counterHitText}`);
       }
 
-      setActiveGesture(isCounterHit ? '⚡ COUNTER HIT CRUSH!' : '🥊 KINETIC COMBO STRIKE');
+      setActiveGesture(isCounterHit ? '⚡ COUNTER HIT CRUSH!' : heroKit.forwardStrike);
 
       // Combo count handling
       let currentComboStep = 1;
@@ -558,7 +755,7 @@ export const RedGateArenaPage = ({
       });
 
       if (!isCounterHit && currentComboStep % 3 === 0) {
-        showBanner('💥 3-HIT COMBO FINISHER! AIRBORNE SLAM!', 'combo');
+        showBanner(heroKit.comboFinisher, 'combo');
       }
 
       let baseDmg = Math.floor(Math.random() * 800) + 3200;
@@ -594,14 +791,14 @@ export const RedGateArenaPage = ({
         const gain = isCounterHit ? 24 : isBossStaggered ? 18 : 12;
         const next = Math.min(100, prev + gain);
         if (next === 100 && prev < 100) {
-          showBanner('⚡ SPECIAL ABILITY READY! (RAISE BOTH HANDS / 4)', 'ready');
+          showBanner(`⚡ ${heroKit.specialName} READY! (RAISE BOTH HANDS / 4)`, 'ready');
         }
         return next;
       });
 
       triggerHitEffects(finalDmg, isCounterHit || isBossStaggered);
       setHeroActionTrigger({ type: 'forward', id: Date.now(), isCounterHit });
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${isCounterHit ? '⚡ Counter Strike' : '💥 Strike'} struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${isCounterHit ? '⚡ Counter Strike' : heroKit.forwardStrike} struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
@@ -619,7 +816,7 @@ export const RedGateArenaPage = ({
       }
 
       setHeroSuperEnergy(0);
-      setActiveGesture(`🙌 ${selectedHero?.special || 'CATACLYSM SPECIAL ATTACK'}`);
+      setActiveGesture(heroKit.specialGesture);
 
       let ultDmg = Math.floor(Math.random() * 6000) + 42000;
       if (isBossStaggered) ultDmg = Math.round(ultDmg * 1.85);
@@ -636,8 +833,8 @@ export const RedGateArenaPage = ({
       triggerHitEffects(ultDmg, true);
       sound.playPortalWarp();
       setHeroActionTrigger({ type: 'both_hands', id: Date.now() });
-      showBanner(`🔥 SPECIAL CATACLYSM! -${ultDmg.toLocaleString()} DMG!`, 'ult');
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ ${selectedHero?.name} unleashed ${selectedHero?.special} for ${ultDmg.toLocaleString()} DMG!`);
+      showBanner(`🔥 ${heroKit.specialName}! -${ultDmg.toLocaleString()} DMG!`, 'ult');
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ ${selectedHero?.name} unleashed ${heroKit.specialName} for ${ultDmg.toLocaleString()} DMG!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
@@ -647,7 +844,7 @@ export const RedGateArenaPage = ({
 
     // 6. SIDEWAYS HAND MOVEMENT // WARP DODGE
     else if (gestureType === 'swipe') {
-      setActiveGesture('↔️ QUANTUM WARP DODGE');
+      setActiveGesture(heroKit.dodgeGesture);
       sound.playHover();
       setHeroActionTrigger({ type: 'swipe', id: Date.now() });
 
@@ -656,7 +853,7 @@ export const RedGateArenaPage = ({
         showBanner('🌀 PERFECT DODGE! +14% ENERGY!', 'dodge');
       }
 
-      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🌀 ${selectedHero?.name} phased through attack zone!`);
+      addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🌀 ${selectedHero?.name} ${heroKit.dodgeLog}!`);
 
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
@@ -687,7 +884,7 @@ export const RedGateArenaPage = ({
       setBossPhase(3);
       sound.playThunder();
       showBanner('⚡ BOSS OVERDRIVE! APOCALYPTIC PHASE!', 'phase');
-      addLog(`🚨 WARNING: ${selectedVillain?.name} entered DESPERATION OVERDRIVE! Attacks every 2.4s!`);
+      addLog(`🚨 WARNING: ${selectedVillain?.name} entered DESPERATION OVERDRIVE! High fury attack overdrive!`);
     } else if (hpRatio <= 0.60 && bossPhase < 2) {
       setBossPhase(2);
       sound.playLaserBeam(true);
@@ -980,7 +1177,7 @@ export const RedGateArenaPage = ({
               <span className="rs-hud-hp-digits villain">{bossHp.toLocaleString()} / {maxBossHp.toLocaleString()} HP</span>
               <div className="rs-hud-name-col right">
                 <span className="rs-hud-name villain">{selectedVillain?.name || 'VOID TITAN'}</span>
-                <span className="rs-hud-weapon-tag villain">🌌 DARK VOID GAUNTLETS</span>
+                <span className="rs-hud-weapon-tag villain">🌌 {villainKit.weaponName}</span>
               </div>
             </div>
             {/* Boss Segmented HP Track */}
@@ -1059,6 +1256,19 @@ export const RedGateArenaPage = ({
         </div>
       )}
 
+      {/* 7.5 HIGH-PRIORITY INCOMING ATTACK TELEGRAPH BANNER */}
+      {incomingAttackWarning && (
+        <div className="rs-incoming-telegraph-overlay">
+          <div className="rs-telegraph-content">
+            <AlertTriangle size={20} className="rs-telegraph-icon" />
+            <span className="rs-telegraph-text">
+              ⚠️ INCOMING: {villainKit.incomingWarning}!
+            </span>
+            <span className="rs-telegraph-counter-tip">PARRY [1] OR DODGE [A/D] NOW!</span>
+          </div>
+        </div>
+      )}
+
       {/* ============================================================
           8. TACTICAL ACTION BAR (Bottom Center Keybinds & Gesture Guide)
           ============================================================ */}
@@ -1066,64 +1276,64 @@ export const RedGateArenaPage = ({
         <button
           className={`rs-ability-slot ${isHeroParrying ? 'active' : ''}`}
           onClick={() => handleTriggerGesture('palm')}
-          title="Parry Shield (Key 1 or Open Palm)"
+          title={`${heroKit.parry.title} (Key 1 or Open Palm)`}
         >
           <span className="rs-key-tag">[1]</span>
           <Shield size={16} />
           <div className="rs-slot-info">
-            <span className="rs-slot-title">PARRY</span>
-            <span className="rs-slot-desc">OPEN PALM</span>
+            <span className="rs-slot-title">{heroKit.parry.title}</span>
+            <span className="rs-slot-desc">{heroKit.parry.desc}</span>
           </div>
         </button>
 
         <button
           className={`rs-ability-slot charge ${weaponCharged ? 'active' : ''}`}
           onClick={() => handleTriggerGesture('fist')}
-          title="Weapon Charge (Key 2 or Closed Fist)"
+          title={`${heroKit.charge.title} (Key 2 or Closed Fist)`}
         >
           <span className="rs-key-tag">[2]</span>
           <Flame size={16} />
           <div className="rs-slot-info">
-            <span className="rs-slot-title">CHARGE</span>
-            <span className="rs-slot-desc">CLOSED FIST</span>
+            <span className="rs-slot-title">{heroKit.charge.title}</span>
+            <span className="rs-slot-desc">{heroKit.charge.desc}</span>
           </div>
         </button>
 
         <button
           className="rs-ability-slot aim"
           onClick={() => handleTriggerGesture('point')}
-          title="Target Aim Beam (Key 3 / E or Point Index Finger)"
+          title={`${heroKit.aim.title} (Key 3 / E or Point Index Finger)`}
         >
           <span className="rs-key-tag">[3]</span>
           <Target size={16} />
           <div className="rs-slot-info">
-            <span className="rs-slot-title">AIM BEAM</span>
-            <span className="rs-slot-desc">POINT INDEX</span>
+            <span className="rs-slot-title">{heroKit.aim.title}</span>
+            <span className="rs-slot-desc">{heroKit.aim.desc}</span>
           </div>
         </button>
 
         <button
           className="rs-ability-slot strike"
           onClick={() => handleTriggerGesture('forward')}
-          title="Kinetic Strike (Space / F or Forward Hand Push)"
+          title={`${heroKit.strike.title} (Space / F or Forward Hand Push)`}
         >
           <span className="rs-key-tag">[SPACE]</span>
           <Sparkles size={16} />
           <div className="rs-slot-info">
-            <span className="rs-slot-title">STRIKE</span>
-            <span className="rs-slot-desc">FORWARD PUSH</span>
+            <span className="rs-slot-title">{heroKit.strike.title}</span>
+            <span className="rs-slot-desc">{heroKit.strike.desc}</span>
           </div>
         </button>
 
         <button
           className={`rs-ability-slot ultimate ${heroSuperEnergy >= 100 ? 'ready' : 'charging'}`}
           onClick={() => handleTriggerGesture('both_hands')}
-          title="Special Ability Cataclysm (Key 4 / R or Raise Both Hands)"
+          title={`${heroKit.special.title} (Key 4 / R or Raise Both Hands)`}
         >
           <span className="rs-key-tag">[4]</span>
           <Zap size={16} />
           <div className="rs-slot-info">
-            <span className="rs-slot-title">SPECIAL</span>
+            <span className="rs-slot-title">{heroKit.special.title}</span>
             <span className="rs-slot-desc">{heroSuperEnergy >= 100 ? 'READY!' : `${heroSuperEnergy}%`}</span>
           </div>
         </button>
@@ -1131,13 +1341,13 @@ export const RedGateArenaPage = ({
         <button
           className="rs-ability-slot dodge"
           onClick={() => handleTriggerGesture('swipe')}
-          title="Warp Dodge (Key A/D/W or Swipe Sideways)"
+          title={`${heroKit.dodge.title} (Key A/D/W or Swipe Sideways)`}
         >
           <span className="rs-key-tag">[DODGE]</span>
           <RotateCcw size={16} />
           <div className="rs-slot-info">
-            <span className="rs-slot-title">DODGE</span>
-            <span className="rs-slot-desc">SWIPE HAND</span>
+            <span className="rs-slot-title">{heroKit.dodge.title}</span>
+            <span className="rs-slot-desc">{heroKit.dodge.desc}</span>
           </div>
         </button>
       </footer>
@@ -1263,42 +1473,42 @@ export const RedGateArenaPage = ({
                 <span className="rs-calib-icon">🖐️</span>
                 <div className="rs-calib-details">
                   <span className="rs-calib-name">OPEN PALM</span>
-                  <span className="rs-calib-action">Energy Shield & Parry [1]</span>
+                  <span className="rs-calib-action">{heroKit.parry.title} [1]</span>
                 </div>
               </div>
               <div className="rs-calib-item">
                 <span className="rs-calib-icon">✊</span>
                 <div className="rs-calib-details">
                   <span className="rs-calib-name">CLOSED FIST</span>
-                  <span className="rs-calib-action">Charge Weapon Energy [2]</span>
+                  <span className="rs-calib-action">{heroKit.charge.title} [2]</span>
                 </div>
               </div>
               <div className="rs-calib-item">
                 <span className="rs-calib-icon">☝️</span>
                 <div className="rs-calib-details">
                   <span className="rs-calib-name">POINT INDEX</span>
-                  <span className="rs-calib-action">Targeted Core Beam [3]</span>
+                  <span className="rs-calib-action">{heroKit.aim.title} [3]</span>
                 </div>
               </div>
               <div className="rs-calib-item">
                 <span className="rs-calib-icon">🥊</span>
                 <div className="rs-calib-details">
                   <span className="rs-calib-name">FORWARD PUSH</span>
-                  <span className="rs-calib-action">Kinetic Combo Strike [SPACE]</span>
+                  <span className="rs-calib-action">{heroKit.strike.title} [SPACE]</span>
                 </div>
               </div>
               <div className="rs-calib-item">
                 <span className="rs-calib-icon">🙌</span>
                 <div className="rs-calib-details">
                   <span className="rs-calib-name">BOTH HANDS</span>
-                  <span className="rs-calib-action">Special Cataclysm [4]</span>
+                  <span className="rs-calib-action">{heroKit.special.title} [4]</span>
                 </div>
               </div>
               <div className="rs-calib-item">
                 <span className="rs-calib-icon">↔️</span>
                 <div className="rs-calib-details">
                   <span className="rs-calib-name">SIDEWAYS SWIPE</span>
-                  <span className="rs-calib-action">Warp Dodge [A/D]</span>
+                  <span className="rs-calib-action">{heroKit.dodge.title} [A/D]</span>
                 </div>
               </div>
             </div>

@@ -50,6 +50,8 @@ export const ThreeBattleArena = ({
   const thorSkyBoltsRef = useRef(null);
   const thorHammerMeshRef = useRef(null);
   const spideyWebLineRef = useRef(null);
+  const spideyWebCableRef = useRef(null);
+  const spideySenseRef = useRef(null);
   const spideyWebBurstRef = useRef(null);
   const spideyWebTrapRef = useRef(null);
   const capFlyingShieldRef = useRef(null);
@@ -94,7 +96,7 @@ export const ThreeBattleArena = ({
   const groundShockStateRef = useRef({ active: false, time: 0 });
 
   // Dynamic Camera Tracking & Hit-Stop Crunch
-  const cameraZoomTargetRef = useRef({ x: -0.35, y: 2.05, z: 7.1 });
+  const cameraZoomTargetRef = useRef({ x: -0.35, y: 2.15, z: 7.3 });
   const hitStopTimerRef = useRef(0);
 
   // Combat Animation States & FSM State
@@ -108,17 +110,36 @@ export const ThreeBattleArena = ({
   const aiFsmStateRef = useRef('IDLE');
 
   const introPhaseRef = useRef(introPhase);
-  useEffect(() => {
-    introPhaseRef.current = introPhase;
-  }, [introPhase]);
+  const isVictoryRef = useRef(isVictory);
+  const isDefeatedRef = useRef(isDefeated);
+  const heroHpRef = useRef(heroHp);
+  const bossHpRef = useRef(bossHp);
+  const bossPhaseRef = useRef(bossPhase);
+  const isBossStaggeredRef = useRef(isBossStaggered);
+  const activeGestureRef = useRef(activeGesture);
+  const onHeroDamagedRef = useRef(onHeroDamaged);
+  const setIncomingAttackWarningRef = useRef(setIncomingAttackWarning);
+  const onTelemetryUpdateRef = useRef(onTelemetryUpdate);
+
+  useEffect(() => { introPhaseRef.current = introPhase; }, [introPhase]);
+  useEffect(() => { isVictoryRef.current = isVictory; }, [isVictory]);
+  useEffect(() => { isDefeatedRef.current = isDefeated; }, [isDefeated]);
+  useEffect(() => { heroHpRef.current = heroHp; }, [heroHp]);
+  useEffect(() => { bossHpRef.current = bossHp; }, [bossHp]);
+  useEffect(() => { bossPhaseRef.current = bossPhase; }, [bossPhase]);
+  useEffect(() => { isBossStaggeredRef.current = isBossStaggered; }, [isBossStaggered]);
+  useEffect(() => { activeGestureRef.current = activeGesture; }, [activeGesture]);
+  useEffect(() => { onHeroDamagedRef.current = onHeroDamaged; }, [onHeroDamaged]);
+  useEffect(() => { setIncomingAttackWarningRef.current = setIncomingAttackWarning; }, [setIncomingAttackWarning]);
+  useEffect(() => { onTelemetryUpdateRef.current = onTelemetryUpdate; }, [onTelemetryUpdate]);
 
   // Reset timer on defeat/retry
   useEffect(() => {
     if (!isDefeated) {
       aiAttackTimerRef.current = -2.0;
-      if (setIncomingAttackWarning) setIncomingAttackWarning(false);
+      if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
     }
-  }, [isDefeated, setIncomingAttackWarning]);
+  }, [isDefeated]);
 
   // Set up Three.js 3D Battle Arena
   useEffect(() => {
@@ -133,10 +154,10 @@ export const ThreeBattleArena = ({
     scene.fog = new THREE.FogExp2(0x050818, 0.038);
     sceneRef.current = scene;
 
-    // 2. Cinematic Camera (Angled 3D Isometric View)
+    // 2. Cinematic Camera (Angled 3D Isometric View with Full Height Clearance)
     const camera = new THREE.PerspectiveCamera(44, width / height, 0.1, 1000);
-    camera.position.set(-0.35, 2.05, 7.1);
-    camera.lookAt(0, 1.45, 0.3);
+    camera.position.set(-0.35, 2.15, 7.3);
+    camera.lookAt(0, 1.40, 0.3);
     cameraRef.current = camera;
 
     // 3. WebGL Renderer with High-Performance Tone Mapping
@@ -148,154 +169,52 @@ export const ThreeBattleArena = ({
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
 
-    // 4. Lighting Rig for Volumetric 3D Bodies & 4K Arena Clash
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+    // 4. Focused High-Performance Combat Lighting (Rock-Solid 60 FPS on any laptop)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
     scene.add(ambientLight);
 
-    const cameraKeyLight = new THREE.DirectionalLight(0xffffff, 3.2);
-    cameraKeyLight.position.set(0, 3.2, 8.5);
+    const cameraKeyLight = new THREE.DirectionalLight(0xffffff, 2.8);
+    cameraKeyLight.position.set(1.5, 4.0, 7.0);
     scene.add(cameraKeyLight);
 
-    // Frontal direct fighter duel spotlight (illuminates hero and villain chests/faces directly)
-    const duelFrontalLight = new THREE.DirectionalLight(0xffffff, 3.0);
-    duelFrontalLight.position.set(0, 2.5, 6.0);
+    // Frontal direct fighter duel spotlight (highlights character contours & faces directly)
+    const duelFrontalLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    duelFrontalLight.position.set(0, 2.2, 5.5);
     scene.add(duelFrontalLight);
 
-    const overheadLight = new THREE.DirectionalLight(0xffffff, 2.2);
-    overheadLight.position.set(2, 6, 5);
-    scene.add(overheadLight);
-
-    // Hero key & fill lights
-    const heroKeyLight = new THREE.PointLight(0x00f3ff, 3.5, 15);
-    heroKeyLight.position.set(-3.5, 3.2, 3);
-    scene.add(heroKeyLight);
-
-    const heroFrontSpot = new THREE.PointLight(0x00f3ff, 3.2, 10);
-    heroFrontSpot.position.set(-1.0, 1.8, 2.8);
-    scene.add(heroFrontSpot);
-
-    // Villain key & fill lights
-    const villainKeyLight = new THREE.PointLight(0xa855f7, 3.8, 15);
-    villainKeyLight.position.set(3.5, 3.2, 3);
-    scene.add(villainKeyLight);
-
-    const villainFrontSpot = new THREE.PointLight(0xa855f7, 3.2, 10);
-    villainFrontSpot.position.set(1.0, 1.8, 2.8);
-    scene.add(villainFrontSpot);
-
-    const portalCoreLight = new THREE.PointLight(0x8b5cf6, 5.5, 30);
+    // Subtle dimensional rim light
+    const portalCoreLight = new THREE.PointLight(0x8b5cf6, 2.5, 12);
     portalCoreLight.position.set(0, 2.5, -4.5);
     scene.add(portalCoreLight);
 
     // ============================================================
-    // 5. FUTURISTIC 3D CYBER CITY BACKGROUND & SKYWAYS
+    // 5. HIGH-OCTANE LAG-FREE ARENA BATTLE BACKGROUND
     // ============================================================
+    // Streamlined deep-space duel stage focused 100% on the fighters
     const cityGroup = new THREE.Group();
     scene.add(cityGroup);
     cityGroupRef.current = cityGroup;
+    speedersRef.current = [];
 
-    // Cyber Skyscrapers with Glowing Neon Trims
-    const bldgMat = new THREE.MeshStandardMaterial({
-      color: 0x060a17,
-      metalness: 0.9,
-      roughness: 0.25
-    });
-    const neonCyanMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-    const neonVioletMat = new THREE.MeshBasicMaterial({ color: 0xa855f7 });
-    const neonGoldMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    // Distant dimensional gate perimeter arch
+    const gateArchGeo = new THREE.TorusGeometry(4.2, 0.08, 12, 48);
+    const gateArchMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.65 });
+    const gateArch = new THREE.Mesh(gateArchGeo, gateArchMat);
+    gateArch.position.set(0, 2.6, -5.5);
+    cityGroup.add(gateArch);
 
-    const buildingCoords = [
-      { x: -16, z: -20, w: 4, d: 4, h: 22 },
-      { x: -11, z: -17, w: 3.5, d: 3.5, h: 17 },
-      { x: -7,  z: -24, w: 4.5, d: 4.5, h: 26 },
-      { x: -4,  z: -18, w: 3, d: 3, h: 15 },
-      { x: 4,   z: -19, w: 3.2, d: 3.2, h: 16 },
-      { x: 8,   z: -23, w: 4.2, d: 4.2, h: 25 },
-      { x: 12,  z: -16, w: 3.8, d: 3.8, h: 18 },
-      { x: 17,  z: -21, w: 4.5, d: 4.5, h: 24 }
-    ];
-
-    buildingCoords.forEach((bc, idx) => {
-      const bGeo = new THREE.BoxGeometry(bc.w, bc.h, bc.d);
-      const bMesh = new THREE.Mesh(bGeo, bldgMat);
-      bMesh.position.set(bc.x, bc.h / 2 - 2, bc.z);
-      cityGroup.add(bMesh);
-
-      // Glowing roof antenna / beacon
-      const antGeo = new THREE.CylinderGeometry(0.06, 0.08, 3.5, 6);
-      const antMesh = new THREE.Mesh(antGeo, idx % 2 === 0 ? neonCyanMat : neonVioletMat);
-      antMesh.position.set(bc.x, bc.h - 1, bc.z);
-      cityGroup.add(antMesh);
-
-      // Neon horizontal edge ribbon
-      const ribGeo = new THREE.BoxGeometry(bc.w + 0.1, 0.25, bc.d + 0.1);
-      const ribMesh = new THREE.Mesh(ribGeo, idx % 3 === 0 ? neonGoldMat : idx % 2 === 0 ? neonCyanMat : neonVioletMat);
-      ribMesh.position.set(bc.x, bc.h * 0.75, bc.z);
-      cityGroup.add(ribMesh);
-    });
-
-    // Moving Cyber Speeders (Hover Cars cruising across skyways)
-    const speeders = [];
-    const speederColors = [0x00f3ff, 0xa855f7, 0xf97316, 0x38bdf8, 0xef4444, 0x10b981];
-    for (let s = 0; s < 6; s++) {
-      const sGroup = new THREE.Group();
-      const sBody = new THREE.Mesh(
-        new THREE.BoxGeometry(0.8, 0.18, 0.35),
-        new THREE.MeshBasicMaterial({ color: speederColors[s % speederColors.length] })
-      );
-      sGroup.add(sBody);
-
-      // Rear engine light streak
-      const sTrail = new THREE.Mesh(
-        new THREE.BoxGeometry(1.4, 0.08, 0.12),
-        new THREE.MeshBasicMaterial({ color: speederColors[s % speederColors.length], transparent: true, opacity: 0.7 })
-      );
-      sTrail.position.x = s % 2 === 0 ? -0.8 : 0.8;
-      sGroup.add(sTrail);
-
-      const yPos = 4.5 + (s * 1.4);
-      const zPos = -13 - (s * 2.2);
-      const speed = (s % 2 === 0 ? 1 : -1) * (5.5 + s * 1.2);
-      sGroup.position.set((Math.random() - 0.5) * 30, yPos, zPos);
-      cityGroup.add(sGroup);
-
-      speeders.push({ group: sGroup, speed, zPos });
-    }
-    speedersRef.current = speeders;
-
-    // ============================================================
-    // 6. GIANT DIMENSIONAL VOID PORTAL (Center Arena Backdrop)
-    // ============================================================
+    // Single sleek dimensional core ring
     const portalGroup = new THREE.Group();
-    portalGroup.position.set(0, 2.4, -4.2);
+    portalGroup.position.set(0, 2.4, -4.5);
     scene.add(portalGroup);
 
-    // Outer Rotating Violet Vortex Ring
     const pRing1 = new THREE.Mesh(
-      new THREE.TorusGeometry(3.4, 0.09, 16, 64),
-      new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.9 })
+      new THREE.TorusGeometry(3.0, 0.05, 12, 48),
+      new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.65 })
     );
     portalGroup.add(pRing1);
-
-    // Inner Counter-Rotating Cyan Vortex Ring
-    const pRing2 = new THREE.Mesh(
-      new THREE.TorusGeometry(2.6, 0.06, 16, 64),
-      new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.85 })
-    );
-    portalGroup.add(pRing2);
-    portalRingsRef.current = [pRing1, pRing2];
-
-    // Swirling Dark Matter Vortex Disc
-    const vortexGeo = new THREE.RingGeometry(0.2, 3.2, 32);
-    const vortexMat = new THREE.MeshBasicMaterial({
-      color: 0x2e1065,
-      transparent: true,
-      opacity: 0.75,
-      side: THREE.DoubleSide
-    });
-    const vortexDisc = new THREE.Mesh(vortexGeo, vortexMat);
-    portalGroup.add(vortexDisc);
-    portalVortexRef.current = vortexDisc;
+    portalRingsRef.current = [pRing1];
+    portalVortexRef.current = null;
 
     // ============================================================
     // 7. ARENA BATTLE PLATFORM & TACTICAL RINGS
@@ -466,7 +385,39 @@ export const ThreeBattleArena = ({
     heroVfxGroup.add(hammerMesh);
     thorHammerMeshRef.current = hammerMesh;
 
-    // C. Web Ninja / Spider-Man: Web Line, Snare Trap & Nano-Web Burst
+    // C. Web Ninja / Spider-Man: 3D High-Tensile Web Cable, Spider-Sense Arcs, Snare Trap & Nano-Web Burst
+    const webCableGroup = new THREE.Group();
+    const webCoreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+    const webAuraMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+    const webCoreMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 10), webCoreMat);
+    const webAuraMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.095, 1, 10), webAuraMat);
+    webCableGroup.add(webCoreMesh);
+    webCableGroup.add(webAuraMesh);
+    webCableGroup.visible = false;
+    heroVfxGroup.add(webCableGroup);
+    spideyWebCableRef.current = { group: webCableGroup, core: webCoreMesh, aura: webAuraMesh };
+
+    // Spider-Sense Holographic Tingling Comic Arcs (radiating alert arcs above Spider-Man's head)
+    const spideySenseGroup = new THREE.Group();
+    spideySenseGroup.name = 'spidey-sense';
+    spideySenseGroup.visible = false;
+    for (let a = 0; a < 4; a++) {
+      const arcCurve = new THREE.EllipseCurve(0, 0, 0.35 + a * 0.12, 0.22 + a * 0.08, Math.PI * 0.15, Math.PI * 0.85, false, 0);
+      const arcPts = arcCurve.getPoints(20);
+      const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPts);
+      const arcMat = new THREE.LineBasicMaterial({
+        color: a % 2 === 0 ? 0xff0044 : 0xfacc15,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending
+      });
+      const arcLine = new THREE.Line(arcGeo, arcMat);
+      arcLine.position.y = a * 0.10;
+      spideySenseGroup.add(arcLine);
+    }
+    heroVfxGroup.add(spideySenseGroup);
+    spideySenseRef.current = spideySenseGroup;
+
     const webLineGeo = new THREE.BufferGeometry();
     const webLinePos = new Float32Array(6);
     webLineGeo.setAttribute('position', new THREE.BufferAttribute(webLinePos, 3));
@@ -604,86 +555,155 @@ export const ThreeBattleArena = ({
     }
     voidOrbsRef.current = voidOrbs;
 
-    // Green Goblin Pumpkin Bomb
-    const pBomb = new THREE.Mesh(
+    // 2. Green Goblin: Authentic Jack-o'-Lantern Pumpkin Bomb & Fireball Blast
+    const pBombGroup = new THREE.Group();
+    const pBombCore = new THREE.Mesh(
       new THREE.SphereGeometry(0.24, 16, 14),
-      new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0xea580c, metalness: 0.7, roughness: 0.2 })
+      new THREE.MeshStandardMaterial({
+        color: 0xf97316,
+        emissive: 0xea580c,
+        emissiveIntensity: 0.85,
+        metalness: 0.6,
+        roughness: 0.25
+      })
     );
-    pBomb.visible = false;
-    villainVfxGroup.add(pBomb);
-    goblinBombRef.current = pBomb;
+    const pStem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.035, 0.12, 8),
+      new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 })
+    );
+    pStem.position.y = 0.26;
+    pBombGroup.add(pBombCore);
+    pBombGroup.add(pStem);
+    const pLight = new THREE.PointLight(0xf97316, 2.8, 4.5);
+    pBombGroup.add(pLight);
+    pBombGroup.visible = false;
+    villainVfxGroup.add(pBombGroup);
+    goblinBombRef.current = pBombGroup;
 
-    const pExplosion = new THREE.Mesh(
-      new THREE.SphereGeometry(1.2, 16, 16),
+    // Multi-layer Fiery Pumpkin Explosion
+    const pExpGroup = new THREE.Group();
+    const pExpOuter = new THREE.Mesh(
+      new THREE.SphereGeometry(1.4, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
     );
-    pExplosion.visible = false;
-    villainVfxGroup.add(pExplosion);
-    goblinExplosionRef.current = pExplosion;
+    const pExpInner = new THREE.Mesh(
+      new THREE.SphereGeometry(0.8, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
+    );
+    pExpGroup.add(pExpOuter);
+    pExpGroup.add(pExpInner);
+    pExpGroup.userData = { outer: pExpOuter, inner: pExpInner };
+    pExpGroup.visible = false;
+    villainVfxGroup.add(pExpGroup);
+    goblinExplosionRef.current = pExpGroup;
 
-    // Thanos Infinity Beam & Shockwave
-    const tBeamGeo = new THREE.CylinderGeometry(0.32, 0.32, 4.8, 16);
+    // 3. Thanos: Canonical 6-Infinity-Stone Cosmic Destruction Ray & Power Stone Shockwave
+    const thanosBeamGroup = new THREE.Group();
+    const tBeamGeo = new THREE.CylinderGeometry(0.36, 0.36, 5.2, 16);
     tBeamGeo.rotateZ(Math.PI / 2);
-    tBeamGeo.translate(-2.4, 0, 0);
-    const thanosBeam = new THREE.Mesh(
+    tBeamGeo.translate(-2.6, 0, 0);
+    const tOuterBeam = new THREE.Mesh(
       tBeamGeo,
       new THREE.MeshBasicMaterial({ color: 0xd946ef, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
     );
-    thanosBeam.position.set(1.8, 2.4, 0.5);
-    thanosBeam.visible = false;
-    villainVfxGroup.add(thanosBeam);
-    thanosBeamRef.current = thanosBeam;
+    const tInnerGeo = new THREE.CylinderGeometry(0.18, 0.18, 5.2, 16);
+    tInnerGeo.rotateZ(Math.PI / 2);
+    tInnerGeo.translate(-2.6, 0, 0);
+    const tInnerBeam = new THREE.Mesh(
+      tInnerGeo,
+      new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
+    );
+    thanosBeamGroup.add(tOuterBeam);
+    thanosBeamGroup.add(tInnerBeam);
+
+    // 6 Orbiting Infinity Stone Energy Nodes along the beam:
+    // Power (Purple), Space (Blue), Reality (Red), Soul (Orange), Time (Green), Mind (Yellow)
+    const stoneColors = [0xa855f7, 0x3b82f6, 0xef4444, 0xf97316, 0x22c55e, 0xfacc15];
+    const stones = [];
+    stoneColors.forEach((col, idx) => {
+      const stoneMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.11, 12, 12),
+        new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
+      );
+      thanosBeamGroup.add(stoneMesh);
+      stones.push(stoneMesh);
+    });
+    thanosBeamGroup.userData = { outer: tOuterBeam, inner: tInnerBeam, stones };
+    thanosBeamGroup.position.set(1.8, 2.4, 0.5);
+    thanosBeamGroup.visible = false;
+    villainVfxGroup.add(thanosBeamGroup);
+    thanosBeamRef.current = thanosBeamGroup;
 
     const tShockwave = new THREE.Mesh(
-      new THREE.RingGeometry(0.2, 0.45, 32),
-      new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0, side: THREE.DoubleSide })
+      new THREE.RingGeometry(0.2, 0.65, 32),
+      new THREE.MeshBasicMaterial({ color: 0xd946ef, transparent: true, opacity: 0, side: THREE.DoubleSide })
     );
     tShockwave.rotation.x = -Math.PI / 2;
     tShockwave.position.set(-0.5, 0.04, 0.5);
     villainVfxGroup.add(tShockwave);
     thanosShockwaveRef.current = tShockwave;
 
-    // Magneto Spikes & Aura
+    // 4. Magneto: Electromagnetic Railgun Spikes & Torus Aura
     const magGroup = new THREE.Group();
     for (let s = 0; s < 5; s++) {
-      const spikeGeo = new THREE.ConeGeometry(0.12, 0.65, 4);
+      const sGroup = new THREE.Group();
+      const spikeGeo = new THREE.ConeGeometry(0.14, 0.85, 6);
       spikeGeo.rotateZ(Math.PI / 2);
-      const spike = new THREE.Mesh(spikeGeo, new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.95, roughness: 0.15 }));
-      magGroup.add(spike);
+      const spikeMesh = new THREE.Mesh(
+        spikeGeo,
+        new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.95, roughness: 0.15 })
+      );
+      const sTip = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.9 })
+      );
+      sTip.position.x = -0.42;
+      sGroup.add(spikeMesh);
+      sGroup.add(sTip);
+      magGroup.add(sGroup);
     }
     magGroup.visible = false;
     villainVfxGroup.add(magGroup);
     magnetoSpikesRef.current = magGroup;
 
     const magAura = new THREE.Mesh(
-      new THREE.TorusGeometry(1.4, 0.05, 12, 32),
+      new THREE.TorusGeometry(1.6, 0.06, 12, 36),
       new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
     );
-    magAura.position.set(2.2, 2.2, 0.5);
+    magAura.position.set(1.8, 2.2, 0.5);
     villainVfxGroup.add(magAura);
     magnetoAuraRef.current = magAura;
 
-    // Doctor Doom Orbital Disintegration Ray
-    const doomBeamGeo = new THREE.CylinderGeometry(0.42, 0.42, 8.0, 20);
-    const doomBeam = new THREE.Mesh(
+    // 5. Doctor Doom: Orbital Latverian Satellite Siphon & Technomancy Ground Rune
+    const doomBeamGroup = new THREE.Group();
+    const doomBeamGeo = new THREE.CylinderGeometry(0.48, 0.48, 8.5, 20);
+    const doomOuterBeam = new THREE.Mesh(
       doomBeamGeo,
       new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
     );
-    doomBeam.position.set(-2.0, 4.0, 0.5);
-    doomBeam.visible = false;
-    villainVfxGroup.add(doomBeam);
-    doomOrbitalBeamRef.current = doomBeam;
+    const doomInnerGeo = new THREE.CylinderGeometry(0.22, 0.22, 8.5, 16);
+    const doomInnerBeam = new THREE.Mesh(
+      doomInnerGeo,
+      new THREE.MeshBasicMaterial({ color: 0xa7f3d0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
+    );
+    doomBeamGroup.add(doomOuterBeam);
+    doomBeamGroup.add(doomInnerBeam);
+    doomBeamGroup.userData = { outer: doomOuterBeam, inner: doomInnerBeam };
+    doomBeamGroup.position.set(-1.8, 4.2, 0.5);
+    doomBeamGroup.visible = false;
+    villainVfxGroup.add(doomBeamGroup);
+    doomOrbitalBeamRef.current = doomBeamGroup;
 
     const doomRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.2, 0.5, 32),
+      new THREE.RingGeometry(0.2, 0.65, 32),
       new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0, side: THREE.DoubleSide })
     );
     doomRing.rotation.x = -Math.PI / 2;
-    doomRing.position.set(-2.0, 0.04, 0.5);
+    doomRing.position.set(-1.8, 0.04, 0.5);
     villainVfxGroup.add(doomRing);
     doomGroundRingRef.current = doomRing;
 
-    // Loki Scepter Beam & Clones
+    // 6. Loki: Asgardian Scepter Beam & Phantom Hologram Decoys
     const lokiBeam = new THREE.Mesh(
       tBeamGeo,
       new THREE.MeshBasicMaterial({ color: 0x84cc16, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
@@ -695,12 +715,35 @@ export const ThreeBattleArena = ({
 
     const lokiCloneGroup = new THREE.Group();
     for (let c = 0; c < 2; c++) {
-      const clone = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.4, 0.35, 3.8, 16),
+      const cloneSub = new THREE.Group();
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.38, 0.32, 2.2, 16),
         new THREE.MeshBasicMaterial({ color: 0x84cc16, transparent: true, opacity: 0, wireframe: true })
       );
-      clone.position.set(c === 0 ? 1.0 : 3.4, 1.9, 0.5);
-      lokiCloneGroup.add(clone);
+      body.position.y = 1.1;
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.22, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0x84cc16, transparent: true, opacity: 0, wireframe: true })
+      );
+      head.position.y = 2.4;
+      const hornL = new THREE.Mesh(
+        new THREE.ConeGeometry(0.04, 0.35, 6),
+        new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0 })
+      );
+      hornL.position.set(-0.16, 2.65, 0.05);
+      hornL.rotation.z = 0.5;
+      const hornR = new THREE.Mesh(
+        new THREE.ConeGeometry(0.04, 0.35, 6),
+        new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0 })
+      );
+      hornR.position.set(0.16, 2.65, 0.05);
+      hornR.rotation.z = -0.5;
+      cloneSub.add(body);
+      cloneSub.add(head);
+      cloneSub.add(hornL);
+      cloneSub.add(hornR);
+      cloneSub.position.set(c === 0 ? 0.3 : 3.1, 0, 0.5);
+      lokiCloneGroup.add(cloneSub);
     }
     villainVfxGroup.add(lokiCloneGroup);
     lokiIllusionsRef.current = lokiCloneGroup;
@@ -891,7 +934,7 @@ export const ThreeBattleArena = ({
       if (hitStopTimerRef.current > 0) {
         hitStopTimerRef.current -= rawDelta;
         delta = 0; // Freeze fighters in crunch impact pose!
-      } else if (isVictory) {
+      } else if (isVictoryRef.current) {
         delta = rawDelta * 0.25; // Dramatic bullet-time slow motion on victory
       }
 
@@ -902,8 +945,8 @@ export const ThreeBattleArena = ({
         const currentFps = Math.round((frameCount * 1000) / (now - lastFpsTime));
         frameCount = 0;
         lastFpsTime = now;
-        if (onTelemetryUpdate) {
-          onTelemetryUpdate({
+        if (onTelemetryUpdateRef.current) {
+          onTelemetryUpdateRef.current({
             fps: currentFps,
             aiState: aiFsmStateRef.current,
             distance: villainGroupRef.current ? Math.abs(villainGroupRef.current.position.x - (-1.8)).toFixed(1) : '3.6'
@@ -911,22 +954,9 @@ export const ThreeBattleArena = ({
         }
       }
 
-      // Rotate Swirling Dimensional Void Portal
-      if (portalRingsRef.current.length >= 2) {
-        portalRingsRef.current[0].rotation.z += delta * 0.85;
-        portalRingsRef.current[1].rotation.z -= delta * 1.25;
-      }
-      if (portalVortexRef.current) {
-        portalVortexRef.current.rotation.z += delta * 1.6;
-      }
-
-      // Move Flying Skyway Speeders
-      if (speedersRef.current) {
-        speedersRef.current.forEach((sp) => {
-          sp.group.position.x += sp.speed * delta;
-          if (sp.group.position.x > 26) sp.group.position.x = -26;
-          else if (sp.group.position.x < -26) sp.group.position.x = 26;
-        });
+      // Subtle portal ring rotation (lightweight, zero-lag)
+      if (portalRingsRef.current.length > 0 && portalRingsRef.current[0]) {
+        portalRingsRef.current[0].rotation.z += delta * 0.45;
       }
 
       // ============================================================
@@ -934,7 +964,7 @@ export const ThreeBattleArena = ({
       // ============================================================
       const cam = cameraRef.current;
       if (cam) {
-        if (isVictory) {
+        if (isVictoryRef.current) {
           // Epic 360-degree slow-motion cinematic orbit around Victor
           const orbAngle = elapsed * 0.45;
           cam.position.x = Math.sin(orbAngle) * 5.2 - 0.5;
@@ -1008,92 +1038,329 @@ export const ThreeBattleArena = ({
         }
       }
 
-      // --- HERO 3D SKELETAL MOTION & ATTACK KINEMATICS ---
+      // --- HERO 3D SKELETAL MOTION & AUTHENTIC MARVEL ATTACK KINEMATICS ---
       if (heroGroupRef.current) {
         const hGroup = heroGroupRef.current;
         const hAnim = heroAnimRef.current;
         const heroId = selectedHero?.id;
-        const isWeb = heroId === 'spiderman' || heroId === 'web-ninja';
-        const isTech = heroId === 'ironman' || heroId === 'plasma-ranger';
-        const isMage = heroId === 'doctor-strange' || heroId === 'dr-strange' || heroId === 'arcane-sorcerer';
-        const isThunder = heroId === 'thor' || heroId === 'storm-guardian';
+        const isIronMan = heroId === 'ironman' || heroId === 'plasma-ranger';
+        const isThor = heroId === 'thor' || heroId === 'storm-guardian';
+        const isSpidey = heroId === 'spiderman' || heroId === 'web-ninja' || !heroId;
+        const isCap = heroId === 'captain-america' || heroId === 'shield-sentinel';
+        const isStrange = heroId === 'doctor-strange' || heroId === 'dr-strange' || heroId === 'arcane-sorcerer';
 
-        if (isVictory) {
+        if (isVictoryRef.current) {
           hAnim.state = 'victory';
-          if (isTech) {
+          if (isIronMan) {
             hGroup.position.set(-1.8, 0.45 + Math.sin(elapsed * 2.5) * 0.05, 0.5);
-          } else if (isMage) {
-            hGroup.position.set(-1.8, 0.35 + Math.sin(elapsed * 1.8) * 0.04, 0.5);
+          } else if (isStrange) {
+            hGroup.position.set(-1.8, 0.38 + Math.sin(elapsed * 1.8) * 0.04, 0.5);
           } else {
             hGroup.position.set(-1.8, 0, 0.5);
           }
           hGroup.rotation.set(0, Math.PI / 3.4, 0);
-        } else if (isDefeated) {
+        } else if (isDefeatedRef.current) {
           hAnim.state = 'defeat';
           hGroup.position.set(-1.8, 0, 0.5);
         } else if (hAnim.state === 'idle') {
-          // Authentic Boxer / Martial Arts kinetic bouncing stance (Tekken / SF6 style)
-          const martialBounce = Math.abs(Math.sin(elapsed * 4.2)) * 0.055;
-          const martialSway = Math.sin(elapsed * 2.1) * 0.02;
-          if (isTech) {
-            hGroup.position.y = 0.08 + Math.sin(elapsed * 3.8) * 0.025;
-            hGroup.position.x = -1.8;
-            hGroup.position.z = 0.5;
-            hGroup.rotation.z = Math.sin(elapsed * 1.8) * 0.01;
-          } else if (isMage) {
-            hGroup.position.y = 0.14 + Math.sin(elapsed * 2.0) * 0.03;
-            hGroup.position.x = -1.8;
-            hGroup.position.z = 0.5;
-            hGroup.rotation.z = 0;
+          // --- CHARACTER-SPECIFIC IDLE BATTLE STANCES ---
+          if (isIronMan) {
+            // High-Tech Nanotech Hover Flight (subtle jet thruster stabilization)
+            hGroup.position.set(-1.8, 0.22 + Math.sin(elapsed * 3.6) * 0.035, 0.5);
+            hGroup.rotation.set(0.04, Math.PI / 3.4, Math.sin(elapsed * 1.8) * 0.02);
+          } else if (isStrange) {
+            // Sorcerer Supreme Mystical Levitation (graceful floating with Cloak of Levitation)
+            hGroup.position.set(-1.8, 0.32 + Math.sin(elapsed * 2.0) * 0.04, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
+          } else if (isSpidey) {
+            // Agile Web-Slinger Martial Bounce (hyper-reactive athletic stance)
+            const spideyBounce = Math.abs(Math.sin(elapsed * 4.4)) * 0.055;
+            hGroup.position.set(-1.8, spideyBounce, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, Math.sin(elapsed * 2.2) * 0.02);
+          } else if (isCap) {
+            // Disciplined Super-Soldier High Guard (grounded military stance, shield forward)
+            const capBounce = Math.abs(Math.sin(elapsed * 3.2)) * 0.032;
+            hGroup.position.set(-1.8, capBounce, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
+          } else if (isThor) {
+            // God of Thunder Sturdy Battle Stance (heavy, wide Asgardian posture)
+            const thorBreath = Math.sin(elapsed * 2.4) * 0.028;
+            hGroup.position.set(-1.8, thorBreath, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
           } else {
-            hGroup.position.y = martialBounce;
-            hGroup.rotation.z = martialSway;
-            hGroup.position.x = -1.8;
-            hGroup.position.z = 0.5;
+            const mBounce = Math.abs(Math.sin(elapsed * 4.0)) * 0.05;
+            hGroup.position.set(-1.8, mBounce, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
           }
         } else if (hAnim.state === 'punch') {
+          // --- CHARACTER-SPECIFIC COMBAT COMBOS & POWERS ---
           hAnim.time += delta;
           const cIdx = hAnim.comboIndex || 0;
           const isFinisher = cIdx === 2;
-          const punchDur = isFinisher ? 0.32 : 0.22; // Snappy martial combo timings
+          const punchDur = isFinisher ? 0.88 : (isCap && cIdx === 1) || (isThor && cIdx === 1) ? 0.72 : 0.56;
           const p = hAnim.time / punchDur;
-          const targetX = cIdx === 2 ? 1.35 : cIdx === 1 ? 1.20 : 0.98;
-          const jumpY = cIdx === 2 ? 0.65 : (isWeb ? 0.55 : isTech ? 0.20 : 0);
 
-          if (p < 0.36) {
-            const f = Math.sin((p / 0.36) * (Math.PI / 2));
-            hGroup.position.x = -1.8 + f * (targetX - (-1.8));
-            hGroup.position.y = jumpY * f;
-            if (isFinisher) {
-              hGroup.rotation.x = -f * Math.PI * 1.5; // Airborne Dragon Somersault flip!
+          if (isIronMan) {
+            // 1. IRON MAN: JET THRUSTER REPULSOR COMBOS
+            if (cIdx === 0) {
+              // Combo 0: Forward Rocket Dash + Palm Repulsor Thrust Blast
+              const targetX = 1.05;
+              if (p < 0.40) {
+                const f = Math.sin((p / 0.40) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (targetX - (-1.8)), 0.25, 0.5);
+                hGroup.rotation.z = -0.06 * f;
+                if (p >= 0.35 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(targetX + 0.15, 2.1, 0.5, 0x00f3ff, false, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.40) / 0.60;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(targetX - easeBack * (targetX - (-1.8)), 0.22, 0.5);
+                hGroup.rotation.z = -0.06 * (1.0 - easeBack);
+              }
+            } else if (cIdx === 1) {
+              // Combo 1: Dual Repulsor High-Velocity Jet Barrage
+              const targetX = 1.20;
+              if (p < 0.42) {
+                const f = Math.sin((p / 0.42) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (targetX - (-1.8)), 0.28, 0.5);
+                hGroup.rotation.z = -0.10 * f;
+                if (p >= 0.36 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(targetX + 0.15, 2.1, 0.5, 0x00f3ff, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.42) / 0.58;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(targetX - easeBack * (targetX - (-1.8)), 0.22, 0.5);
+                hGroup.rotation.z = -0.10 * (1.0 - easeBack);
+              }
             } else {
-              hGroup.rotation.z = -0.08 * f;
+              // Combo 2: Finisher Supersonic Thruster Dive-Bomb Slam
+              if (p < 0.42) {
+                const f = Math.sin((p / 0.42) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (1.35 - (-1.8)), f * 1.35, 0.5);
+                hGroup.rotation.x = -f * 0.45;
+                if (p >= 0.38 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.35, 1.8, 0.5, 0x00f3ff, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.42) / 0.58;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(1.35 - easeBack * (1.35 - (-1.8)), (1.0 - easeBack) * 1.35, 0.5);
+                hGroup.rotation.x = -(1.0 - easeBack) * 0.45;
+              }
             }
-          } else if (p < 0.55) {
-            hGroup.position.x = targetX;
-            hGroup.position.y = jumpY;
-            if (isFinisher) {
-              hGroup.rotation.x = -Math.PI * 2.0;
+          } else if (isThor) {
+            // 2. THOR: ASGARDIAN MJOLNIR HAMMER COMBOS & LIGHTNING
+            if (cIdx === 0) {
+              // Combo 0: Mjolnir Heavy Electric Uppercut Swing
+              const targetX = 1.0;
+              if (p < 0.42) {
+                const f = Math.sin((p / 0.42) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (targetX - (-1.8)), f * 0.25, 0.5);
+                hGroup.rotation.z = -0.12 * f;
+                if (p >= 0.38 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(targetX + 0.15, 2.2, 0.5, 0x38bdf8, false, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.42) / 0.58;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(targetX - easeBack * (targetX - (-1.8)), (1.0 - easeBack) * 0.25, 0.5);
+                hGroup.rotation.z = -0.12 * (1.0 - easeBack);
+              }
+            } else if (cIdx === 1) {
+              // Combo 1: Mjolnir Spinning Boomerang Hammer Toss
+              if (p < 0.45) {
+                const f = Math.sin((p / 0.45) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * 0.4, 0, 0.5);
+                hGroup.rotation.z = -0.15 * f;
+                if (p >= 0.40 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.6, 2.1, 0.5, 0x38bdf8, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.45) / 0.55;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(-1.4 - easeBack * 0.4, 0, 0.5);
+                hGroup.rotation.z = -0.15 * (1.0 - easeBack);
+              }
             } else {
-              hGroup.rotation.z = -0.08;
+              // Combo 2: Finisher Sky Lightning Hammer Cataclysm Slam
+              if (p < 0.42) {
+                const f = Math.sin((p / 0.42) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (1.30 - (-1.8)), f * 1.6, 0.5);
+                hGroup.rotation.x = -f * 0.5;
+                if (p >= 0.38 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.30, 1.8, 0.5, 0x60a5fa, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.42) / 0.58;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(1.30 - easeBack * (1.30 - (-1.8)), (1.0 - easeBack) * 1.6, 0.5);
+                hGroup.rotation.x = -(1.0 - easeBack) * 0.5;
+              }
             }
-            if (!hAnim.hasClashed) {
-              hAnim.hasClashed = true;
-              const clashColor = hAnim.isCounterHit ? 0xff0055 : isThunder ? 0x60a5fa : isTech ? 0x00f3ff : 0xf59e0b;
-              triggerClash(targetX + 0.15, 2.0 + jumpY * 0.5, 0.5, clashColor, isFinisher, hAnim.isCounterHit);
-            }
-          } else if (p < 1.0) {
-            const f = (p - 0.55) / 0.45;
-            const easeBack = Math.sin(f * (Math.PI / 2));
-            hGroup.position.x = targetX - easeBack * (targetX - (-1.8));
-            hGroup.position.y = jumpY * (1.0 - easeBack);
-            if (isFinisher) {
-              hGroup.rotation.x = (1.0 - easeBack) * (-Math.PI * 2.0);
+          } else if (isSpidey) {
+            // 3. SPIDER-MAN: ACROBATIC WEB-ZIP & SOMERSAULT FLIP COMBOS
+            if (cIdx === 0) {
+              // Combo 0: High-Tensile Web-Zip Slingshot Dropkick
+              const targetX = 1.15;
+              if (p < 0.38) {
+                const f = Math.sin((p / 0.38) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (targetX - (-1.8)), f * 0.45, 0.5);
+                hGroup.rotation.z = -0.25 * f; // Dropkick body angle
+                if (p >= 0.32 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(targetX + 0.15, 2.0, 0.5, 0xff2a5f, false, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.38) / 0.62;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(targetX - easeBack * (targetX - (-1.8)), (1.0 - easeBack) * 0.45, 0.5);
+                hGroup.rotation.z = -0.25 * (1.0 - easeBack);
+              }
+            } else if (cIdx === 1) {
+              // Combo 1: Acrobatic Windmill Roundhouse Aerial Spin Kick
+              const targetX = 1.25;
+              if (p < 0.40) {
+                const f = Math.sin((p / 0.40) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (targetX - (-1.8)), f * 0.6, 0.5);
+                hGroup.rotation.y = Math.PI / 3.4 + f * Math.PI * 2;
+                if (p >= 0.36 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(targetX + 0.15, 2.1, 0.5, 0xff2a5f, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.40) / 0.60;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(targetX - easeBack * (targetX - (-1.8)), (1.0 - easeBack) * 0.6, 0.5);
+                hGroup.rotation.y = Math.PI / 3.4;
+              }
             } else {
-              hGroup.rotation.z = -0.08 * (1.0 - easeBack);
+              // Combo 2: Finisher Web Blaster into Aerial Axe Somersault Slam
+              if (p < 0.42) {
+                const f = Math.sin((p / 0.42) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (1.30 - (-1.8)), f * 0.85, 0.5);
+                hGroup.rotation.x = -f * Math.PI * 2.0; // 360-degree aerial flip slam!
+                if (p >= 0.38 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.30, 2.0, 0.5, 0xff2a5f, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.42) / 0.58;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(1.30 - easeBack * (1.30 - (-1.8)), (1.0 - easeBack) * 0.85, 0.5);
+                hGroup.rotation.x = -(1.0 - easeBack) * Math.PI * 2.0;
+              }
             }
-          } else {
-            hGroup.position.set(-1.8, 0, 0.5);
+          } else if (isCap) {
+            // 4. CAPTAIN AMERICA: VIBRANIUM SHIELD BASH & RICOCHET TOSS COMBOS
+            if (cIdx === 0) {
+              // Combo 0: Kinetic Shield Charge & Shoulder Ram Bash
+              const targetX = 1.05;
+              if (p < 0.40) {
+                const f = Math.sin((p / 0.40) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (targetX - (-1.8)), 0, 0.5);
+                hGroup.rotation.y = Math.PI / 3.4 + 0.15 * f;
+                if (p >= 0.35 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(targetX + 0.15, 1.9, 0.5, 0xfbbf24, false, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.40) / 0.60;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(targetX - easeBack * (targetX - (-1.8)), 0, 0.5);
+                hGroup.rotation.y = Math.PI / 3.4 + 0.15 * (1.0 - easeBack);
+              }
+            } else if (cIdx === 1) {
+              // Combo 1: Spinning Ricochet Shield Toss & Deflection Return
+              if (p < 0.45) {
+                const f = Math.sin((p / 0.45) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * 0.35, 0, 0.5);
+                hGroup.rotation.z = -0.10 * f;
+                if (p >= 0.38 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.7, 2.0, 0.5, 0xfbbf24, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.45) / 0.55;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(-1.45 - easeBack * 0.35, 0, 0.5);
+                hGroup.rotation.z = -0.10 * (1.0 - easeBack);
+              }
+            } else {
+              // Combo 2: Finisher Leaping Star-Spangled Shield Rim Slam
+              if (p < 0.42) {
+                const f = Math.sin((p / 0.42) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * (1.30 - (-1.8)), f * 1.45, 0.5);
+                hGroup.rotation.x = -f * 0.45;
+                if (p >= 0.38 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.30, 1.8, 0.5, 0xfbbf24, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.42) / 0.58;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(1.30 - easeBack * (1.30 - (-1.8)), (1.0 - easeBack) * 1.45, 0.5);
+                hGroup.rotation.x = -(1.0 - easeBack) * 0.45;
+              }
+            }
+          } else if (isStrange) {
+            // 5. DOCTOR STRANGE: ELDRITCH TAO MANDALA CASTING
+            if (cIdx === 0) {
+              // Combo 0: Floating Eldritch Tao Mandala Cast
+              if (p < 0.42) {
+                const f = Math.sin((p / 0.42) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * 0.6, 0.35, 0.5);
+                hGroup.rotation.z = -0.08 * f;
+                if (p >= 0.36 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.6, 2.1, 0.5, 0xf59e0b, false, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.42) / 0.58;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(-1.2 - easeBack * 0.6, 0.32, 0.5);
+                hGroup.rotation.z = -0.08 * (1.0 - easeBack);
+              }
+            } else if (cIdx === 1) {
+              // Combo 1: Dual Mandala Continuous Energy Ray
+              if (p < 0.42) {
+                const f = Math.sin((p / 0.42) * (Math.PI / 2));
+                hGroup.position.set(-1.8 + f * 0.7, 0.38, 0.5);
+                if (p >= 0.36 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.7, 2.1, 0.5, 0xf59e0b, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.42) / 0.58;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(-1.1 - easeBack * 0.7, 0.32, 0.5);
+              }
+            } else {
+              // Combo 2: Finisher Tao Glyph Eruption & Mirror Shard Burst
+              if (p < 0.44) {
+                const f = Math.sin((p / 0.44) * (Math.PI / 2));
+                hGroup.position.set(-1.8 - f * 0.4, 0.45 + f * 0.3, 0.5); // Floats majestically backward
+                if (p >= 0.38 && !hAnim.hasClashed) {
+                  hAnim.hasClashed = true;
+                  triggerClash(1.5, 2.0, 0.5, 0xa855f7, true, hAnim.isCounterHit);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.44) / 0.56;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                hGroup.position.set(-2.2 + easeBack * 0.4, 0.75 - easeBack * 0.43, 0.5);
+              }
+            }
+          }
+
+          if (p >= 1.0) {
+            hGroup.position.set(-1.8, isIronMan ? 0.22 : isStrange ? 0.32 : 0, 0.5);
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
             hAnim.hasClashed = false;
@@ -1101,77 +1368,169 @@ export const ThreeBattleArena = ({
           }
         } else if (hAnim.state === 'staggered') {
           hAnim.time += delta;
-          const sP = Math.min(1.0, hAnim.time / 0.20); // Fast 0.20s recoil recovery
+          const sP = Math.min(1.0, hAnim.time / 0.38);
           hGroup.position.x = -1.8 - Math.sin(sP * Math.PI) * 0.45;
-          hGroup.position.y = 0;
+          hGroup.position.y = isIronMan ? 0.22 : isStrange ? 0.32 : 0;
           hGroup.rotation.z = -Math.sin(sP * Math.PI) * 0.12;
-          if (hAnim.time >= 0.20) {
+          if (hAnim.time >= 0.38) {
             hAnim.state = 'idle';
             hAnim.time = 0;
-            hGroup.position.set(-1.8, 0, 0.5);
+            hGroup.position.set(-1.8, isIronMan ? 0.22 : isStrange ? 0.32 : 0, 0.5);
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
           }
         } else if (hAnim.state === 'ultimate') {
+          // --- CHARACTER-SPECIFIC CATACLYSM ULTIMATE SKILLS ---
           hAnim.time += delta;
-          const p = hAnim.time / 0.42; // Fast cinematic ultimate leap
+          const ultDur = 1.25;
+          const p = hAnim.time / ultDur;
 
-          if (p < 0.40) {
-            // Ascending charge leap into upper screen with dramatic camera punch
-            const f = Math.sin((p / 0.40) * (Math.PI / 2));
-            hGroup.position.y = f * 3.2;
-            hGroup.position.x = -1.8 + f * 3.1;
-            hGroup.rotation.z = f * Math.PI * 2;
-            if (cameraZoomTargetRef.current) {
-              cameraZoomTargetRef.current.z = 5.6; // Dramatic cinematic zoom
+          if (isIronMan) {
+            // Arc Reactor Unibeam Overdrive (Mid-Air Laser Channel)
+            if (p < 0.35) {
+              const f = Math.sin((p / 0.35) * (Math.PI / 2));
+              hGroup.position.set(-1.8 + f * 0.4, 0.22 + f * 0.9, 0.5);
+              hGroup.rotation.set(0.12 * f, Math.PI / 3.4, 0);
+              if (cameraZoomTargetRef.current) cameraZoomTargetRef.current.z = 5.8;
+            } else if (p < 0.70) {
+              // Channels Colossal Unibeam
+              hGroup.position.set(-1.4, 1.12, 0.5);
+              if (!hAnim.hasClashed) {
+                hAnim.hasClashed = true;
+                triggerClash(1.8, 2.3, 0.5, 0x00f3ff, true, false);
+              }
+            } else if (p < 1.0) {
+              const f = (p - 0.70) / 0.30;
+              const easeBack = Math.sin(f * (Math.PI / 2));
+              hGroup.position.set(-1.4 - easeBack * 0.4, 1.12 - easeBack * 0.9, 0.5);
             }
-          } else if (p < 0.62) {
-            // Cataclysmic downward crash onto villain
-            const f = (p - 0.40) / 0.22;
-            hGroup.position.y = (1.0 - f) * 3.2;
-            hGroup.position.x = 1.3;
-            hGroup.rotation.z = 0;
-            if (!hAnim.hasClashed) {
-              hAnim.hasClashed = true;
-              const clashColor = isThunder ? 0x93c5fd : isTech ? 0x00f3ff : 0xff3b00;
-              triggerClash(1.3, 1.8, 0.5, clashColor, true, false);
+          } else if (isThor) {
+            // Mjolnir Sky Lightning Cataclysm
+            if (p < 0.35) {
+              const f = Math.sin((p / 0.35) * (Math.PI / 2));
+              hGroup.position.set(-1.8 + f * 0.5, f * 2.8, 0.5);
+              hGroup.rotation.z = f * Math.PI * 0.25;
+              if (cameraZoomTargetRef.current) cameraZoomTargetRef.current.z = 5.5;
+            } else if (p < 0.65) {
+              // Cataclysmic lightning crash
+              const f = (p - 0.35) / 0.30;
+              hGroup.position.set(THREE.MathUtils.lerp(-1.3, 1.4, f), (1.0 - f) * 2.8, 0.5);
+              if (!hAnim.hasClashed) {
+                hAnim.hasClashed = true;
+                triggerClash(1.4, 1.8, 0.5, 0x60a5fa, true, false);
+              }
+            } else if (p < 1.0) {
+              const f = (p - 0.65) / 0.35;
+              const easeBack = Math.sin(f * (Math.PI / 2));
+              hGroup.position.set(1.4 - easeBack * 3.2, 0, 0.5);
+              hGroup.rotation.z = 0;
             }
-          } else if (p < 1.0) {
-            const f = (p - 0.62) / 0.38;
-            const easeBack = Math.sin(f * (Math.PI / 2));
-            hGroup.position.x = 1.3 - easeBack * 3.1;
-            hGroup.position.y = 0;
-          } else {
-            hGroup.position.set(-1.8, 0, 0.5);
+          } else if (isSpidey) {
+            // Maximum Spider Web Blitz
+            if (p < 0.30) {
+              const f = Math.sin((p / 0.30) * (Math.PI / 2));
+              hGroup.position.set(-1.8 + f * 3.2, f * 2.5, 0.5);
+              hGroup.rotation.z = f * Math.PI * 2;
+              if (cameraZoomTargetRef.current) cameraZoomTargetRef.current.z = 5.4;
+            } else if (p < 0.65) {
+              // Multi-angle ricochet blitz strikes
+              const subP = (p - 0.30) / 0.35;
+              const angle = subP * Math.PI * 4;
+              hGroup.position.set(1.4 + Math.cos(angle) * 1.2, 2.0 + Math.sin(angle) * 1.0, 0.5);
+              if (!hAnim.hasClashed) {
+                hAnim.hasClashed = true;
+                triggerClash(1.4, 2.0, 0.5, 0xff2a5f, true, false);
+              }
+            } else if (p < 1.0) {
+              const f = (p - 0.65) / 0.35;
+              const easeBack = Math.sin(f * (Math.PI / 2));
+              hGroup.position.set(1.4 - easeBack * 3.2, (1.0 - easeBack) * 1.0, 0.5);
+            }
+          } else if (isCap) {
+            // Vibranium Kinetic Bastion & Stratosphere Star Slam
+            if (p < 0.35) {
+              const f = Math.sin((p / 0.35) * (Math.PI / 2));
+              hGroup.position.set(-1.8 + f * 1.5, f * 3.2, 0.5);
+              if (cameraZoomTargetRef.current) cameraZoomTargetRef.current.z = 5.5;
+            } else if (p < 0.65) {
+              const f = (p - 0.35) / 0.30;
+              hGroup.position.set(THREE.MathUtils.lerp(-0.3, 1.4, f), (1.0 - f) * 3.2, 0.5);
+              if (!hAnim.hasClashed) {
+                hAnim.hasClashed = true;
+                triggerClash(1.4, 1.8, 0.5, 0xfbbf24, true, false);
+              }
+            } else if (p < 1.0) {
+              const f = (p - 0.65) / 0.35;
+              const easeBack = Math.sin(f * (Math.PI / 2));
+              hGroup.position.set(1.4 - easeBack * 3.2, 0, 0.5);
+            }
+          } else if (isStrange) {
+            // Astral Mirror Dimension Shift
+            if (p < 0.40) {
+              const f = Math.sin((p / 0.40) * (Math.PI / 2));
+              hGroup.position.set(-1.8 - f * 0.5, 0.32 + f * 1.2, 0.5);
+              if (cameraZoomTargetRef.current) cameraZoomTargetRef.current.z = 5.5;
+            } else if (p < 0.75) {
+              hGroup.position.set(-2.3, 1.52, 0.5);
+              if (!hAnim.hasClashed) {
+                hAnim.hasClashed = true;
+                triggerClash(1.6, 2.2, 0.5, 0xa855f7, true, false);
+              }
+            } else if (p < 1.0) {
+              const f = (p - 0.75) / 0.25;
+              const easeBack = Math.sin(f * (Math.PI / 2));
+              hGroup.position.set(-2.3 + easeBack * 0.5, 1.52 - easeBack * 1.2, 0.5);
+            }
+          }
+
+          if (p >= 1.0) {
+            hGroup.position.set(-1.8, isIronMan ? 0.22 : isStrange ? 0.32 : 0, 0.5);
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
             hAnim.hasClashed = false;
           }
         } else if (hAnim.state === 'dodge') {
+          // --- CHARACTER-SPECIFIC COMBAT EVASIONS ---
           hAnim.time += delta;
-          const p = hAnim.time / 0.22; // Snappy 0.22s warp phase dodge
+          const p = hAnim.time / 0.48;
           if (p < 0.5) {
             const f = Math.sin((p / 0.5) * (Math.PI / 2));
             hGroup.position.x = -1.8 - f * 0.9;
-            hGroup.position.z = 0.5 - f * 1.0;
-            if (isWeb) {
-              hGroup.position.y = Math.sin(f * Math.PI) * 0.75;
-              hGroup.rotation.x = -f * Math.PI;
-            } else if (isTech) {
-              hGroup.position.y = 0.35 * f;
+            hGroup.position.z = 0.5 - f * 0.8;
+            if (isSpidey) {
+              // High Acrobatic Web-Swing Backflip
+              hGroup.position.y = Math.sin(f * Math.PI) * 1.1;
+              hGroup.rotation.x = -f * Math.PI * 2.0;
+            } else if (isIronMan) {
+              // High-Speed Jet Booster Reverse Burn
+              hGroup.position.y = 0.22 + f * 0.45;
+              hGroup.rotation.x = 0.2 * f;
+            } else if (isStrange) {
+              // Astral Dimension Phase Drift
+              hGroup.position.y = 0.32 + f * 0.2;
+            } else {
+              // Tactical Ground Combat Roll
+              hGroup.position.y = Math.sin(f * Math.PI) * 0.25;
+              hGroup.rotation.z = -f * 0.35;
             }
           } else if (p < 1.0) {
             const f = (p - 0.5) / 0.5;
             const easeBack = Math.sin(f * (Math.PI / 2));
             hGroup.position.x = -2.7 + easeBack * 0.9;
-            hGroup.position.z = -0.5 + easeBack * 1.0;
-            if (isWeb) {
-              hGroup.position.y = (1.0 - easeBack) * 0.75;
-              hGroup.rotation.x = -(1.0 + easeBack) * Math.PI;
-            } else if (isTech) {
-              hGroup.position.y = (1.0 - easeBack) * 0.35;
+            hGroup.position.z = -0.3 + easeBack * 0.8;
+            if (isSpidey) {
+              hGroup.position.y = (1.0 - easeBack) * 1.1;
+              hGroup.rotation.x = 0;
+            } else if (isIronMan) {
+              hGroup.position.y = 0.67 - easeBack * 0.45;
+              hGroup.rotation.x = 0;
+            } else if (isStrange) {
+              hGroup.position.y = 0.52 - easeBack * 0.2;
+            } else {
+              hGroup.position.y = 0;
+              hGroup.rotation.z = 0;
             }
           } else {
-            hGroup.position.set(-1.8, 0, 0.5);
+            hGroup.position.set(-1.8, isIronMan ? 0.22 : isStrange ? 0.32 : 0, 0.5);
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
           }
@@ -1180,7 +1539,7 @@ export const ThreeBattleArena = ({
         // Natural Hit Recoil Elastic Spring Curve
         if (hAnim.recoiling) {
           hAnim.recoilTime = (hAnim.recoilTime || 0) + delta;
-          const rP = Math.min(1.0, hAnim.recoilTime / 0.20);
+          const rP = Math.min(1.0, hAnim.recoilTime / 0.38);
           hGroup.position.x = -1.8 - Math.sin(rP * Math.PI) * 0.48;
           hGroup.rotation.z = -Math.sin(rP * Math.PI) * 0.12;
           if (rP >= 1.0) {
@@ -1193,7 +1552,19 @@ export const ThreeBattleArena = ({
 
         // 3D skeletal kinematic articulation for Hero
         if (heroRigRef.current) {
-          animateArticulated3DFighter(heroRigRef.current, hAnim.state, hAnim.time, delta, elapsed, true, activeGesture, hAnim.comboIndex || 0);
+          animateArticulated3DFighter(heroRigRef.current, hAnim.state, hAnim.time, delta, elapsed, true, activeGestureRef.current, hAnim.comboIndex || 0);
+        }
+
+        // Spider-Sense Holographic Tingling Comic Arcs (tracks above head when villain telegraphs)
+        if (isSpidey && spideySenseRef.current) {
+          const isWarning = aiFsmStateRef.current === 'APPROACH';
+          spideySenseRef.current.visible = isWarning;
+          if (isWarning) {
+            const hPos = hGroup.position;
+            spideySenseRef.current.position.set(hPos.x, hPos.y + 2.5 + Math.sin(elapsed * 16) * 0.06, hPos.z);
+            const alertPulse = 1.0 + Math.sin(elapsed * 22) * 0.22;
+            spideySenseRef.current.scale.set(alertPulse, alertPulse, 1.0);
+          }
         }
       }
 
@@ -1207,18 +1578,20 @@ export const ThreeBattleArena = ({
         vfx.heroVfxTime += delta;
         const t = vfx.heroVfxTime;
         const isUlt = vfx.heroAttackType === 'vsign';
+        const cIdx = heroAnimRef.current?.comboIndex || 0;
+        const isPoint = vfx.heroAttackType === 'point';
 
-        // 1. PLASMA RANGER / IRON MAN
+        // 1. IRON MAN / PLASMA RANGER: DUAL ARC PLASMA REPULSORS & UNIBEAM
         if (heroId === 'ironman' && ironmanBeamRef.current) {
           const beam = ironmanBeamRef.current;
           beam.visible = true;
-          const maxDur = isUlt ? 0.65 : 0.35;
+          const maxDur = isUlt ? 0.72 : (cIdx === 2 ? 0.48 : 0.35);
           beam.material.opacity = Math.max(0, 1.0 - t / maxDur);
-          beam.scale.set(isUlt ? 3.0 : 1.2, 1, isUlt ? 3.0 : 1.2);
+          beam.scale.set(isUlt ? 3.4 : (cIdx === 2 ? 1.8 : 1.2), 1, isUlt ? 3.4 : (cIdx === 2 ? 1.8 : 1.2));
 
           if (ironmanRingsRef.current) {
             ironmanRingsRef.current.forEach((r, idx) => {
-              r.visible = isUlt;
+              r.visible = isUlt || cIdx === 2;
               const rProg = (t * 3.5 + idx * 0.3) % 1.0;
               r.position.set(THREE.MathUtils.lerp(-1.8, 2.0, rProg), 2.1, 0.5);
               r.scale.set(1 + rProg * 1.5, 1 + rProg * 1.5, 1);
@@ -1233,48 +1606,56 @@ export const ThreeBattleArena = ({
           }
         }
 
-        // 2. STORM GUARDIAN / THOR: MAGNETIC HAMMER & LIGHTNING
+        // 2. THOR: ASGARDIAN MJOLNIR HAMMER TOSS, LIGHTNING CURRENT & SKY BOLTS
         else if (heroId === 'thor' && thorLightningRef.current) {
-          const maxDur = isUlt ? 0.7 : 0.4;
+          const isHammerThrow = cIdx === 1 || isPoint;
+          const maxDur = isUlt ? 0.75 : (isHammerThrow ? 0.65 : 0.42);
           const op = Math.max(0, 1.0 - t / maxDur);
           thorLightningRef.current.material.opacity = op;
 
-          // Returning Hammer Flight Arc
+          // Returning Hammer Flight Arc (Combo 1 or Point Aim)
           if (thorHammerMeshRef.current) {
             const h = thorHammerMeshRef.current;
-            h.visible = true;
-            h.rotation.x += delta * 25;
-            const p = t / maxDur;
-            if (p < 0.5) {
-              const f = p / 0.5;
-              h.position.set(THREE.MathUtils.lerp(-1.8, 2.0, f), 2.1 + Math.sin(f * Math.PI) * 0.8, 0.5);
-            } else {
-              const f = (p - 0.5) / 0.5;
-              h.position.set(THREE.MathUtils.lerp(2.0, -1.8, f), 2.1 + Math.sin(f * Math.PI) * 0.4, 0.5);
+            h.visible = isHammerThrow;
+            if (h.visible) {
+              h.rotation.x += delta * 28;
+              const p = t / maxDur;
+              if (p < 0.5) {
+                const f = p / 0.5;
+                h.position.set(THREE.MathUtils.lerp(-1.8, 1.9, f), 2.1 + Math.sin(f * Math.PI) * 0.8, 0.5);
+              } else {
+                const f = (p - 0.5) / 0.5;
+                h.position.set(THREE.MathUtils.lerp(1.9, -1.8, f), 2.1 + Math.sin(f * Math.PI) * 0.4, 0.5);
+              }
             }
           }
 
+          // Electric blue lightning bolts
           const pos = thorLightningRef.current.geometry.attributes.position.array;
           const pts = pos.length / 3;
           for (let p = 0; p < pts; p++) {
             const frac = p / (pts - 1);
             pos[p * 3] = THREE.MathUtils.lerp(-1.6, 2.0, frac);
-            pos[p * 3 + 1] = THREE.MathUtils.lerp(2.2, 2.0, frac) + (Math.random() - 0.5) * (isUlt ? 1.2 : 0.6);
+            pos[p * 3 + 1] = THREE.MathUtils.lerp(2.2, 2.0, frac) + (Math.random() - 0.5) * (isUlt ? 1.4 : 0.6);
             pos[p * 3 + 2] = 0.5 + (Math.random() - 0.5) * 0.8;
           }
           thorLightningRef.current.geometry.attributes.position.needsUpdate = true;
 
+          // Sky Bolts on Finisher or Ultimate
           if (thorSkyBoltsRef.current) {
-            thorSkyBoltsRef.current.material.opacity = isUlt ? op : 0;
-            const skyPos = thorSkyBoltsRef.current.geometry.attributes.position.array;
-            const sPts = skyPos.length / 3;
-            for (let sp = 0; sp < sPts; sp++) {
-              const frac = sp / (sPts - 1);
-              skyPos[sp * 3] = -1.6 + (Math.random() - 0.5) * 0.4;
-              skyPos[sp * 3 + 1] = THREE.MathUtils.lerp(6.0, 2.4, frac);
-              skyPos[sp * 3 + 2] = 0.5 + (Math.random() - 0.5) * 0.4;
+            const isSkyBolts = isUlt || cIdx === 2;
+            thorSkyBoltsRef.current.material.opacity = isSkyBolts ? op : 0;
+            if (isSkyBolts) {
+              const skyPos = thorSkyBoltsRef.current.geometry.attributes.position.array;
+              const sPts = skyPos.length / 3;
+              for (let sp = 0; sp < sPts; sp++) {
+                const frac = sp / (sPts - 1);
+                skyPos[sp * 3] = 1.8 + (Math.random() - 0.5) * 0.8;
+                skyPos[sp * 3 + 1] = THREE.MathUtils.lerp(7.0, 1.8, frac);
+                skyPos[sp * 3 + 2] = 0.5 + (Math.random() - 0.5) * 0.6;
+              }
+              thorSkyBoltsRef.current.geometry.attributes.position.needsUpdate = true;
             }
-            thorSkyBoltsRef.current.geometry.attributes.position.needsUpdate = true;
           }
 
           if (t > maxDur) {
@@ -1283,99 +1664,152 @@ export const ThreeBattleArena = ({
           }
         }
 
-        // 3. WEB NINJA / SPIDER-MAN: WEB LINE & WEB TRAP
-        else if ((heroId === 'spiderman' || !heroId) && spideyWebLineRef.current) {
-          const maxDur = isUlt ? 0.65 : 0.35;
+        // 3. SPIDER-MAN: 3D HIGH-TENSILE WEB CABLE, NET BURST & MAXIMUM SPIDER DOME
+        else if ((heroId === 'spiderman' || heroId === 'web-ninja' || !heroId) && spideyWebLineRef.current) {
+          const maxDur = isUlt ? 0.90 : (cIdx === 2 ? 0.65 : 0.48);
           const op = Math.max(0, 1.0 - t / maxDur);
 
           if (!isUlt) {
-            spideyWebLineRef.current.material.opacity = op;
-            const pos = spideyWebLineRef.current.geometry.attributes.position.array;
-            pos[0] = -1.5; pos[1] = 2.1; pos[2] = 0.6;
-            pos[3] = 1.8;  pos[4] = 2.0; pos[5] = 0.5;
-            spideyWebLineRef.current.geometry.attributes.position.needsUpdate = true;
+            // Update 3D High-Tensile Web Cable Mesh (Combo 0 or Aim)
+            if (spideyWebCableRef.current) {
+              const cable = spideyWebCableRef.current;
+              const isWebZip = cIdx === 0 || isPoint;
+              cable.group.visible = isWebZip && t < 0.38;
+              if (cable.group.visible) {
+                cable.core.material.opacity = op;
+                cable.aura.material.opacity = op * 0.85;
 
-            // Slowing web snare at boss feet
+                const hPos = heroGroupRef.current ? heroGroupRef.current.position : new THREE.Vector3(-1.8, 0, 0.5);
+                const vPos = villainGroupRef.current ? villainGroupRef.current.position : new THREE.Vector3(1.8, 0, 0.5);
+                const pStart = new THREE.Vector3(hPos.x + 0.35, hPos.y + 1.25, hPos.z + 0.1);
+                const pEnd = new THREE.Vector3(vPos.x - 0.2, vPos.y + 1.6, vPos.z);
+
+                const dist = pStart.distanceTo(pEnd);
+                const mid = new THREE.Vector3().addVectors(pStart, pEnd).multiplyScalar(0.5);
+                cable.group.position.copy(mid);
+
+                const dir = new THREE.Vector3().subVectors(pEnd, pStart).normalize();
+                const up = new THREE.Vector3(0, 1, 0);
+                cable.group.quaternion.setFromUnitVectors(up, dir);
+                cable.core.scale.set(1, dist, 1);
+                cable.aura.scale.set(1, dist, 1);
+              }
+            }
+
+            // Web net burst on Finisher
+            if (cIdx === 2 && spideyWebBurstRef.current) {
+              const group = spideyWebBurstRef.current;
+              const progress = Math.min(1.0, t / 0.35);
+              group.children.forEach((strand, idx) => {
+                strand.material.opacity = op;
+                const arr = strand.geometry.attributes.position.array;
+                arr[0] = -1.5; arr[1] = 2.1; arr[2] = 0.6;
+                const angle = (idx / 10) * Math.PI * 2;
+                arr[3] = THREE.MathUtils.lerp(-1.5, 1.8, progress);
+                arr[4] = THREE.MathUtils.lerp(2.1, 2.0 + Math.sin(angle) * 1.6, progress);
+                arr[5] = THREE.MathUtils.lerp(0.6, 0.5 + Math.cos(angle) * 1.6, progress);
+                strand.geometry.attributes.position.needsUpdate = true;
+              });
+            }
+
+            // Web snare at villain feet
             if (spideyWebTrapRef.current) {
-              spideyWebTrapRef.current.material.opacity = Math.max(0, 0.85 - t / 0.5);
-              const sc = 1 + t * 2.5;
+              spideyWebTrapRef.current.visible = cIdx === 2;
+              spideyWebTrapRef.current.material.opacity = Math.max(0, 0.85 - t / 0.6);
+              const sc = 1 + t * 2.2;
               spideyWebTrapRef.current.scale.set(sc, sc, 1);
             }
           } else if (spideyWebBurstRef.current) {
+            // Maximum Spider 3D Web Dome
             const group = spideyWebBurstRef.current;
-            const progress = Math.min(1.0, t / 0.2);
+            const progress = Math.min(1.0, t / 0.45);
             group.children.forEach((strand, idx) => {
               strand.material.opacity = op;
               const arr = strand.geometry.attributes.position.array;
-              arr[0] = -1.5; arr[1] = 2.1; arr[2] = 0.6;
+              arr[0] = -1.8; arr[1] = 2.1; arr[2] = 0.6;
               const angle = (idx / 10) * Math.PI * 2;
-              arr[3] = THREE.MathUtils.lerp(-1.5, 1.8, progress);
-              arr[4] = THREE.MathUtils.lerp(2.1, 2.0 + Math.sin(angle) * 1.4, progress);
-              arr[5] = THREE.MathUtils.lerp(0.6, 0.5 + Math.cos(angle) * 1.4, progress);
+              arr[3] = THREE.MathUtils.lerp(-1.8, 1.8 + Math.cos(angle) * 1.5, progress);
+              arr[4] = THREE.MathUtils.lerp(2.1, 2.0 + Math.sin(angle) * 2.0, progress);
+              arr[5] = THREE.MathUtils.lerp(0.6, 0.5 + Math.sin(angle) * 1.5, progress);
               strand.geometry.attributes.position.needsUpdate = true;
             });
           }
 
-          if (t > maxDur) vfx.heroAttackType = null;
-        }
-
-        // 4. SHIELD SENTINEL / CAPTAIN AMERICA: SHIELD THROW & STAR SLAM
-        else if (heroId === 'captain-america' && capFlyingShieldRef.current) {
-          const shield = capFlyingShieldRef.current;
-          const maxDur = isUlt ? 0.65 : 0.5;
-
-          if (!isUlt) {
-            shield.visible = true;
-            shield.rotation.y += delta * 30;
-            const p = t / 0.5;
-            if (p < 0.5) {
-              const f = p / 0.5;
-              shield.position.x = THREE.MathUtils.lerp(-2.0, 1.8, f);
-              shield.position.y = 1.8 + Math.sin(f * Math.PI) * 0.8;
-            } else if (p < 1.0) {
-              const f = (p - 0.5) / 0.5;
-              shield.position.x = THREE.MathUtils.lerp(1.8, -2.0, f);
-              shield.position.y = 1.8 + Math.sin(f * Math.PI) * 0.4;
-            } else {
-              shield.visible = false;
-              vfx.heroAttackType = null;
-            }
-          } else if (capStarSlamRef.current) {
-            const slam = capStarSlamRef.current;
-            const sc = 1 + t * 9;
-            slam.scale.set(sc, sc, 1);
-            slam.material.opacity = Math.max(0, 0.95 - t / 0.65);
-            if (t > maxDur) {
-              slam.material.opacity = 0;
-              vfx.heroAttackType = null;
-            }
+          if (t > maxDur) {
+            if (spideyWebCableRef.current) spideyWebCableRef.current.group.visible = false;
+            vfx.heroAttackType = null;
           }
         }
 
-        // 5. ARCANE SORCERER / DOCTOR STRANGE: MANDALAS & MIRROR SHARDS
-        else if ((heroId === 'doctor-strange' || heroId === 'dr-strange') && strangeMandalasRef.current) {
-          const maxDur = isUlt ? 0.7 : 0.45;
+        // 4. CAPTAIN AMERICA: VIBRANIUM RICOCHET SHIELD TOSS & STAR SLAM SHOCKWAVE
+        else if (heroId === 'captain-america' && capFlyingShieldRef.current) {
+          const isShieldThrow = cIdx === 1 || isPoint;
+          const shield = capFlyingShieldRef.current;
+          const maxDur = isUlt ? 0.72 : (isShieldThrow ? 0.58 : 0.42);
 
-          if (!isUlt) {
+          if (isShieldThrow) {
+            shield.visible = true;
+            shield.rotation.y += delta * 32;
+            const p = t / maxDur;
+            if (p < 0.5) {
+              const f = p / 0.5;
+              shield.position.x = THREE.MathUtils.lerp(-1.8, 1.8, f);
+              shield.position.y = 1.9 + Math.sin(f * Math.PI) * 0.75;
+            } else if (p < 1.0) {
+              const f = (p - 0.5) / 0.5;
+              shield.position.x = THREE.MathUtils.lerp(1.8, -1.8, f);
+              shield.position.y = 1.9 + Math.sin(f * Math.PI) * 0.4;
+            } else {
+              shield.visible = false;
+            }
+          }
+
+          // Golden Star Slam Shockwave (Finisher or Ultimate)
+          if ((cIdx === 2 || isUlt) && capStarSlamRef.current) {
+            const slam = capStarSlamRef.current;
+            slam.visible = true;
+            const sc = 1 + t * 9;
+            slam.scale.set(sc, sc, 1);
+            slam.material.opacity = Math.max(0, 0.95 - t / 0.65);
+          }
+
+          if (t > maxDur) {
+            shield.visible = false;
+            if (capStarSlamRef.current) capStarSlamRef.current.visible = false;
+            vfx.heroAttackType = null;
+          }
+        }
+
+        // 5. DOCTOR STRANGE: ROTATING TAO MANDALA RINGS & MIRROR DIMENSION CRYSTAL SHARDS
+        else if ((heroId === 'doctor-strange' || heroId === 'dr-strange') && strangeMandalasRef.current) {
+          const isMandalaCast = cIdx === 0 || cIdx === 1 || isPoint;
+          const maxDur = isUlt ? 0.75 : (cIdx === 2 ? 0.65 : 0.48);
+
+          if (isMandalaCast) {
             const m = strangeMandalasRef.current;
             m.visible = true;
-            m.rotation.z += delta * 12;
-            m.position.x = THREE.MathUtils.lerp(-1.8, 1.8, t / 0.45);
+            m.rotation.z += delta * 15;
+            m.position.x = THREE.MathUtils.lerp(-1.8, 1.8, t / 0.48);
             m.position.y = 2.1;
-            if (t > maxDur) {
-              m.visible = false;
-              vfx.heroAttackType = null;
-            }
-          } else if (mirrorShardsRef.current) {
+          }
+
+          // Mirror Dimension Shards (Finisher or Ultimate)
+          if ((cIdx === 2 || isUlt) && mirrorShardsRef.current) {
+            mirrorShardsRef.current.visible = true;
             mirrorShardsRef.current.children.forEach(shard => {
-              shard.material.opacity = Math.max(0, 0.9 - t / 0.7);
-              shard.rotation.x += delta * 6;
-              shard.rotation.y += delta * 8;
+              shard.material.opacity = Math.max(0, 0.9 - t / maxDur);
+              shard.rotation.x += delta * 7;
+              shard.rotation.y += delta * 9;
             });
-            if (t > maxDur) {
+          }
+
+          if (t > maxDur) {
+            if (strangeMandalasRef.current) strangeMandalasRef.current.visible = false;
+            if (mirrorShardsRef.current) {
+              mirrorShardsRef.current.visible = false;
               mirrorShardsRef.current.children.forEach(s => (s.material.opacity = 0));
-              vfx.heroAttackType = null;
             }
+            vfx.heroAttackType = null;
           }
         } else {
           vfx.heroAttackType = null;
@@ -1390,145 +1824,169 @@ export const ThreeBattleArena = ({
         const vAnim = villainAnimRef.current;
         const villainId = selectedVillain?.id || 'void-titan';
 
-        if (isVictory) {
+        if (isVictoryRef.current) {
           aiFsmStateRef.current = 'DEFEATED';
           vAnim.state = 'defeat';
           vGroup.position.set(1.8, 0, 0.5);
           if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
-        } else if (isDefeated) {
+        } else if (isDefeatedRef.current) {
           aiFsmStateRef.current = 'VICTORIOUS';
           vAnim.state = 'victory';
           vGroup.position.set(1.8, 0, 0.5);
           if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
-        } else if (introPhase === 'active' && bossHp > 0) {
+        } else if (introPhaseRef.current === 'active' && bossHpRef.current > 0) {
           aiAttackTimerRef.current += delta;
 
-        // Dynamic Snappy Attack Cycle Timing based on Boss Phase
-        const isEnraged = bossPhase >= 2;
-        const attackInterval = bossPhase === 3 ? 1.6 : isEnraged ? 2.1 : 2.7;
-        const warningWindow = bossPhase === 3 ? 0.60 : isEnraged ? 0.70 : 0.80;
-        const warningStart = attackInterval - warningWindow;
+          // Deliberate, Strategic Combat Pacing:
+          // Phase 1 (Tactical Probe): 5.0s attack interval, 1.70s warning telegraph
+          // Phase 2 (Enraged Barrage): 4.0s attack interval, 1.35s warning telegraph
+          // Phase 3 (Desperation Overdrive): 3.2s attack interval, 1.10s warning telegraph
+          const isEnraged = bossPhaseRef.current >= 2;
+          const attackInterval = bossPhaseRef.current === 3 ? 3.2 : isEnraged ? 4.0 : 5.0;
+          const warningWindow = bossPhaseRef.current === 3 ? 1.10 : isEnraged ? 1.35 : 1.70;
+          const warningStart = attackInterval - warningWindow;
 
-        // FSM State transitions
-        if (isBossStaggered) {
-          aiFsmStateRef.current = 'STUNNED';
-          aiAttackTimerRef.current = 0;
-          if (setIncomingAttackWarning) setIncomingAttackWarning(false);
-          if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
-          vAnim.state = 'staggered';
-          vGroup.position.set(1.8, 0, 0.5);
-          vGroup.rotation.z = 0;
-        } else {
-          // If in Warning window -> APPROACH & TELEGRAPH
-          if (aiAttackTimerRef.current > warningStart && aiAttackTimerRef.current < attackInterval) {
-            aiFsmStateRef.current = 'APPROACH';
-            if (setIncomingAttackWarning) setIncomingAttackWarning(true);
-            if (dangerZoneMeshRef.current) {
-              const warningColor = isEnraged ? 0xa855f7 : 0xff0033;
-              dangerZoneMeshRef.current.material.color.setHex(warningColor);
-              dangerZoneMeshRef.current.material.opacity = 0.75 + Math.sin(elapsed * 18) * 0.25;
-              dangerZoneMeshRef.current.scale.set(1 + Math.sin(elapsed * 14) * 0.16, 1 + Math.sin(elapsed * 14) * 0.16, 1);
-            }
-            vGroup.position.x = 1.8 + (Math.random() - 0.5) * 0.08;
-          } else if (aiAttackTimerRef.current < warningStart) {
-            aiFsmStateRef.current = isEnraged ? 'ENRAGED' : 'IDLE';
-            if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
-          }
-
-          // Trigger Attack execution!
-          if (aiAttackTimerRef.current >= attackInterval && (vAnim.state === 'idle' || vAnim.state === 'staggered')) {
-            aiFsmStateRef.current = 'ATTACK';
-            vAnim.state = 'attack';
-            vAnim.time = 0;
+          // FSM State transitions
+          if (isBossStaggeredRef.current) {
+            aiFsmStateRef.current = 'STUNNED';
             aiAttackTimerRef.current = 0;
-            if (setIncomingAttackWarning) setIncomingAttackWarning(false);
+            if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
             if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+            vAnim.state = 'staggered';
+            // Staggered down on one knee
+            vGroup.position.set(1.8, -0.25, 0.5);
+            vGroup.rotation.set(-0.15, -Math.PI / 3.4, 0.12);
+          } else {
+            // If in Warning window -> APPROACH & TELEGRAPH
+            if (aiAttackTimerRef.current > warningStart && aiAttackTimerRef.current < attackInterval) {
+              aiFsmStateRef.current = 'APPROACH';
+              if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(true);
+              if (dangerZoneMeshRef.current) {
+                const warningColor = isEnraged ? 0xa855f7 : 0xff0033;
+                dangerZoneMeshRef.current.material.color.setHex(warningColor);
+                dangerZoneMeshRef.current.material.opacity = 0.75 + Math.sin(elapsed * 12) * 0.25;
+                dangerZoneMeshRef.current.scale.set(1 + Math.sin(elapsed * 10) * 0.16, 1 + Math.sin(elapsed * 10) * 0.16, 1);
+              }
+              // Boss enters menacing forward lean telegraph
+              vGroup.position.x = 1.8 - 0.15 * Math.sin(((aiAttackTimerRef.current - warningStart) / warningWindow) * (Math.PI / 2));
+            } else if (aiAttackTimerRef.current < warningStart) {
+              aiFsmStateRef.current = isEnraged ? 'ENRAGED' : 'IDLE';
+              if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+            }
 
-            vfx.villainAttackActive = true;
-            vfx.villainVfxTime = 0;
+            // Trigger Attack execution!
+            if (aiAttackTimerRef.current >= attackInterval && (vAnim.state === 'idle' || vAnim.state === 'staggered')) {
+              aiFsmStateRef.current = 'ATTACK';
+              vAnim.state = 'attack';
+              vAnim.time = 0;
+              aiAttackTimerRef.current = 0;
+              if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+              if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
 
-            // Specific villain attack sounds
-            if (villainId === 'void-titan') {
-              sound.playLaserBeam(true);
-              sound.playPortalWarp();
-            } else if (villainId === 'green-goblin') {
-              sound.playExplosion();
-            } else if (villainId === 'thanos') {
-              sound.playLaserBeam(true);
-            } else if (villainId === 'magneto') {
-              sound.playShieldBlock();
-            } else if (villainId === 'doctor-doom' || villainId === 'doom-regent') {
-              sound.playLaserBeam(true);
-            } else if (villainId === 'loki') {
-              sound.playMysticCast();
-            } else {
-              sound.playPunch();
+              vfx.villainAttackActive = true;
+              vfx.villainVfxTime = 0;
+
+              // Specific villain attack sounds
+              if (villainId === 'void-titan') {
+                sound.playLaserBeam(true);
+                sound.playPortalWarp();
+              } else if (villainId === 'green-goblin') {
+                sound.playExplosion();
+              } else if (villainId === 'thanos') {
+                sound.playLaserBeam(true);
+              } else if (villainId === 'magneto') {
+                sound.playShieldBlock();
+              } else if (villainId === 'doctor-doom' || villainId === 'doom-regent') {
+                sound.playLaserBeam(true);
+              } else if (villainId === 'loki') {
+                sound.playMysticCast();
+              } else {
+                sound.playPunch();
+              }
             }
           }
-        }
 
-        // Animated Void Orbs orbiting Titan when Enraged
-        if (voidOrbsRef.current.length > 0) {
-          voidOrbsRef.current.forEach((orb, oIdx) => {
-            orb.material.opacity = isEnraged ? 0.85 : 0;
-            const oAng = elapsed * 3.5 + (oIdx * (Math.PI * 2 / 3));
-            orb.position.set(vGroup.position.x + Math.cos(oAng) * 1.5, 2.2 + Math.sin(oAng * 1.5) * 0.5, 0.5 + Math.sin(oAng) * 1.0);
-          });
-        }
-
-        if (vAnim.state === 'idle') {
-          // Predatory stalking breathing bounce and slight rhythmic sway
-          const stalkBounce = Math.sin(elapsed * 2.8 + 1.2) * 0.05;
-          const stalkSway = Math.cos(elapsed * 1.9) * 0.02;
-          vGroup.position.y = stalkBounce;
-          vGroup.rotation.z = stalkSway;
-          vGroup.position.x = 1.8;
-          vGroup.position.z = 0.5;
-        } else if (vAnim.state === 'staggered') {
-          vAnim.time += delta;
-          const sP = Math.min(1.0, vAnim.time / 0.20); // Snappy 0.20s boss recoil
-          vGroup.position.x = 1.8 + Math.sin(sP * Math.PI) * 0.45;
-          vGroup.position.y = 0;
-          vGroup.rotation.z = Math.sin(sP * Math.PI) * 0.1;
-          if (vAnim.time >= 0.20 && !isBossStaggered) {
-            vAnim.state = 'idle';
-            vAnim.time = 0;
-            vGroup.position.set(1.8, 0, 0.5);
-            vGroup.rotation.set(0, -Math.PI / 3.4, 0);
+          // Animated Void Orbs orbiting Titan when Enraged
+          if (voidOrbsRef.current.length > 0) {
+            voidOrbsRef.current.forEach((orb, oIdx) => {
+              orb.material.opacity = isEnraged ? 0.85 : 0;
+              const oAng = elapsed * 2.8 + (oIdx * (Math.PI * 2 / 3));
+              orb.position.set(vGroup.position.x + Math.cos(oAng) * 1.5, 2.2 + Math.sin(oAng * 1.5) * 0.5, 0.5 + Math.sin(oAng) * 1.0);
+            });
           }
-        } else if (vAnim.state === 'attack') {
-          vAnim.time += delta;
-          const p = vAnim.time / 0.26; // Snappy 0.26s boss strike
 
-          if (p < 0.38) {
-            const f = Math.sin((p / 0.38) * (Math.PI / 2));
-            vGroup.position.x = 1.8 - f * 2.4;
-            vGroup.position.y = Math.sin((p / 0.38) * Math.PI) * 0.12;
-            vGroup.rotation.z = -0.07 * f;
-          } else if (p < 0.54) {
-            vGroup.position.x = -0.6;
-            vGroup.position.y = 0;
-            vGroup.rotation.z = -0.07;
+          if (vAnim.state === 'idle') {
+            // Predatory stalking breathing bounce and slight rhythmic sway tailored per villain
+            const stalkBounce = Math.sin(elapsed * 2.8 + 1.2) * 0.045;
+            const stalkSway = Math.cos(elapsed * 1.9) * 0.02;
 
-            if (!vAnim.hasDamaged) {
-              vAnim.hasDamaged = true;
+            if (villainId === 'green-goblin') {
+              // Norman Osborn hovering high on his supersonic razor glider
+              vGroup.position.set(1.8, 1.85 + Math.sin(elapsed * 3.2) * 0.12, 0.5);
+              vGroup.rotation.set(0.08 * Math.sin(elapsed * 2.5), -Math.PI / 3.4, 0.05 * Math.cos(elapsed * 2.0));
+            } else if (villainId === 'magneto') {
+              // Master of Magnetism levitating gracefully in mid-air
+              vGroup.position.set(1.8, 0.65 + Math.sin(elapsed * 2.2) * 0.06, 0.5);
+              vGroup.rotation.set(0, -Math.PI / 3.4, 0);
+            } else if (villainId === 'thanos') {
+              // The Mad Titan heavy, immovable cosmic presence
+              vGroup.position.set(1.8, stalkBounce * 0.6, 0.5);
+              vGroup.rotation.set(0, -Math.PI / 3.4, 0);
+            } else if (villainId === 'doctor-doom' || villainId === 'doom-regent') {
+              // Monarch of Latveria regal upright stance
+              vGroup.position.set(1.8, stalkBounce * 0.5, 0.5);
+              vGroup.rotation.set(0, -Math.PI / 3.4, 0);
+            } else if (villainId === 'loki') {
+              // God of Mischief agile stealth crouch
+              vGroup.position.set(1.8, stalkBounce * 0.8, 0.5);
+              vGroup.rotation.set(0, -Math.PI / 3.4, stalkSway);
+            } else {
+              vGroup.position.y = stalkBounce;
+              vGroup.rotation.z = stalkSway;
+              vGroup.position.x = 1.8;
+              vGroup.position.z = 0.5;
+            }
+          } else if (vAnim.state === 'staggered') {
+            vAnim.time += delta;
+            const sP = Math.min(1.0, vAnim.time / 0.42);
+            vGroup.position.x = 1.8 + Math.sin(sP * Math.PI) * 0.45;
+            vGroup.position.y = isBossStaggeredRef.current ? -0.25 : (villainId === 'green-goblin' ? 1.5 : villainId === 'magneto' ? 0.45 : 0);
+            vGroup.rotation.z = Math.sin(sP * Math.PI) * 0.1;
+            if (vAnim.time >= 0.42 && !isBossStaggeredRef.current) {
+              vAnim.state = 'idle';
+              vAnim.time = 0;
+              vGroup.position.set(1.8, villainId === 'green-goblin' ? 1.85 : villainId === 'magneto' ? 0.65 : 0, 0.5);
+              vGroup.rotation.set(0, -Math.PI / 3.4, 0);
+            }
+          } else if (vAnim.state === 'attack') {
+            // --- CHARACTER-SPECIFIC VILLAIN ATTACK MOTIONS & KINEMATICS ---
+            vAnim.time += delta;
+            const isGoblin = villainId === 'green-goblin';
+            const isThanos = villainId === 'thanos';
+            const isDoom = villainId === 'doctor-doom' || villainId === 'doom-regent';
+            const isLoki = villainId === 'loki';
+            const isMag = villainId === 'magneto';
+            const attackDur = isThanos ? 0.95 : isGoblin ? 0.90 : isDoom ? 0.85 : isMag ? 0.85 : 0.78;
+            const p = vAnim.time / attackDur;
+
+            const checkDamageToHero = (hitColor = 0xef4444, isHeavy = false) => {
               const isHeroDodging = heroAnimRef.current?.state === 'dodge';
-              const isHeroBlocking = (heroAnimRef.current?.state === 'block') || (activeGesture && (activeGesture.toUpperCase().includes('SHIELD') || activeGesture.toUpperCase().includes('PALM')));
+              const isHeroBlocking = (heroAnimRef.current?.state === 'block') || (activeGestureRef.current && (activeGestureRef.current.toUpperCase().includes('SHIELD') || activeGestureRef.current.toUpperCase().includes('PALM')));
               const isHeroCountering = (heroAnimRef.current?.state === 'punch' || heroAnimRef.current?.state === 'ultimate');
 
               const heroCurrentX = heroGroupRef.current?.position.x ?? -1.8;
               if (isHeroDodging) {
-                if (onHeroDamaged) onHeroDamaged('dodged');
+                if (onHeroDamagedRef.current) onHeroDamagedRef.current('dodged');
                 triggerClash(heroCurrentX, 1.8, 0.5, 0x00f3ff);
                 cameraShakeRef.current = 0.05;
                 sound.playWebSling();
               } else if (isHeroBlocking) {
-                if (onHeroDamaged) onHeroDamaged('blocked');
+                if (onHeroDamagedRef.current) onHeroDamagedRef.current('blocked');
                 triggerClash(-1.2, 1.8, 0.5, 0x38bdf8);
                 cameraShakeRef.current = 0.08;
                 sound.playShieldBlock();
               } else if (isHeroCountering) {
-                if (onHeroDamaged) onHeroDamaged('clash');
+                if (onHeroDamagedRef.current) onHeroDamagedRef.current('clash');
                 triggerClash(0.2, 1.8, 0.5, 0xf59e0b);
                 sound.playThunder();
                 cameraShakeRef.current = 0.35;
@@ -1537,10 +1995,10 @@ export const ThreeBattleArena = ({
                 vAnim.recoiling = true;
                 vAnim.recoilTime = 0;
               } else {
-                if (onHeroDamaged) onHeroDamaged('hit');
-                triggerClash(heroCurrentX, 1.8, 0.5, 0xef4444);
+                if (onHeroDamagedRef.current) onHeroDamagedRef.current('hit');
+                triggerClash(heroCurrentX, 1.8, 0.5, hitColor, isHeavy, false);
                 sound.playPunch();
-                cameraShakeRef.current = 0.28;
+                cameraShakeRef.current = isHeavy ? 0.32 : 0.24;
                 if (heroAnimRef.current) {
                   heroAnimRef.current.state = 'staggered';
                   heroAnimRef.current.time = 0;
@@ -1548,20 +2006,157 @@ export const ThreeBattleArena = ({
                   heroAnimRef.current.recoilTime = 0;
                 }
               }
+            };
+
+            if (isThanos) {
+              // 1. THANOS: THE MAD TITAN HEAVY MARCH & INFINITY GAUNTLET COSMIC BEAM
+              if (p < 0.35) {
+                // Heavy march forward, raises left arm with Infinity Gauntlet
+                const f = Math.sin((p / 0.35) * (Math.PI / 2));
+                vGroup.position.x = 1.8 - f * 0.7; // Advances to X = 1.1
+                vGroup.position.y = f * 0.05;
+                vGroup.rotation.y = -Math.PI / 3.4 + 0.18 * f;
+                vGroup.rotation.z = -0.06 * f;
+              } else if (p < 0.68) {
+                // Infinity Gauntlet thrust forward channeling 6-stone destruction
+                vGroup.position.x = 1.1;
+                vGroup.position.y = 0;
+                vGroup.rotation.y = -Math.PI / 3.4 + 0.22;
+                if (p >= 0.45 && !vAnim.hasDamaged) {
+                  vAnim.hasDamaged = true;
+                  checkDamageToHero(0xd946ef, true);
+                }
+              } else if (p < 1.0) {
+                // Heavy titan steps back to base position
+                const f = (p - 0.68) / 0.32;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                vGroup.position.x = 1.1 + easeBack * 0.7;
+                vGroup.rotation.y = -Math.PI / 3.4 + 0.22 * (1.0 - easeBack);
+                vGroup.rotation.z = 0;
+              }
+            } else if (isDoom) {
+              // 2. DOCTOR DOOM: SOVEREIGN LATVERIAN ORBITAL SIPHON & TECHNOMANCY RAY
+              if (p < 0.35) {
+                // Stands tall, raises right gauntlet commanding Latverian orbital weapons
+                const f = Math.sin((p / 0.35) * (Math.PI / 2));
+                vGroup.position.x = 1.8 - f * 0.3; // Stays sovereign at X = 1.5
+                vGroup.position.y = f * 0.08;
+                vGroup.rotation.y = -Math.PI / 3.4 + 0.12 * f;
+              } else if (p < 0.65) {
+                vGroup.position.x = 1.5;
+                vGroup.position.y = 0.08;
+                if (p >= 0.42 && !vAnim.hasDamaged) {
+                  vAnim.hasDamaged = true;
+                  checkDamageToHero(0x10b981, true);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.65) / 0.35;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                vGroup.position.x = 1.5 + easeBack * 0.3;
+                vGroup.position.y = 0.08 * (1.0 - easeBack);
+              }
+            } else if (isGoblin) {
+              // 3. GREEN GOBLIN: RAZOR GLIDER SWOOPING DIVE & PUMPKIN BOMB BARRAGE
+              if (p < 0.32) {
+                // Glider swoops downward in a menacing dive
+                const f = Math.sin((p / 0.32) * (Math.PI / 2));
+                vGroup.position.x = 1.8 - f * 0.6; // X: 1.8 -> 1.2
+                vGroup.position.y = 1.85 - f * 0.75; // Y: 1.85 -> 1.10
+                vGroup.rotation.x = 0.35 * f; // Glider nose pitches down
+              } else if (p < 0.62) {
+                // Throws pumpkin bomb and pulls glider back up
+                const f = (p - 0.32) / 0.30;
+                vGroup.position.x = 1.2;
+                vGroup.position.y = 1.10 + f * 0.75;
+                vGroup.rotation.x = 0.35 * (1.0 - f);
+                if (p >= 0.48 && !vAnim.hasDamaged) {
+                  vAnim.hasDamaged = true;
+                  checkDamageToHero(0xf97316, true);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.62) / 0.38;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                vGroup.position.x = 1.2 + easeBack * 0.6;
+                vGroup.position.y = 1.85;
+                vGroup.rotation.x = 0;
+              }
+            } else if (isLoki) {
+              // 4. LOKI: TEMPORAL PHASE ILLUSION TELEPORT & DUAL DAGGER FLURRY
+              if (p < 0.25) {
+                // Vanishes into emerald smoke
+                const f = (p / 0.25);
+                vGroup.position.x = 1.8 + f * 0.3;
+                vGroup.scale.set(1.0 - f * 0.9, 1.0 - f * 0.9, 1.0 - f * 0.9);
+              } else if (p < 0.58) {
+                // Reappears right beside hero at X = -1.1!
+                vGroup.scale.set(1, 1, 1);
+                vGroup.position.set(-1.1, 0, 0.5);
+                vGroup.rotation.y = Math.PI / 3.4;
+                if (p >= 0.38 && !vAnim.hasDamaged) {
+                  vAnim.hasDamaged = true;
+                  checkDamageToHero(0x84cc16, false);
+                }
+              } else if (p < 0.75) {
+                // Fades out from hero
+                const f = (p - 0.58) / 0.17;
+                vGroup.scale.set(1.0 - f * 0.9, 1.0 - f * 0.9, 1.0 - f * 0.9);
+              } else {
+                // Reappears back at base stance
+                const f = (p - 0.75) / 0.25;
+                vGroup.position.set(1.8, 0, 0.5);
+                vGroup.rotation.set(0, -Math.PI / 3.4, 0);
+                vGroup.scale.set(f, f, f);
+              }
+            } else if (isMag) {
+              // 5. MAGNETO: ELECTROMAGNETIC LEVITATION & RAILGUN SPIKE VOLLEY
+              if (p < 0.35) {
+                // Raises both hands commanding electromagnetic forces
+                const f = Math.sin((p / 0.35) * (Math.PI / 2));
+                vGroup.position.y = 0.65 + f * 0.35; // Floats higher to Y = 1.0
+                vGroup.position.x = 1.8;
+                vGroup.rotation.x = -0.15 * f;
+              } else if (p < 0.65) {
+                // Thrusts hands forward launching railgun spikes
+                vGroup.position.y = 1.0;
+                if (p >= 0.45 && !vAnim.hasDamaged) {
+                  vAnim.hasDamaged = true;
+                  checkDamageToHero(0xef4444, true);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.65) / 0.35;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                vGroup.position.y = 1.0 - easeBack * 0.35;
+                vGroup.rotation.x = -0.15 * (1.0 - easeBack);
+              }
+            } else {
+              // Default Void Titan
+              if (p < 0.32) {
+                const f = Math.sin((p / 0.32) * (Math.PI / 2));
+                vGroup.position.x = 1.8 + f * 0.25;
+                vGroup.position.y = f * 0.15;
+              } else if (p < 0.58) {
+                const f = (p - 0.32) / 0.26;
+                const easeLunge = Math.sin(f * (Math.PI / 2));
+                vGroup.position.x = (1.8 + 0.25) - easeLunge * (1.8 + 0.25 - (-0.6));
+                if (p >= 0.48 && !vAnim.hasDamaged) {
+                  vAnim.hasDamaged = true;
+                  checkDamageToHero(0xa855f7, true);
+                }
+              } else if (p < 1.0) {
+                const f = (p - 0.58) / 0.42;
+                const easeBack = Math.sin(f * (Math.PI / 2));
+                vGroup.position.x = -0.6 + easeBack * (1.8 - (-0.6));
+              }
             }
-          } else if (p < 1.0) {
-            const f = (p - 0.54) / 0.46;
-            const easeBack = Math.sin(f * (Math.PI / 2));
-            vGroup.position.x = -0.6 + easeBack * 2.4;
-            vGroup.position.y = 0;
-            vGroup.rotation.z = -0.07 * (1.0 - easeBack);
-          } else {
-            vGroup.position.set(1.8, 0, 0.5);
-            vGroup.rotation.z = 0;
-            vAnim.state = 'idle';
-            vAnim.hasDamaged = false;
+
+            if (p >= 1.0) {
+              vGroup.position.set(1.8, isGoblin ? 1.85 : isMag ? 0.65 : 0, 0.5);
+              vGroup.rotation.set(0, -Math.PI / 3.4, 0);
+              vGroup.scale.set(1, 1, 1);
+              vAnim.state = 'idle';
+              vAnim.hasDamaged = false;
+            }
           }
-        }
 
         // ============================================================
         // --- VILLAIN SIGNATURE POWERS 3D VFX LOOP ---
@@ -1584,94 +2179,123 @@ export const ThreeBattleArena = ({
             }
           }
 
-          // 2. GREEN GOBLIN
+          // 2. GREEN GOBLIN: ROLLING PUMPKIN BOMB & FIERY FIREBALL DETONATION
           else if (villainId === 'green-goblin') {
             if (goblinBombRef.current) {
               const bomb = goblinBombRef.current;
-              bomb.visible = vt < 0.25;
-              const f = vt / 0.25;
-              bomb.position.x = THREE.MathUtils.lerp(2.2, -2.0, f);
-              bomb.position.y = 2.0 + Math.sin(f * Math.PI) * 1.2;
-              bomb.rotation.x += delta * 15;
+              const bombFlightDur = 0.48;
+              bomb.visible = vt < bombFlightDur;
+              if (bomb.visible) {
+                const f = vt / bombFlightDur;
+                bomb.position.x = THREE.MathUtils.lerp(1.2, -1.8, f);
+                bomb.position.y = 1.6 + Math.sin(f * Math.PI) * 1.4 - f * 1.3;
+                bomb.rotation.x += delta * 24;
+                bomb.rotation.y += delta * 18;
+              }
             }
             if (goblinExplosionRef.current) {
               const exp = goblinExplosionRef.current;
-              if (vt >= 0.2 && vt < 0.5) {
+              if (vt >= 0.42 && vt < 0.85) {
                 exp.visible = true;
-                const sc = (vt - 0.2) * 8;
-                exp.position.set(-2.0, 1.8, 0.5);
+                const eProg = (vt - 0.42) / 0.43;
+                const sc = 0.4 + eProg * 3.4;
+                exp.position.set(-1.8, 1.2, 0.5);
                 exp.scale.set(sc, sc, sc);
-                exp.material.opacity = 1.0 - (vt - 0.2) / 0.3;
+                if (exp.userData?.outer) exp.userData.outer.material.opacity = (1.0 - eProg) * 0.95;
+                if (exp.userData?.inner) exp.userData.inner.material.opacity = (1.0 - eProg) * 1.0;
               } else {
                 exp.visible = false;
               }
             }
           }
 
-          // 3. THANOS
+          // 3. THANOS: 6 INFINITY STONES COSMIC RAY & POWER STONE CRATER
           else if (villainId === 'thanos') {
             if (thanosBeamRef.current) {
-              thanosBeamRef.current.visible = true;
-              thanosBeamRef.current.material.opacity = Math.max(0, 1.0 - vt / 0.45);
-              thanosBeamRef.current.scale.set(2.4, 1, 2.4);
+              const beamGroup = thanosBeamRef.current;
+              beamGroup.visible = vt < 0.72;
+              const op = Math.max(0, 1.0 - vt / 0.72);
+              if (beamGroup.userData?.outer) beamGroup.userData.outer.material.opacity = op;
+              if (beamGroup.userData?.inner) beamGroup.userData.inner.material.opacity = op;
+              if (beamGroup.userData?.stones) {
+                beamGroup.userData.stones.forEach((st, idx) => {
+                  const ang = vt * 14 + (idx * Math.PI / 3);
+                  const rad = 0.28 + Math.sin(vt * 8) * 0.08;
+                  st.position.set(-0.8 - (idx * 0.65), Math.cos(ang) * rad, Math.sin(ang) * rad);
+                  st.material.opacity = op;
+                });
+              }
             }
             if (thanosShockwaveRef.current) {
-              const sc = 1 + vt * 9;
+              const sc = 1 + vt * 12;
               thanosShockwaveRef.current.scale.set(sc, sc, 1);
-              thanosShockwaveRef.current.material.opacity = Math.max(0, 0.9 - vt / 0.45);
+              thanosShockwaveRef.current.material.opacity = Math.max(0, 0.95 - vt / 0.68);
             }
           }
 
-          // 4. MAGNETO
+          // 4. MAGNETO: ELECTROMAGNETIC TORUS AURA & RAILGUN SPIKE VOLLEY
           else if (villainId === 'magneto') {
             if (magnetoAuraRef.current) {
-              magnetoAuraRef.current.material.opacity = Math.max(0, 0.85 - vt / 0.45);
-              magnetoAuraRef.current.rotation.z += delta * 12;
+              magnetoAuraRef.current.visible = vt < 0.70;
+              magnetoAuraRef.current.material.opacity = Math.max(0, 0.9 - vt / 0.70);
+              magnetoAuraRef.current.rotation.z += delta * 14;
             }
             if (magnetoSpikesRef.current) {
               const spikes = magnetoSpikesRef.current;
-              spikes.visible = true;
-              const f = Math.min(1.0, vt / 0.3);
+              spikes.visible = vt < 0.65;
+              const f = Math.min(1.0, vt / 0.38);
               spikes.children.forEach((spike, idx) => {
-                const offY = (idx - 2) * 0.35;
-                spike.position.set(THREE.MathUtils.lerp(2.2, -2.0, f), 2.2 + offY, 0.5);
+                const offY = (idx - 2) * 0.42;
+                spike.position.set(THREE.MathUtils.lerp(1.8, -2.4, f), 2.2 + offY, 0.5);
               });
             }
           }
 
-          // 5. DOCTOR DOOM / DOOM REGENT
+          // 5. DOCTOR DOOM: ORBITAL SATELLITE SIPHON PILLAR & TECHNOMANCY GROUND RUNE
           else if (villainId === 'doctor-doom' || villainId === 'doom-regent') {
             if (doomOrbitalBeamRef.current) {
-              doomOrbitalBeamRef.current.visible = true;
-              doomOrbitalBeamRef.current.material.opacity = Math.max(0, 1.0 - vt / 0.45);
-              doomOrbitalBeamRef.current.scale.set(1.6, 1, 1.6);
+              const dBeam = doomOrbitalBeamRef.current;
+              dBeam.visible = vt < 0.68;
+              const op = Math.max(0, 1.0 - vt / 0.68);
+              if (dBeam.userData?.outer) dBeam.userData.outer.material.opacity = op;
+              if (dBeam.userData?.inner) dBeam.userData.inner.material.opacity = op;
             }
             if (doomGroundRingRef.current) {
-              const sc = 1 + vt * 8;
+              doomGroundRingRef.current.visible = vt < 0.68;
+              const sc = 1 + vt * 10;
               doomGroundRingRef.current.scale.set(sc, sc, 1);
-              doomGroundRingRef.current.material.opacity = Math.max(0, 0.85 - vt / 0.45);
+              doomGroundRingRef.current.material.opacity = Math.max(0, 0.9 - vt / 0.68);
             }
           }
 
-          // 6. LOKI
+          // 6. LOKI: SCEPTER BEAM & FLICKERING PHANTOM CLONE DECOYS
           else if (villainId === 'loki') {
             if (lokiScepterBeamRef.current) {
-              lokiScepterBeamRef.current.visible = true;
-              lokiScepterBeamRef.current.material.opacity = Math.max(0, 1.0 - vt / 0.45);
+              lokiScepterBeamRef.current.visible = vt >= 0.25 && vt < 0.62;
+              lokiScepterBeamRef.current.material.opacity = Math.max(0, 1.0 - (vt - 0.25) / 0.37);
             }
             if (lokiIllusionsRef.current) {
-              const op = Math.sin(vt * 18) > 0 ? 0.75 : 0.2;
-              lokiIllusionsRef.current.children.forEach(c => (c.material.opacity = op));
+              lokiIllusionsRef.current.visible = vt < 0.65;
+              const op = Math.sin(vt * 18) > 0 ? 0.85 : 0.25;
+              lokiIllusionsRef.current.children.forEach(c => {
+                c.children.forEach(m => {
+                  if (m.material) m.material.opacity = op;
+                });
+              });
             }
           }
 
-          if (vt > 0.48) {
+          const maxVfxDur = villainId === 'green-goblin' ? 0.88 : villainId === 'thanos' ? 0.72 : 0.68;
+          if (vt > maxVfxDur) {
             vfx.villainAttackActive = false;
             if (voidBeamRef.current) voidBeamRef.current.visible = false;
             if (thanosBeamRef.current) thanosBeamRef.current.visible = false;
             if (doomOrbitalBeamRef.current) doomOrbitalBeamRef.current.visible = false;
+            if (doomGroundRingRef.current) doomGroundRingRef.current.visible = false;
             if (lokiScepterBeamRef.current) lokiScepterBeamRef.current.visible = false;
+            if (lokiIllusionsRef.current) lokiIllusionsRef.current.visible = false;
             if (magnetoSpikesRef.current) magnetoSpikesRef.current.visible = false;
+            if (magnetoAuraRef.current) magnetoAuraRef.current.visible = false;
             if (goblinBombRef.current) goblinBombRef.current.visible = false;
             if (goblinExplosionRef.current) goblinExplosionRef.current.visible = false;
           }
@@ -1700,7 +2324,7 @@ export const ThreeBattleArena = ({
 
       // --- 3D SHIELD OPACITY & ROTATION ---
       if (shieldMeshRef.current) {
-        const isShieldActive = activeGesture && (activeGesture.toUpperCase().includes('SHIELD') || activeGesture.toUpperCase().includes('PALM'));
+        const isShieldActive = activeGestureRef.current && (activeGestureRef.current.toUpperCase().includes('SHIELD') || activeGestureRef.current.toUpperCase().includes('PALM'));
         const targetOpacity = isShieldActive ? 0.85 : 0;
         shieldMeshRef.current.material.opacity += (targetOpacity - shieldMeshRef.current.material.opacity) * 0.25;
         if (shieldWireRef.current) {
@@ -1869,7 +2493,7 @@ export const ThreeBattleArena = ({
       }
     } else if (heroActionTrigger.type === 'point') {
       heroAnimRef.current = { state: 'punch', time: 0, recoiling: false, recoilTime: 0, comboIndex: 1 };
-      activeVfxRef.current.heroAttackType = 'fist';
+      activeVfxRef.current.heroAttackType = 'point';
       activeVfxRef.current.heroVfxTime = 0;
       cameraShakeRef.current = 0.22;
       if (villainAnimRef.current) {
@@ -1878,15 +2502,42 @@ export const ThreeBattleArena = ({
         villainAnimRef.current.recoiling = true;
         villainAnimRef.current.recoilTime = 0;
       }
-      sound.playLaserBeam(true);
+      if (heroId === 'thor') {
+        sound.playThunder();
+      } else if (heroId === 'spiderman') {
+        sound.playWebSling();
+      } else if (heroId === 'captain-america') {
+        sound.playShieldBlock();
+      } else if (heroId === 'doctor-strange' || heroId === 'dr-strange') {
+        sound.playMysticCast();
+      } else {
+        sound.playLaserBeam(true);
+      }
     } else if (heroActionTrigger.type === 'palm') {
       heroAnimRef.current = { state: 'block', time: 0, recoiling: false, recoilTime: 0 };
       if (shieldMeshRef.current) {
         shieldMeshRef.current.material.opacity = 0.95;
       }
+      if (heroId === 'captain-america') {
+        sound.playShieldBlock();
+      } else if (heroId === 'doctor-strange' || heroId === 'dr-strange') {
+        sound.playMysticCast();
+      } else if (heroId === 'spiderman') {
+        sound.playWebSling();
+      } else {
+        sound.playHover();
+      }
     } else if (heroActionTrigger.type === 'swipe') {
       heroAnimRef.current = { state: 'dodge', time: 0, recoiling: false };
-      sound.playWebSling();
+      if (heroId === 'ironman') {
+        sound.playLaserBeam(false);
+      } else if (heroId === 'thor') {
+        sound.playThunder();
+      } else if (heroId === 'doctor-strange' || heroId === 'dr-strange') {
+        sound.playMysticCast();
+      } else {
+        sound.playWebSling();
+      }
     }
   }, [heroActionTrigger, selectedHero]);
 
