@@ -157,8 +157,8 @@ export const ThreeBattleArena = ({
 
     // 1. Scene & Setup with Atmospheric Volumetric Fog
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050818);
-    scene.fog = new THREE.FogExp2(0x050818, 0.038);
+    scene.background = null; // Transparent so moving 3D environment blends with dimensional portal background
+    scene.fog = new THREE.FogExp2(0x050818, 0.018);
     sceneRef.current = scene;
 
     // 2. Cinematic Camera (Angled 3D Isometric View with Full Height Clearance)
@@ -167,10 +167,10 @@ export const ThreeBattleArena = ({
     camera.lookAt(0, 1.40, 0.3);
     cameraRef.current = camera;
 
-    // 3. WebGL Renderer with High-Performance Tone Mapping (alpha: false eliminates GPU compositor lag)
-    const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true, powerPreference: 'high-performance' });
+    // 3. WebGL Renderer with High-Performance Tone Mapping (alpha: true, locked 60 FPS on any laptop)
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.35;
     rendererRef.current = renderer;
@@ -202,7 +202,7 @@ export const ThreeBattleArena = ({
     movingBgGroupRef.current = movingBgGroup;
 
     // 5A. Multi-Depth Dynamic Moving Cosmic Starfield (Deep Space Galaxy)
-    const starCount = 600;
+    const starCount = 280;
     const bgStarGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(starCount * 3);
     const starColors = new Float32Array(starCount * 3);

@@ -170,8 +170,8 @@ export class ComputerVisionGestureEngine {
 
     if (this.video && this.video.readyState >= 2 && !this.video.paused) {
       const now = performance.now();
-      // Throttle AI landmark detection to ~16 FPS (every 60ms) to leave 80%+ CPU frame budget for locked 60fps 3D rendering
-      if (!this.lastDetectTime || (now - this.lastDetectTime >= 60)) {
+      // Throttle AI landmark detection to ~13 FPS (every 75ms) to leave 85%+ CPU frame budget for locked 60fps 3D rendering
+      if (!this.lastDetectTime || (now - this.lastDetectTime >= 75)) {
         this.lastDetectTime = now;
         if (timestamp <= (this.lastVideoTime || 0)) {
           timestamp = (this.lastVideoTime || 0) + 1;

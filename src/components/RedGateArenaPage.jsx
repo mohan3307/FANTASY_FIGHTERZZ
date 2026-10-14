@@ -1061,17 +1061,15 @@ export const RedGateArenaPage = ({
 
   return (
     <div className={`rs-redgate-arena-screen phase-${introPhase}`}>
-      {/* 1. Portal Atmospheric Background (decodes only during intro to guarantee 60 FPS in combat) */}
-      {introPhase !== 'active' && (
-        <video
-          className="rs-redgate-portal-video-bg"
-          autoPlay
-          loop
-          muted
-          playsInline
-          src="/assets/red_gate_portal.mp4"
-        />
-      )}
+      {/* 1. Dimensional Portal Moving Background (Stays seamlessly active throughout entire duel) */}
+      <video
+        className="rs-redgate-portal-video-bg"
+        autoPlay
+        loop
+        muted
+        playsInline
+        src="/assets/red_gate_portal.mp4"
+      />
 
       <div className="rs-redgate-blood-fog"></div>
       <div className="rs-redgate-vignette-overlay"></div>
