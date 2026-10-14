@@ -75,6 +75,12 @@ export const ThreeBattleArena = ({
   const lokiScepterBeamRef = useRef(null);
   const lokiIllusionsRef = useRef(null);
 
+  // 3D Moving Dynamic Background References
+  const movingBgGroupRef = useRef(null);
+  const bgMonolithsRef = useRef([]);
+  const bgVortexRingsRef = useRef([]);
+  const horizonRingRef = useRef(null);
+
   // Active VFX State Tracker
   const activeVfxRef = useRef({
     heroAttackType: null,
@@ -164,7 +170,7 @@ export const ThreeBattleArena = ({
     // 3. WebGL Renderer with High-Performance Tone Mapping (alpha: false eliminates GPU compositor lag)
     const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.35;
     rendererRef.current = renderer;
@@ -189,33 +195,135 @@ export const ThreeBattleArena = ({
     scene.add(portalCoreLight);
 
     // ============================================================
-    // 5. HIGH-OCTANE LAG-FREE ARENA BATTLE BACKGROUND
+    // 5. HIGH-OCTANE 3D DYNAMIC MOVING ARENA BACKGROUND (AAA COMBAT STAGE)
     // ============================================================
-    // Streamlined deep-space duel stage focused 100% on the fighters
-    const cityGroup = new THREE.Group();
-    scene.add(cityGroup);
-    cityGroupRef.current = cityGroup;
-    speedersRef.current = [];
+    const movingBgGroup = new THREE.Group();
+    scene.add(movingBgGroup);
+    movingBgGroupRef.current = movingBgGroup;
 
-    // Distant dimensional gate perimeter arch
+    // 5A. Multi-Depth Dynamic Moving Cosmic Starfield (Deep Space Galaxy)
+    const starCount = 600;
+    const bgStarGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
+    const palette = [
+      new THREE.Color(0x00f3ff), // Cyan
+      new THREE.Color(0x8b5cf6), // Purple
+      new THREE.Color(0xef4444), // Crimson (Red Gate)
+      new THREE.Color(0xffffff), // White
+      new THREE.Color(0xf59e0b)  // Amber
+    ];
+    for (let i = 0; i < starCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos((Math.random() * 2) - 1);
+      const r = 20 + Math.random() * 32;
+      starPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      starPos[i * 3 + 1] = Math.abs(r * Math.cos(phi)) * 0.75 - 1.5;
+      starPos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+      const col = palette[Math.floor(Math.random() * palette.length)];
+      starColors[i * 3] = col.r;
+      starColors[i * 3 + 1] = col.g;
+      starColors[i * 3 + 2] = col.b;
+    }
+    bgStarGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    bgStarGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+    const bgStarMat = new THREE.PointsMaterial({
+      size: 0.25,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const starField = new THREE.Points(bgStarGeo, bgStarMat);
+    movingBgGroup.add(starField);
+
+    // 5B. Floating Ancient Dimensional Runic Monoliths (Levitating in distance)
+    const monoliths = [];
+    const monolithGeo = new THREE.CylinderGeometry(0.35, 0.55, 3.8, 5);
+    const monolithMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a,
+      metalness: 0.85,
+      roughness: 0.25,
+      emissive: 0x1e1b4b,
+      emissiveIntensity: 0.5
+    });
+    const runeRingGeo = new THREE.TorusGeometry(0.7, 0.03, 8, 24);
+    const runeRingMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.75 });
+
+    const monolithData = [
+      { x: -7.5, y: 3.5, z: -8.0, rotY: 0.3, speed: 0.9, offset: 0 },
+      { x: 7.5, y: 4.2, z: -9.0, rotY: -0.4, speed: 1.1, offset: 1.5 },
+      { x: -5.0, y: 5.5, z: -12.0, rotY: 0.7, speed: 0.7, offset: 2.8 },
+      { x: 5.2, y: 6.0, z: -11.5, rotY: -0.6, speed: 0.85, offset: 4.2 },
+      { x: -9.5, y: 2.8, z: -6.0, rotY: 0.2, speed: 1.2, offset: 3.1 },
+      { x: 9.8, y: 3.1, z: -7.0, rotY: -0.5, speed: 1.0, offset: 5.0 }
+    ];
+
+    monolithData.forEach((d) => {
+      const mono = new THREE.Mesh(monolithGeo, monolithMat);
+      mono.position.set(d.x, d.y, d.z);
+      mono.rotation.y = d.rotY;
+      mono.rotation.z = 0.08;
+      const rRing = new THREE.Mesh(runeRingGeo, runeRingMat);
+      rRing.rotation.x = Math.PI / 2;
+      mono.add(rRing);
+
+      mono.userData = { baseY: d.y, speed: d.speed, offset: d.offset, rRing };
+      movingBgGroup.add(mono);
+      monoliths.push(mono);
+    });
+    bgMonolithsRef.current = monoliths;
+
+    // 5C. Deep Celestial Horizon Energy Rings
+    const horizonRingGeo = new THREE.TorusGeometry(18, 0.15, 12, 64);
+    const horizonRingMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.45 });
+    const horizonRing = new THREE.Mesh(horizonRingGeo, horizonRingMat);
+    horizonRing.rotation.x = Math.PI / 2;
+    horizonRing.position.set(0, -0.6, -6);
+    movingBgGroup.add(horizonRing);
+    horizonRingRef.current = horizonRing;
+
+    const horizonRing2Geo = new THREE.TorusGeometry(26, 0.1, 12, 64);
+    const horizonRing2Mat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.3 });
+    const horizonRing2 = new THREE.Mesh(horizonRing2Geo, horizonRing2Mat);
+    horizonRing2.rotation.x = Math.PI / 2;
+    horizonRing2.position.set(0, -1.2, -8);
+    movingBgGroup.add(horizonRing2);
+
+    // 5D. Dynamic Multi-Ring Dimensional Portal Core Vortex (Red Gate Entrance)
+    const portalGroup = new THREE.Group();
+    portalGroup.position.set(0, 2.5, -5.2);
+    scene.add(portalGroup);
+
     const gateArchGeo = new THREE.TorusGeometry(4.2, 0.08, 12, 48);
     const gateArchMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.65 });
     const gateArch = new THREE.Mesh(gateArchGeo, gateArchMat);
-    gateArch.position.set(0, 2.6, -5.5);
-    cityGroup.add(gateArch);
+    portalGroup.add(gateArch);
 
-    // Single sleek dimensional core ring
-    const portalGroup = new THREE.Group();
-    portalGroup.position.set(0, 2.4, -4.5);
-    scene.add(portalGroup);
-
-    const pRing1 = new THREE.Mesh(
-      new THREE.TorusGeometry(3.0, 0.05, 12, 48),
-      new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.65 })
+    const vRing1 = new THREE.Mesh(
+      new THREE.TorusGeometry(3.6, 0.06, 12, 48),
+      new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.75 })
     );
-    portalGroup.add(pRing1);
-    portalRingsRef.current = [pRing1];
+    portalGroup.add(vRing1);
+
+    const vRing2 = new THREE.Mesh(
+      new THREE.TorusGeometry(2.8, 0.05, 12, 48),
+      new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.85 })
+    );
+    portalGroup.add(vRing2);
+
+    const vRing3 = new THREE.Mesh(
+      new THREE.TorusGeometry(2.0, 0.04, 12, 48),
+      new THREE.MeshBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.9 })
+    );
+    portalGroup.add(vRing3);
+
+    portalRingsRef.current = [vRing1];
+    bgVortexRingsRef.current = [vRing1, vRing2, vRing3];
     portalVortexRef.current = null;
+    cityGroupRef.current = portalGroup;
+    speedersRef.current = [];
 
     // ============================================================
     // 7. ARENA BATTLE PLATFORM & TACTICAL RINGS
@@ -955,9 +1063,28 @@ export const ThreeBattleArena = ({
         }
       }
 
-      // Subtle portal ring rotation (lightweight, zero-lag)
-      if (portalRingsRef.current.length > 0 && portalRingsRef.current[0]) {
-        portalRingsRef.current[0].rotation.z += delta * 0.45;
+      // 3D Moving Dynamic Background Animation (Zero CPU overhead, pure GPU matrix transform)
+      if (movingBgGroupRef.current) {
+        movingBgGroupRef.current.rotation.y = elapsed * 0.025;
+      }
+      if (bgMonolithsRef.current && bgMonolithsRef.current.length > 0) {
+        for (let i = 0; i < bgMonolithsRef.current.length; i++) {
+          const m = bgMonolithsRef.current[i];
+          m.position.y = m.userData.baseY + Math.sin(elapsed * m.userData.speed + m.userData.offset) * 0.28;
+          m.rotation.y += delta * 0.15;
+          if (m.userData.rRing) {
+            m.userData.rRing.rotation.z += delta * 0.6;
+          }
+        }
+      }
+      if (bgVortexRingsRef.current && bgVortexRingsRef.current.length >= 3) {
+        const rings = bgVortexRingsRef.current;
+        if (rings[0]) rings[0].rotation.z += delta * 0.35;
+        if (rings[1]) rings[1].rotation.z -= delta * 0.45;
+        if (rings[2]) rings[2].rotation.z += delta * 0.65;
+      }
+      if (horizonRingRef.current) {
+        horizonRingRef.current.rotation.z += delta * 0.03;
       }
 
       // ============================================================
@@ -1005,14 +1132,10 @@ export const ThreeBattleArena = ({
         }
       }
 
-      // Ambient spark animation
+      // Ambient spark animation (Optimized for smooth 60fps without CPU array thrashing)
       if (particlesRef.current) {
-        const positions = particlesRef.current.geometry.attributes.position.array;
-        for (let i = 1; i < positions.length; i += 3) {
-          positions[i] += delta * 0.9;
-          if (positions[i] > 6) positions[i] = 0;
-        }
-        particlesRef.current.geometry.attributes.position.needsUpdate = true;
+        particlesRef.current.rotation.y += delta * 0.04;
+        particlesRef.current.position.y = Math.sin(elapsed * 0.6) * 0.25;
       }
 
       // --- INTRO PORTAL EMERGENCE ---

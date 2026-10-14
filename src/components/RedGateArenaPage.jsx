@@ -15,11 +15,13 @@ import {
   Play,
   Crosshair,
   Activity,
-  Cpu
+  Cpu,
+  Trophy
 } from 'lucide-react';
 import { ComputerVisionGestureEngine } from '../utils/gestureDetector';
 import { ThreeBattleArena } from './ThreeBattleArena';
 import { sound } from '../utils/audio';
+import { saveToLeaderboard } from './LeaderboardPage';
 
 export const getHeroCombatKit = (hero) => {
   const code = hero?.heroCode || hero?.id || '';
@@ -204,7 +206,9 @@ export const RedGateArenaPage = ({
   selectedVillain,
   cameraStream,
   isSimulatedCamera,
-  onExitArena
+  onExitArena,
+  onViewLeaderboard,
+  playerName = 'Hero_001'
 }) => {
   // Intro Sequence Phases: 'city-pan' -> 'hero-entrance' -> 'boss-entrance' -> 'cinematic-banner' -> 'countdown' -> 'active'
   const [introPhase, setIntroPhase] = useState('city-pan');
@@ -239,6 +243,9 @@ export const RedGateArenaPage = ({
   const [combatLog, setCombatLog] = useState([]);
   const [isVictory, setIsVictory] = useState(false);
   const [isDefeated, setIsDefeated] = useState(false);
+  const [battleElapsed, setBattleElapsed] = useState(0); // Counts UP for leaderboard timing
+  const [leaderboardSaved, setLeaderboardSaved] = useState(false);
+  const battleStartTimeRef = useRef(null);
   const [cvConfidence, setCvConfidence] = useState(0);
   const [cvTrackingStatus, setCvTrackingStatus] = useState(cameraStream ? 'LOADING MODEL' : 'CAMERA OFF');
   const [isScreenShaking, setIsScreenShaking] = useState(false);
@@ -409,7 +416,15 @@ export const RedGateArenaPage = ({
   // Round Clock Timer (Countdown)
   useEffect(() => {
     if (introPhase !== 'active' || isVictory || isDefeated) return;
+    // Start the elapsed timer when battle becomes active
+    if (!battleStartTimeRef.current) {
+      battleStartTimeRef.current = Date.now();
+    }
     const interval = setInterval(() => {
+      // Update elapsed time
+      if (battleStartTimeRef.current) {
+        setBattleElapsed(Math.floor((Date.now() - battleStartTimeRef.current) / 1000));
+      }
       setRoundTime((prev) => {
         if (prev <= 1) {
           // Never shut down battle prematurely — grant Overtime Sudden Death!
@@ -938,6 +953,10 @@ export const RedGateArenaPage = ({
 
   const triggerVictory = () => {
     setIsVictory(true);
+    // Freeze elapsed time
+    if (battleStartTimeRef.current) {
+      setBattleElapsed(Math.floor((Date.now() - battleStartTimeRef.current) / 1000));
+    }
     sound.playVictoryFanfare();
     showBanner(`🏆 VICTORY! ${selectedVillain?.name || 'BOSS'} DEFEATED!`, 'victory');
     addLog(`🏆 GLORY! ${selectedVillain?.name} collapsed! S-Rank Gate successfully sealed!`);
@@ -965,26 +984,74 @@ export const RedGateArenaPage = ({
     setIncomingAttackWarning(false);
     setHeroActionTrigger(null);
     setIntroPhase('active');
+    setBattleElapsed(0);
+    setLeaderboardSaved(false);
+    battleStartTimeRef.current = Date.now();
+    setTotalDamageDealt(0);
+    setMaxComboReached(0);
     addLog(`[SYSTEM] Battle reset. S-Rank Gate reopened. Engage!`);
   };
 
-  // Calculate Expo Visitor Score and Rank
+  // Calculate proper scoring: reward FASTER completion heavily (real fighting game tournament rules)
   const calculateExpoScore = () => {
-    const timeBonus = roundTime * 1200;
-    const comboBonus = maxComboReached * 4500;
-    const hpBonus = heroHp * 80;
-    const baseScore = totalDamageDealt > 0 ? totalDamageDealt : 250000;
-    const totalScore = baseScore + timeBonus + comboBonus + hpBonus;
+    const timeTaken = battleElapsed || 1;
+    // Speed points:
+    // Sub 20s: 350,000 pts (Speed God)
+    // 20-35s: 280,000 - 320,000 pts
+    // 35-60s: 200,000 - 250,000 pts
+    // Above 60s: decays smoothly down to min 40,000 pts
+    let speedBonus = 0;
+    if (timeTaken <= 20) {
+      speedBonus = 350000 - (timeTaken * 1500);
+    } else if (timeTaken <= 35) {
+      speedBonus = 300000 - ((timeTaken - 20) * 4000);
+    } else if (timeTaken <= 60) {
+      speedBonus = 220000 - ((timeTaken - 35) * 3000);
+    } else {
+      speedBonus = Math.max(40000, 140000 - ((timeTaken - 60) * 1200));
+    }
 
-    let rank = 'A WARRIOR';
-    if (totalScore > 320000) rank = 'SSS TITAN SLAYER';
-    else if (totalScore > 280000) rank = 'SS S-RANK HERO';
-    else if (totalScore > 240000) rank = 'S GUARDIAN';
+    // HP preservation bonus: up to 150,000 points
+    const hpRatio = Math.max(0, Math.min(1, heroHp / maxHeroHp));
+    let hpBonus = Math.round(hpRatio * 150000);
+    if (hpRatio >= 0.98) hpBonus += 50000; // FLAWLESS VICTORY BONUS!
 
-    return { totalScore: Math.round(totalScore), rank };
+    // Combo Mastery: 7,500 points per max combo hit
+    const bestCombo = Math.max(maxComboReached, comboCount);
+    const comboBonus = Math.min(120000, bestCombo * 7500);
+
+    // Damage Dealt Efficiency
+    const damageBonus = Math.min(80000, Math.round(totalDamageDealt / 8));
+
+    const totalScore = Math.round(speedBonus + hpBonus + comboBonus + damageBonus);
+
+    let rank = 'C ROOKIE';
+    if (totalScore >= 520000 || (timeTaken <= 22 && hpRatio > 0.8)) rank = 'SSS TITAN SLAYER';
+    else if (totalScore >= 420000 || timeTaken <= 32) rank = 'SS S-RANK HERO';
+    else if (totalScore >= 320000 || timeTaken <= 45) rank = 'S GUARDIAN';
+    else if (totalScore >= 220000 || timeTaken <= 65) rank = 'A WARRIOR';
+    else if (totalScore >= 120000) rank = 'B FIGHTER';
+
+    return { totalScore, rank, timeTaken, isFlawless: hpRatio >= 0.98 };
   };
 
   const expoResults = calculateExpoScore();
+
+  // Auto-save to leaderboard cleanly on victory
+  useEffect(() => {
+    if (isVictory && !leaderboardSaved) {
+      saveToLeaderboard({
+        playerName: playerName || 'Student Warrior',
+        timeTaken: expoResults.timeTaken,
+        score: expoResults.totalScore,
+        heroName: selectedHero?.name || 'Unknown Hero',
+        villainName: selectedVillain?.name || 'Unknown Boss',
+        maxCombo: maxComboReached || comboCount,
+        heroHpRemaining: heroHp
+      });
+      setLeaderboardSaved(true);
+    }
+  }, [isVictory, leaderboardSaved, expoResults, playerName, selectedHero, selectedVillain, maxComboReached, comboCount, heroHp]);
 
   // Percentages for HUD
   const heroHpPercent = Math.max(0, (heroHp / maxHeroHp) * 100);
@@ -1571,9 +1638,15 @@ export const RedGateArenaPage = ({
             </div>
             <h2 className="rs-defeat-title text-cyan-400">{selectedVillain?.name || 'BOSS'} OBLITERATED!</h2>
             <p className="rs-defeat-subtitle">
-              Tactical mastery achieved! S-Rank Red Gate successfully sealed against {selectedVillain?.name || 'Dungeon Boss'} with {selectedHero?.name}.
+              <strong>{playerName}</strong> achieved tactical mastery! S-Rank Red Gate sealed against {selectedVillain?.name || 'Dungeon Boss'} with {selectedHero?.name}.
             </p>
             <div className="rs-victory-stats-row">
+              <div className="rs-vic-stat">
+                <span className="rs-vic-stat-label">⏱️ TIME TAKEN</span>
+                <span className="rs-vic-stat-val text-green-400">
+                  {Math.floor(expoResults.timeTaken / 60)}:{(expoResults.timeTaken % 60).toString().padStart(2, '0')}
+                </span>
+              </div>
               <div className="rs-vic-stat">
                 <span className="rs-vic-stat-label">COMBAT SCORE</span>
                 <span className="rs-vic-stat-val text-yellow-400">{expoResults.totalScore.toLocaleString()} PTS</span>
@@ -1587,14 +1660,24 @@ export const RedGateArenaPage = ({
                 <span className="rs-vic-stat-val text-cyan-400">{expoResults.rank}</span>
               </div>
             </div>
+            <div className="rs-lb-saved-badge">
+              <Trophy size={14} className="text-yellow-400" />
+              <span>RECORD SAVED TO LEADERBOARD</span>
+            </div>
             <div className="rs-defeat-actions-row">
               <button className="rs-btn-defeat-retry victory-replay" onClick={handleRetryBattle}>
                 <RotateCcw size={16} />
                 <span>PLAY AGAIN</span>
               </button>
+              {onViewLeaderboard && (
+                <button className="rs-btn-defeat-leaderboard" onClick={onViewLeaderboard}>
+                  <Trophy size={16} />
+                  <span>VIEW LEADERBOARD</span>
+                </button>
+              )}
               <button className="rs-btn-defeat-exit" onClick={onExitArena}>
                 <ArrowLeft size={16} />
-                <span>NEXT EXPO VISITOR</span>
+                <span>MAIN MENU</span>
               </button>
             </div>
           </div>

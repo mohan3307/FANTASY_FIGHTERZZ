@@ -9,7 +9,8 @@ import {
   User,
   Volume2,
   VolumeX,
-  Maximize2
+  Maximize2,
+  Trophy
 } from 'lucide-react';
 import { PortalParticles } from './components/PortalParticles';
 import { HowToPlayModal } from './components/HowToPlayModal';
@@ -21,6 +22,8 @@ import { CameraPermissionModal } from './components/CameraPermissionModal';
 import { BattleRulesModal } from './components/BattleRulesModal';
 import { RedGateArenaPage } from './components/RedGateArenaPage';
 import { FighterSlashTransition } from './components/FighterSlashTransition';
+import { StudentNameModal } from './components/StudentNameModal';
+import { LeaderboardPage } from './components/LeaderboardPage';
 import { MARVEL_HEROES } from './data/marvelHeroes';
 import { MARVEL_VILLAINS } from './data/marvelVillains';
 import { preloadFighterModels } from './components/ThreeFighter3DModels';
@@ -33,8 +36,30 @@ export function App() {
     preloadFighterModels();
     preloadHandLandmarker();
   }, []);
-  // Navigation State: 'home' | 'hero-select' | 'villain-select' | 'red-gate-battle'
+  // Navigation State: 'home' | 'hero-select' | 'villain-select' | 'red-gate-battle' | 'leaderboard'
   const [currentPage, setCurrentPage] = useState('home');
+
+  // Student/Player Name State
+  const [playerName, setPlayerName] = useState(() => {
+    try {
+      return localStorage.getItem('fantasy_fighterzz_player_name') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [showNameModal, setShowNameModal] = useState(false);
+
+  // Prompt student name right when the app opens if not already registered
+  useEffect(() => {
+    if (!playerName) {
+      const timer = setTimeout(() => {
+        setShowNameModal(true);
+        sound.playModal();
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const [selectedHero, setSelectedHero] = useState(MARVEL_HEROES[0]);
   const [selectedVillain, setSelectedVillain] = useState(MARVEL_VILLAINS[0]); // Default Doctor Doom
 
@@ -92,9 +117,32 @@ export function App() {
     }, 90);
   };
 
-  // 1. Play Button on Home ➡️ Warp to Hero Selection
+  // 1. Play Button on Home ➡️ Ask Name (if not set) then Warp to Hero Selection
   const handlePlayClick = () => {
+    if (!playerName) {
+      setShowNameModal(true);
+      sound.playModal();
+      return;
+    }
     navigateWithWarp('hero-select', 'HERO SELECTION');
+  };
+
+  // Handle student name submission
+  const handleNameSubmit = (name) => {
+    setPlayerName(name);
+    try {
+      localStorage.setItem('fantasy_fighterzz_player_name', name);
+    } catch {}
+    setShowNameModal(false);
+    sound.playClick();
+    if (currentPage === 'home') {
+      navigateWithWarp('hero-select', 'HERO SELECTION');
+    }
+  };
+
+  // Navigate to Leaderboard
+  const handleLeaderboardClick = () => {
+    navigateWithWarp('leaderboard', 'LEADERBOARD');
   };
 
   // 2. Select Hero ➡️ Warp to Villain Selection
@@ -185,12 +233,17 @@ export function App() {
 
               {/* Player Profile & Controls on Right */}
               <div className="rs-stage-top-hud rs-home-hud-clean">
-                <div className="rs-hud-profile-badge">
+                <div 
+                  className="rs-hud-profile-badge" 
+                  onClick={() => { sound.playModal(); setShowNameModal(true); }}
+                  style={{ cursor: 'pointer' }}
+                  title="Click to edit Student Name"
+                >
                   <div className="rs-hud-avatar-icon">
                     <User size={14} />
                   </div>
                   <div className="rs-hud-profile-info">
-                    <span className="rs-hud-user-name">Hero_001</span>
+                    <span className="rs-hud-user-name">{playerName || 'Enter Name'}</span>
                     <span className="rs-hud-user-lvl">Lv. 5</span>
                   </div>
                   <div className="rs-hud-progress-track">
@@ -344,6 +397,15 @@ export function App() {
                 </button>
 
                 <button
+                  className="rs-stage-btn nav chamfered leaderboard"
+                  onClick={handleLeaderboardClick}
+                  onMouseEnter={() => sound.playHover()}
+                >
+                  <Trophy size={19} className="rs-nav-icon trophy-icon" />
+                  <span className="rs-nav-text">LEADERBOARD</span>
+                </button>
+
+                <button
                   className="rs-stage-btn nav chamfered quit"
                   onClick={handleQuitClick}
                   onMouseEnter={() => sound.playHover()}
@@ -395,6 +457,14 @@ export function App() {
           cameraStream={cameraStream}
           isSimulatedCamera={isSimulatedCamera}
           onExitArena={() => navigateWithWarp('home', 'MAIN MENU')}
+          onViewLeaderboard={() => navigateWithWarp('leaderboard', 'LEADERBOARD')}
+          playerName={playerName}
+        />
+      )}
+
+      {currentPage === 'leaderboard' && (
+        <LeaderboardPage
+          onBack={() => navigateWithWarp('home', 'MAIN MENU')}
         />
       )}
 
@@ -437,6 +507,12 @@ export function App() {
         isOpen={quitOpen}
         onClose={() => setQuitOpen(false)}
         onConfirm={handleQuitConfirm}
+      />
+
+      {/* Student Name Entry Modal */}
+      <StudentNameModal
+        isOpen={showNameModal}
+        onSubmit={handleNameSubmit}
       />
     </div>
   );
