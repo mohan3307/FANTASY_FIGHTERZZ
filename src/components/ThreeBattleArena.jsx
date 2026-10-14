@@ -1035,8 +1035,9 @@ export const ThreeBattleArena = ({
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const rawDelta = Math.min(clock.getDelta(), 0.1);
-      const elapsed = clock.getElapsedTime();
+      try {
+        const rawDelta = Math.min(clock.getDelta(), 0.1);
+        const elapsed = clock.getElapsedTime();
 
       // Fighting Game Hit-Stop (Micro-Impact Freeze on collisions)
       let delta = rawDelta;
@@ -2523,16 +2524,36 @@ export const ThreeBattleArena = ({
         }
       }
 
+        renderer.render(scene, camera);
+      } catch (loopErr) {
+        console.warn('Combat arena render glitch recovered:', loopErr);
+      }
+    };
+
+    const handleContextLost = (e) => {
+      e.preventDefault();
+      console.warn('WebGL context lost, pausing render to recover...');
+    };
+    const handleContextRestored = () => {
+      console.log('WebGL context restored');
       renderer.render(scene, camera);
     };
+    if (renderer.domElement) {
+      renderer.domElement.addEventListener('webglcontextlost', handleContextLost, false);
+      renderer.domElement.addEventListener('webglcontextrestored', handleContextRestored, false);
+    }
 
     animate();
 
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
-      if (renderer.domElement && container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
+      if (renderer.domElement) {
+        renderer.domElement.removeEventListener('webglcontextlost', handleContextLost);
+        renderer.domElement.removeEventListener('webglcontextrestored', handleContextRestored);
+        if (container.contains(renderer.domElement)) {
+          container.removeChild(renderer.domElement);
+        }
       }
       renderer.dispose();
     };

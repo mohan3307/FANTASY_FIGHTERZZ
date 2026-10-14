@@ -170,7 +170,7 @@ export class ComputerVisionGestureEngine {
 
     if (this.video && this.video.readyState >= 2 && !this.video.paused) {
       const now = performance.now();
-    // Throttle AI landmark detection to ~16 FPS (every 60ms) to leave 80%+ CPU frame budget for locked 60fps 3D rendering
+      // Throttle AI landmark detection to ~16 FPS (every 60ms) to leave 80%+ CPU frame budget for locked 60fps 3D rendering
       if (!this.lastDetectTime || (now - this.lastDetectTime >= 60)) {
         this.lastDetectTime = now;
         if (timestamp <= (this.lastVideoTime || 0)) {
@@ -180,7 +180,13 @@ export class ComputerVisionGestureEngine {
         this.processVideoFrame(timestamp);
       }
     } else {
-      this.updateStatus('CAMERA OFF');
+      if (this.video && this.video.paused && this.video.srcObject) {
+        this.video.play().catch(() => {});
+      }
+      const hasLiveTracks = this.video?.srcObject?.getVideoTracks?.()?.some(t => t.readyState === 'live');
+      if (!hasLiveTracks && !this.video?.srcObject) {
+        this.updateStatus('CAMERA OFF');
+      }
     }
 
     this.animationId = requestAnimationFrame(this.loop);

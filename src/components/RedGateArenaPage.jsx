@@ -588,7 +588,7 @@ export const RedGateArenaPage = ({
       setIntroPhase('active');
     }
     const now = Date.now();
-    if (now - lastAttackTimeRef.current < 520) return;
+    if (now - lastAttackTimeRef.current < 220) return;
     lastAttackTimeRef.current = now;
 
     setLastGestureType(gestureType);
@@ -1477,7 +1477,7 @@ export const RedGateArenaPage = ({
             ref={pipCanvasRef}
             className="rs-cv-canvas-element"
           />
-          {(!activeStream || cvTrackingStatus === 'CAMERA OFF') && (
+          {!activeStream && (
             <div className="rs-cv-camera-off-overlay">
               <button
                 className="rs-cv-enable-btn"
