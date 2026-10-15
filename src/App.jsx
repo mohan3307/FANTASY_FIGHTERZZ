@@ -49,16 +49,16 @@ export function App() {
   });
   const [showNameModal, setShowNameModal] = useState(false);
 
-  // Prompt student name right when the app opens if not already registered
+  // Prompt student name right when the app opens if name is not yet registered
   useEffect(() => {
     if (!playerName) {
       const timer = setTimeout(() => {
         setShowNameModal(true);
         sound.playModal();
-      }, 700);
+      }, 400);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [playerName]);
 
   const [selectedHero, setSelectedHero] = useState(MARVEL_HEROES[0]);
   const [selectedVillain, setSelectedVillain] = useState(MARVEL_VILLAINS[0]); // Default Doctor Doom
@@ -117,17 +117,18 @@ export function App() {
     }, 90);
   };
 
-  // 1. Play Button on Home ➡️ Ask Name (if not set) then Warp to Hero Selection
+  // 1. Play Button on Home ➡️ Directly proceed if name registered or prompt name
   const handlePlayClick = () => {
     if (!playerName) {
       setShowNameModal(true);
       sound.playModal();
-      return;
+    } else {
+      sound.playClick();
+      navigateWithWarp('hero-select', 'HERO SELECTION');
     }
-    navigateWithWarp('hero-select', 'HERO SELECTION');
   };
 
-  // Handle student name submission
+  // Handle student name submission -> immediately enters Hero Selection!
   const handleNameSubmit = (name) => {
     setPlayerName(name);
     try {
@@ -135,9 +136,7 @@ export function App() {
     } catch {}
     setShowNameModal(false);
     sound.playClick();
-    if (currentPage === 'home') {
-      navigateWithWarp('hero-select', 'HERO SELECTION');
-    }
+    navigateWithWarp('hero-select', 'HERO SELECTION');
   };
 
   // Navigate to Leaderboard
@@ -465,6 +464,7 @@ export function App() {
       {currentPage === 'leaderboard' && (
         <LeaderboardPage
           onBack={() => navigateWithWarp('home', 'MAIN MENU')}
+          onPlayNow={handlePlayClick}
         />
       )}
 
@@ -513,6 +513,8 @@ export function App() {
       <StudentNameModal
         isOpen={showNameModal}
         onSubmit={handleNameSubmit}
+        initialName={playerName}
+        onClose={playerName ? () => setShowNameModal(false) : undefined}
       />
     </div>
   );

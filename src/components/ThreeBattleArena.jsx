@@ -3,7 +3,14 @@ import * as THREE from 'three';
 import { createArticulated3DFighter, animateArticulated3DFighter } from './ThreeFighter3DModels';
 import { sound } from '../utils/audio';
 
-export const ThreeBattleArena = ({
+// Pre-allocated vectors for zero GC stutter in 60FPS animation loop
+const _vecStart = new THREE.Vector3();
+const _vecEnd = new THREE.Vector3();
+const _vecMid = new THREE.Vector3();
+const _vecDir = new THREE.Vector3();
+const _vecUp = new THREE.Vector3(0, 1, 0);
+
+const ThreeBattleArenaComponent = ({
   selectedHero,
   selectedVillain,
   introPhase = 'active',
@@ -103,6 +110,7 @@ export const ThreeBattleArena = ({
 
   // Dynamic Camera Tracking & Hit-Stop Crunch
   const cameraZoomTargetRef = useRef({ x: -0.35, y: 2.15, z: 7.3 });
+  const cameraLookAtTargetRef = useRef({ x: 0, y: 1.48, z: 0.3 });
   const hitStopTimerRef = useRef(0);
 
   // Combat Animation States & FSM State
@@ -114,6 +122,7 @@ export const ThreeBattleArena = ({
   const aiAttackTimerRef = useRef(-2.0); // Grace period on start
   const introAnimRef = useRef({ emergeProgress: 0, heroEntranceProgress: 0 });
   const aiFsmStateRef = useRef('IDLE');
+  const warningActiveRef = useRef(false);
 
   const introPhaseRef = useRef(introPhase);
   const isVictoryRef = useRef(isVictory);
@@ -167,8 +176,14 @@ export const ThreeBattleArena = ({
     camera.lookAt(0, 1.40, 0.3);
     cameraRef.current = camera;
 
-    // 3. WebGL Renderer with High-Performance Tone Mapping (alpha: true, locked 60 FPS on any laptop)
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+    // 3. WebGL Renderer with High-Performance Tone Mapping (Ultra-fast, zero-lag on laptops)
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: false,
+      stencil: false,
+      powerPreference: 'high-performance',
+      precision: 'mediump'
+    });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1032,18 +1047,20 @@ export const ThreeBattleArena = ({
     let animId;
     let frameCount = 0;
     let lastFpsTime = performance.now();
+    let isContextLost = false;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
+      if (isContextLost) return;
       try {
         const rawDelta = Math.min(clock.getDelta(), 0.1);
         const elapsed = clock.getElapsedTime();
 
-      // Fighting Game Hit-Stop (Micro-Impact Freeze on collisions)
+      // Fighting Game Hit-Stop (Smooth Cinematic Impact Slow-Motion - eliminates jarring lag freeze!)
       let delta = rawDelta;
       if (hitStopTimerRef.current > 0) {
         hitStopTimerRef.current -= rawDelta;
-        delta = 0; // Freeze fighters in crunch impact pose!
+        delta = rawDelta * 0.22; // Silky-smooth cinematic slow-motion impact rather than hard frame freeze
       } else if (isVictoryRef.current) {
         delta = rawDelta * 0.25; // Dramatic bullet-time slow motion on victory
       }
@@ -1125,11 +1142,13 @@ export const ThreeBattleArena = ({
           cam.position.y = cZ.y + swayY + shakeY;
           cam.position.z = cZ.z;
 
-          // Dynamically track midpoint between hero and villain
+          // Dynamically track midpoint between hero and villain with cinematic smooth damping
           const hX = heroGroupRef.current ? heroGroupRef.current.position.x : -1.8;
           const vX = villainGroupRef.current ? villainGroupRef.current.position.x : 1.8;
           const midX = (hX + vX) * 0.5;
-          cam.lookAt(midX * 0.4, 1.48, 0.3);
+          const targetLookX = midX * 0.35;
+          cameraLookAtTargetRef.current.x += (targetLookX - cameraLookAtTargetRef.current.x) * Math.min(1.0, rawDelta * 5.0);
+          cam.lookAt(cameraLookAtTargetRef.current.x, 1.48, 0.3);
         }
       }
 
@@ -1218,11 +1237,12 @@ export const ThreeBattleArena = ({
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
           }
         } else if (hAnim.state === 'punch') {
-          // --- CHARACTER-SPECIFIC COMBAT COMBOS & POWERS (Cinematic, weighted pacing) ---
+          // --- CHARACTER-SPECIFIC COMBAT COMBOS & POWERS (Cinematic, deliberate, smooth fighting pacing) ---
           hAnim.time += delta;
           const cIdx = hAnim.comboIndex || 0;
           const isFinisher = cIdx === 2;
-          const punchDur = isFinisher ? 1.20 : (isCap && cIdx === 1) || (isThor && cIdx === 1) ? 1.05 : 0.85;
+          // Paced gracefully for smooth, fluid, cinematic fighting animations
+          const punchDur = isFinisher ? 1.65 : (isCap && cIdx === 1) || (isThor && cIdx === 1) ? 1.45 : 1.25;
           const p = hAnim.time / punchDur;
 
           if (isIronMan) {
@@ -1804,18 +1824,17 @@ export const ThreeBattleArena = ({
                 cable.core.material.opacity = op;
                 cable.aura.material.opacity = op * 0.85;
 
-                const hPos = heroGroupRef.current ? heroGroupRef.current.position : new THREE.Vector3(-1.8, 0, 0.5);
-                const vPos = villainGroupRef.current ? villainGroupRef.current.position : new THREE.Vector3(1.8, 0, 0.5);
-                const pStart = new THREE.Vector3(hPos.x + 0.35, hPos.y + 1.25, hPos.z + 0.1);
-                const pEnd = new THREE.Vector3(vPos.x - 0.2, vPos.y + 1.6, vPos.z);
+                const hPos = heroGroupRef.current ? heroGroupRef.current.position : _vecStart.set(-1.8, 0, 0.5);
+                const vPos = villainGroupRef.current ? villainGroupRef.current.position : _vecEnd.set(1.8, 0, 0.5);
+                _vecStart.set(hPos.x + 0.35, hPos.y + 1.25, hPos.z + 0.1);
+                _vecEnd.set(vPos.x - 0.2, vPos.y + 1.6, vPos.z);
 
-                const dist = pStart.distanceTo(pEnd);
-                const mid = new THREE.Vector3().addVectors(pStart, pEnd).multiplyScalar(0.5);
-                cable.group.position.copy(mid);
+                const dist = _vecStart.distanceTo(_vecEnd);
+                _vecMid.addVectors(_vecStart, _vecEnd).multiplyScalar(0.5);
+                cable.group.position.copy(_vecMid);
 
-                const dir = new THREE.Vector3().subVectors(pEnd, pStart).normalize();
-                const up = new THREE.Vector3(0, 1, 0);
-                cable.group.quaternion.setFromUnitVectors(up, dir);
+                _vecDir.subVectors(_vecEnd, _vecStart).normalize();
+                cable.group.quaternion.setFromUnitVectors(_vecUp, _vecDir);
                 cable.core.scale.set(1, dist, 1);
                 cable.aura.scale.set(1, dist, 1);
               }
@@ -1954,28 +1973,42 @@ export const ThreeBattleArena = ({
           vAnim.state = 'defeat';
           vGroup.position.set(1.8, 0, 0.5);
           if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+          if (warningActiveRef.current) {
+            warningActiveRef.current = false;
+            if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+          }
         } else if (isDefeatedRef.current) {
           aiFsmStateRef.current = 'VICTORIOUS';
           vAnim.state = 'victory';
           vGroup.position.set(1.8, 0, 0.5);
           if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+          if (warningActiveRef.current) {
+            warningActiveRef.current = false;
+            if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+          }
         } else if (introPhaseRef.current === 'active' && bossHpRef.current > 0) {
-          aiAttackTimerRef.current += delta;
+          // Timer ticks when boss is not currently attacking
+          if (vAnim.state !== 'attack') {
+            aiAttackTimerRef.current += delta;
+          }
 
-          // Deliberate, Strategic Combat Pacing (Paced for smooth reaction & cinematic duels):
-          // Phase 1 (Tactical Probe): 7.5s attack interval, 2.60s warning telegraph
-          // Phase 2 (Enraged Barrage): 6.2s attack interval, 2.20s warning telegraph
-          // Phase 3 (Desperation Overdrive): 5.2s attack interval, 1.80s warning telegraph
+          // Deliberate, Strategic Combat Pacing (Slower, cinematic, smooth martial arts duel):
+          // Phase 1 (Tactical Probe): 8.8s attack interval, 3.00s warning telegraph
+          // Phase 2 (Enraged Barrage): 7.6s attack interval, 2.60s warning telegraph
+          // Phase 3 (Desperation Overdrive): 6.6s attack interval, 2.20s warning telegraph
           const isEnraged = bossPhaseRef.current >= 2;
-          const attackInterval = bossPhaseRef.current === 3 ? 5.2 : isEnraged ? 6.2 : 7.5;
-          const warningWindow = bossPhaseRef.current === 3 ? 1.80 : isEnraged ? 2.20 : 2.60;
+          const attackInterval = bossPhaseRef.current === 3 ? 6.6 : isEnraged ? 7.6 : 8.8;
+          const warningWindow = bossPhaseRef.current === 3 ? 2.20 : isEnraged ? 2.60 : 3.00;
           const warningStart = attackInterval - warningWindow;
 
           // FSM State transitions
           if (isBossStaggeredRef.current) {
             aiFsmStateRef.current = 'STUNNED';
             aiAttackTimerRef.current = 0;
-            if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+            if (warningActiveRef.current) {
+              warningActiveRef.current = false;
+              if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+            }
             if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
             vAnim.state = 'staggered';
             // Staggered down on one knee
@@ -1983,9 +2016,12 @@ export const ThreeBattleArena = ({
             vGroup.rotation.set(-0.15, -Math.PI / 3.4, 0.12);
           } else {
             // If in Warning window -> APPROACH & TELEGRAPH
-            if (aiAttackTimerRef.current > warningStart && aiAttackTimerRef.current < attackInterval) {
+            if (aiAttackTimerRef.current >= warningStart && aiAttackTimerRef.current < attackInterval) {
               aiFsmStateRef.current = 'APPROACH';
-              if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(true);
+              if (!warningActiveRef.current) {
+                warningActiveRef.current = true;
+                if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(true);
+              }
               if (dangerZoneMeshRef.current) {
                 const warningColor = isEnraged ? 0xa855f7 : 0xff0033;
                 dangerZoneMeshRef.current.material.color.setHex(warningColor);
@@ -1994,18 +2030,26 @@ export const ThreeBattleArena = ({
               }
               // Boss enters menacing forward lean telegraph
               vGroup.position.x = 1.8 - 0.15 * Math.sin(((aiAttackTimerRef.current - warningStart) / warningWindow) * (Math.PI / 2));
-            } else if (aiAttackTimerRef.current < warningStart) {
+            } else if (aiAttackTimerRef.current < warningStart && vAnim.state !== 'attack') {
               aiFsmStateRef.current = isEnraged ? 'ENRAGED' : 'IDLE';
               if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+              if (warningActiveRef.current) {
+                warningActiveRef.current = false;
+                if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+              }
             }
 
             // Trigger Attack execution!
-            if (aiAttackTimerRef.current >= attackInterval && (vAnim.state === 'idle' || vAnim.state === 'staggered')) {
+            if (aiAttackTimerRef.current >= attackInterval && vAnim.state !== 'attack') {
               aiFsmStateRef.current = 'ATTACK';
               vAnim.state = 'attack';
               vAnim.time = 0;
+              vAnim.hasDamaged = false;
               aiAttackTimerRef.current = 0;
-              if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+              if (warningActiveRef.current) {
+                warningActiveRef.current = false;
+                if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+              }
               if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
 
               vfx.villainAttackActive = true;
@@ -2091,7 +2135,8 @@ export const ThreeBattleArena = ({
             const isDoom = villainId === 'doctor-doom' || villainId === 'doom-regent';
             const isLoki = villainId === 'loki';
             const isMag = villainId === 'magneto';
-            const attackDur = isThanos ? 1.45 : isGoblin ? 1.35 : isDoom ? 1.30 : isMag ? 1.30 : 1.25;
+            // Paced smoothly and gracefully for cinematic fighting
+            const attackDur = isThanos ? 1.85 : isGoblin ? 1.75 : isDoom ? 1.70 : isMag ? 1.70 : 1.60;
             const p = vAnim.time / attackDur;
 
             const checkDamageToHero = (hitColor = 0xef4444, isHeavy = false) => {
@@ -2429,9 +2474,9 @@ export const ThreeBattleArena = ({
         // Boss Hit Recoil Elastic Spring Curve
         if (vAnim.recoiling) {
           vAnim.recoilTime = (vAnim.recoilTime || 0) + delta;
-          const rP = Math.min(1.0, vAnim.recoilTime / 0.20);
-          vGroup.position.x = 1.8 + Math.sin(rP * Math.PI) * 0.48;
-          vGroup.rotation.z = Math.sin(rP * Math.PI) * 0.1;
+          const rP = Math.min(1.0, vAnim.recoilTime / 0.38);
+          vGroup.position.x = 1.8 + Math.sin(rP * Math.PI) * 0.40;
+          vGroup.rotation.z = Math.sin(rP * Math.PI) * 0.08;
           if (rP >= 1.0) {
             vAnim.recoiling = false;
             vAnim.recoilTime = 0;
@@ -2532,10 +2577,21 @@ export const ThreeBattleArena = ({
 
     const handleContextLost = (e) => {
       e.preventDefault();
+      isContextLost = true;
       console.warn('WebGL context lost, pausing render to recover...');
     };
     const handleContextRestored = () => {
-      console.log('WebGL context restored');
+      isContextLost = false;
+      console.log('WebGL context restored, recovering scene...');
+      scene.traverse((obj) => {
+        if (obj.material) {
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach((m) => { m.needsUpdate = true; });
+          } else {
+            obj.material.needsUpdate = true;
+          }
+        }
+      });
       renderer.render(scene, camera);
     };
     if (renderer.domElement) {
@@ -2592,6 +2648,15 @@ export const ThreeBattleArena = ({
         villainAnimRef.current.time = 0;
         villainAnimRef.current.recoiling = true;
         villainAnimRef.current.recoilTime = 0;
+      }
+      if (isCounter) {
+        aiAttackTimerRef.current = 0;
+        if (warningActiveRef.current) {
+          warningActiveRef.current = false;
+          if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+        }
+        if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+        aiFsmStateRef.current = 'IDLE';
       }
 
       // Hero Strike Audio based on Counter-Hit or Combo step
@@ -2663,6 +2728,13 @@ export const ThreeBattleArena = ({
       if (shieldMeshRef.current) {
         shieldMeshRef.current.material.opacity = 0.95;
       }
+      if (warningActiveRef.current) {
+        warningActiveRef.current = false;
+        aiAttackTimerRef.current = 0;
+        if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+        if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+        aiFsmStateRef.current = 'IDLE';
+      }
       if (heroId === 'captain-america') {
         sound.playShieldBlock();
       } else if (heroId === 'doctor-strange' || heroId === 'dr-strange') {
@@ -2674,6 +2746,13 @@ export const ThreeBattleArena = ({
       }
     } else if (heroActionTrigger.type === 'swipe') {
       heroAnimRef.current = { state: 'dodge', time: 0, recoiling: false };
+      if (warningActiveRef.current) {
+        warningActiveRef.current = false;
+        aiAttackTimerRef.current = 0;
+        if (setIncomingAttackWarningRef.current) setIncomingAttackWarningRef.current(false);
+        if (dangerZoneMeshRef.current) dangerZoneMeshRef.current.material.opacity = 0;
+        aiFsmStateRef.current = 'IDLE';
+      }
       if (heroId === 'ironman') {
         sound.playLaserBeam(false);
       } else if (heroId === 'thor') {
@@ -2692,3 +2771,15 @@ export const ThreeBattleArena = ({
     </div>
   );
 };
+
+export const ThreeBattleArena = React.memo(ThreeBattleArenaComponent, (prevProps, nextProps) => {
+  if (prevProps.selectedHero?.id !== nextProps.selectedHero?.id) return false;
+  if (prevProps.selectedVillain?.id !== nextProps.selectedVillain?.id) return false;
+  if (prevProps.heroActionTrigger?.id !== nextProps.heroActionTrigger?.id) return false;
+  if (prevProps.introPhase !== nextProps.introPhase) return false;
+  if (prevProps.isVictory !== nextProps.isVictory) return false;
+  if (prevProps.isDefeated !== nextProps.isDefeated) return false;
+  return true;
+});
+
+export default ThreeBattleArena;

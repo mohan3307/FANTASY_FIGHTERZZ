@@ -784,10 +784,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
     arcaneRuneRing.rotation.x = -Math.PI / 2;
     arcaneRuneRing.position.y = 0.025;
     group.add(arcaneRuneRing);
-
-    const doomGroundLight = new THREE.PointLight(0x10b981, 2.5, 3.8);
-    doomGroundLight.position.set(0, 0.35, 0);
-    group.add(doomGroundLight);
   }
 
   // 3. Fallback / Scanning Placeholder while async GLTF is mounting
@@ -967,9 +963,9 @@ export function createArticulated3DFighter(character, isVillain = false) {
                 mat.side = isCloth ? THREE.DoubleSide : THREE.FrontSide;
                 if (mat.map) {
                   mat.map.colorSpace = THREE.SRGBColorSpace;
-                  mat.map.anisotropy = 4;
-                  mat.map.generateMipmaps = true;
-                  mat.map.minFilter = THREE.LinearMipmapLinearFilter;
+                  mat.map.anisotropy = 1;
+                  mat.map.generateMipmaps = false;
+                  mat.map.minFilter = THREE.LinearFilter;
                 }
                 if (config.id === 'thanos' || config.id === 'mech-destroyer' || config.id === 'void-titan') {
                   mat.metalness = 0.55;
@@ -986,7 +982,9 @@ export function createArticulated3DFighter(character, isVillain = false) {
                 } else if (config.id === 'spiderman' || config.id === 'web-ninja') {
                   if (mat.map) {
                     mat.map.colorSpace = THREE.SRGBColorSpace;
-                    mat.map.anisotropy = 4;
+                    mat.map.anisotropy = 1;
+                    mat.map.generateMipmaps = false;
+                    mat.map.minFilter = THREE.LinearFilter;
                   }
                   mat.metalness = 0.35;
                   mat.roughness = 0.40;
@@ -1126,10 +1124,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
         eyeR.position.set(0.045, 0.035, 0.142);
         imHelm.add(eyeR);
 
-        const eyeGlowLight = new THREE.PointLight(0x00f3ff, 1.8, 2.5);
-        eyeGlowLight.position.set(0, 0.035, 0.18);
-        imHelm.add(eyeGlowLight);
-
         rig.headJoint.add(imHelm);
       }
 
@@ -1143,10 +1137,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
         const core = new THREE.Mesh(new THREE.CircleGeometry(0.06, 16), glowMat);
         core.position.z = 0.018;
         reactorGroup.add(core);
-
-        const pointL = new THREE.PointLight(config.glowColor, 3.4, 5.0);
-        pointL.position.set(0, 0, 0.14);
-        reactorGroup.add(pointL);
 
         // Gold Pectoral Nanotech Armor Plates
         const pecL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.14, 0.05), secondaryMat);
@@ -1194,18 +1184,12 @@ export function createArticulated3DFighter(character, isVillain = false) {
         if (rig.leftWrist) {
           const repL = new THREE.Mesh(new THREE.CircleGeometry(0.038, 12), glowMat);
           repL.position.set(0, -0.06, 0.03);
-          const pLightL = new THREE.PointLight(config.glowColor, 2.0, 2.5);
-          pLightL.position.set(0, -0.06, 0.05);
           rig.leftWrist.add(repL);
-          rig.leftWrist.add(pLightL);
         }
         if (rig.rightWrist) {
           const repR = new THREE.Mesh(new THREE.CircleGeometry(0.038, 12), glowMat);
           repR.position.set(0, -0.06, 0.03);
-          const pLightR = new THREE.PointLight(config.glowColor, 2.0, 2.5);
-          pLightR.position.set(0, -0.06, 0.05);
           rig.rightWrist.add(repR);
-          rig.rightWrist.add(pLightR);
         }
       }
 
@@ -1300,10 +1284,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
           const gemMesh = new THREE.Mesh(gemGeo, gemMat);
           gemMesh.position.set(...st.pos);
           gauntGroup.add(gemMesh);
-
-          const gemLight = new THREE.PointLight(st.color, isMind ? 3.0 : 1.4, 2.2);
-          gemLight.position.set(...st.pos);
-          gauntGroup.add(gemLight);
         });
 
         rig.leftWrist.add(gauntGroup);
@@ -1425,18 +1405,12 @@ export function createArticulated3DFighter(character, isVillain = false) {
         if (rig.leftWrist) {
           const orbL = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), technomancyMat);
           orbL.position.set(0, -0.06, 0.03);
-          const tLightL = new THREE.PointLight(0x10b981, 2.5, 3.0);
-          tLightL.position.set(0, -0.06, 0.05);
           rig.leftWrist.add(orbL);
-          rig.leftWrist.add(tLightL);
         }
         if (rig.rightWrist) {
           const orbR = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), technomancyMat);
           orbR.position.set(0, -0.06, 0.03);
-          const tLightR = new THREE.PointLight(0x10b981, 2.5, 3.0);
-          tLightR.position.set(0, -0.06, 0.05);
           rig.rightWrist.add(orbR);
-          rig.rightWrist.add(tLightR);
         }
       }
 
@@ -1509,10 +1483,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
         hHandle.position.y = -0.22;
         hGroup.add(hHead);
         hGroup.add(hHandle);
-
-        const lightPoint = new THREE.PointLight(0x38bdf8, 2.8, 3.5);
-        lightPoint.position.set(0, 0.05, 0);
-        hGroup.add(lightPoint);
 
         hGroup.position.set(0, -0.1, 0.05);
         rig.rightWrist.add(hGroup);
@@ -1653,11 +1623,8 @@ export function createArticulated3DFighter(character, isVillain = false) {
         eyeAmulet.position.set(0, 0.18, 0.14);
         const eyeGem = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
         eyeGem.position.set(0, 0.18, 0.16);
-        const timeLight = new THREE.PointLight(0x10b981, 2.0, 2.5);
-        timeLight.position.set(0, 0.18, 0.18);
         rig.chestJoint.add(eyeAmulet);
         rig.chestJoint.add(eyeGem);
-        rig.chestJoint.add(timeLight);
       }
 
       if (config.hasLevitationCloak && rig.chestJoint) {
@@ -1772,8 +1739,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
       if (config.hasPumpkinBomb && rig.rightWrist) {
         const bomb = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 12), new THREE.MeshBasicMaterial({ color: 0xf97316 }));
         bomb.position.set(0, -0.12, 0.06);
-        const bLight = new THREE.PointLight(0xf97316, 2.5, 3.0);
-        bomb.add(bLight);
         rig.rightWrist.add(bomb);
       }
 
@@ -1783,8 +1748,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
         if (config.hasVoidCore && rig.chestJoint) {
           const vCore = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), new THREE.MeshBasicMaterial({ color: 0xa855f7 }));
           vCore.position.set(0, 0.12, 0.14);
-          const vLight = new THREE.PointLight(0xa855f7, 3.2, 4.5);
-          vCore.add(vLight);
           rig.chestJoint.add(vCore);
         }
       }
@@ -1840,8 +1803,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
             for (const [sKey, sColor] of Object.entries(stoneColors)) {
               if (lower.includes(`stone_${sKey}`) || lower.includes(`stone_${sKey.substring(0, 3)}`)) {
                 child.material = new THREE.MeshBasicMaterial({ color: sColor });
-                const stoneLight = new THREE.PointLight(sColor, sKey === 'yellow' ? 3.0 : 1.6, 2.5);
-                child.add(stoneLight);
                 stonesFound++;
               }
             }
@@ -1872,9 +1833,6 @@ export function createArticulated3DFighter(character, isVillain = false) {
             );
             gem.position.set(...st.pos);
             gauntGroup.add(gem);
-            const gemL = new THREE.PointLight(st.color, st.isMind ? 3.2 : 1.5, 2.2);
-            gemL.position.set(...st.pos);
-            gauntGroup.add(gemL);
           });
           rig.leftWrist.add(gauntGroup);
           rig.infinityGauntlet = gauntGroup;
@@ -1925,8 +1883,9 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
     rig.mixer.update(delta);
   }
 
-  // 2. Dispatch Smooth State Cross-Fading through AnimationMixer
-  if (rig.fadeToAction) {
+  // 2. Dispatch Smooth State Cross-Fading through AnimationMixer ONLY ON STATE TRANSITION
+  if (rig.fadeToAction && rig.lastAnimationState !== state) {
+    rig.lastAnimationState = state;
     if (state === 'idle') {
       rig.fadeToAction('idle', 0.25);
     } else if (state === 'punch' || state === 'attack') {
@@ -2007,7 +1966,8 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
       }
     } else if (state === 'punch' || state === 'attack') {
       const cStep = comboIndex || 0;
-      const attackProgress = Math.sin(Math.min(1.0, (time || 0) * 1.15) * Math.PI);
+      // Smooth, deliberate combat animation progress (cinematic, fluid fighting)
+      const attackProgress = Math.sin(Math.min(1.0, (time || 0) * 0.78) * Math.PI);
 
       if (isIronMan) {
         // Iron Man Palm Repulsor Thrust & Dive-Bomb
@@ -2055,7 +2015,7 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
       } else {
         if (cStep === 2) {
           rig.model.position.z = bPos.z + attackProgress * 0.28;
-          rig.model.position.y = bPos.y + Math.sin(Math.min(1.0, (time || 0) * 1.2) * Math.PI) * 0.45;
+          rig.model.position.y = bPos.y + Math.sin(Math.min(1.0, (time || 0) * 0.8) * Math.PI) * 0.45;
           rig.model.rotation.x = bRot.x - attackProgress * 0.45;
           rig.model.rotation.y = bRot.y + (isHero ? 0.35 : -0.35) * attackProgress;
         } else if (cStep === 1) {
@@ -2079,14 +2039,14 @@ export function animateArticulated3DFighter(rig, state, time, delta, elapsed, is
       rig.model.position.y = bPos.y + hover;
       rig.model.rotation.y = bRot.y + Math.sin(elapsed * 3.5) * 0.06;
     } else if (state === 'staggered' || state === 'hit_reaction') {
-      // Authentic arcade hit recoil with visceral head/torso snap
-      const snap = Math.sin(Math.min(1.0, (time || 0) * 2.5) * Math.PI);
-      const shake = Math.sin(elapsed * 18) * 0.035 * snap;
+      // Authentic arcade hit recoil with smooth, cinematic impact curve
+      const snap = Math.sin(Math.min(1.0, (time || 0) * 1.5) * Math.PI);
+      const shake = Math.sin(elapsed * 14) * 0.025 * snap;
       rig.model.position.x = bPos.x + shake;
-      rig.model.position.z = bPos.z - snap * 0.18;
-      rig.model.position.y = bPos.y - snap * 0.04;
-      rig.model.rotation.z = bRot.z + (isHero ? -0.15 : 0.15) * snap;
-      rig.model.rotation.x = bRot.x - 0.14 * snap;
+      rig.model.position.z = bPos.z - snap * 0.16;
+      rig.model.position.y = bPos.y - snap * 0.03;
+      rig.model.rotation.z = bRot.z + (isHero ? -0.12 : 0.12) * snap;
+      rig.model.rotation.x = bRot.x - 0.11 * snap;
     }
   }
 

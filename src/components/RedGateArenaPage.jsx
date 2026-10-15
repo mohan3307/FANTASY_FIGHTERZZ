@@ -20,8 +20,10 @@ import {
 } from 'lucide-react';
 import { ComputerVisionGestureEngine } from '../utils/gestureDetector';
 import { ThreeBattleArena } from './ThreeBattleArena';
+import { Cosmic3DBackground } from './Cosmic3DBackground';
 import { sound } from '../utils/audio';
 import { saveToLeaderboard } from './LeaderboardPage';
+import confetti from 'canvas-confetti';
 
 export const getHeroCombatKit = (hero) => {
   const code = hero?.heroCode || hero?.id || '';
@@ -237,8 +239,9 @@ export const RedGateArenaPage = ({
   const [comboCount, setComboCount] = useState(0);
   const [maxComboReached, setMaxComboReached] = useState(0);
   const [totalDamageDealt, setTotalDamageDealt] = useState(0);
+  const lastGestureTypeRef = useRef(null);
+  const setLastGestureType = (val) => { lastGestureTypeRef.current = val; };
   const [activeGesture, setActiveGesture] = useState('Standby (Show Hand)');
-  const [lastGestureType, setLastGestureType] = useState(null);
   const [combatBanner, setCombatBanner] = useState(null);
   const [combatLog, setCombatLog] = useState([]);
   const [isVictory, setIsVictory] = useState(false);
@@ -312,7 +315,7 @@ export const RedGateArenaPage = ({
   };
 
   const addLog = (msg) => {
-    setCombatLog((prev) => [msg, ...prev.slice(0, 4)]);
+    setCombatLog((prev) => [msg, ...prev.slice(0, 2)]);
   };
 
   const triggerHitEffects = (dmg, isCrit) => {
@@ -325,7 +328,7 @@ export const RedGateArenaPage = ({
       x: (Math.random() - 0.5) * 80,
       y: (Math.random() - 0.5) * 60
     };
-    setDamagePopups((prev) => [...prev.slice(-3), newPopup]);
+    setDamagePopups((prev) => [...prev.slice(-1), newPopup]);
 
     setTimeout(() => setBossHitFlash(false), 140);
     setTimeout(() => {
@@ -588,7 +591,8 @@ export const RedGateArenaPage = ({
       setIntroPhase('active');
     }
     const now = Date.now();
-    if (now - lastAttackTimeRef.current < 220) return;
+    // Deliberate fighting game cadence: prevents animation clipping, makes fighting smooth & readable
+    if (now - lastAttackTimeRef.current < 650) return;
     lastAttackTimeRef.current = now;
 
     setLastGestureType(gestureType);
@@ -601,6 +605,7 @@ export const RedGateArenaPage = ({
     if (gestureType === 'palm') {
       if (incomingAttackWarning) {
         // == PERFECT PARRY! ==
+        setIncomingAttackWarning(false);
         setIsHeroParrying(true);
         setActiveGesture(heroKit.parryDeflect);
         sound.playShieldBlock();
@@ -862,6 +867,7 @@ export const RedGateArenaPage = ({
       setHeroActionTrigger({ type: 'swipe', id: Date.now() });
 
       if (incomingAttackWarning) {
+        setIncomingAttackWarning(false);
         setHeroSuperEnergy((prev) => Math.min(100, prev + 14));
         showBanner('🌀 PERFECT DODGE! +14% ENERGY!', 'dodge');
       }
@@ -960,6 +966,29 @@ export const RedGateArenaPage = ({
     sound.playVictoryFanfare();
     showBanner(`🏆 VICTORY! ${selectedVillain?.name || 'BOSS'} DEFEATED!`, 'victory');
     addLog(`🏆 GLORY! ${selectedVillain?.name} collapsed! S-Rank Gate successfully sealed!`);
+
+    // Multi-angle celebratory confetti cannons
+    try {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+      setTimeout(() => {
+        confetti({
+          particleCount: 70,
+          angle: 60,
+          spread: 60,
+          origin: { x: 0.05, y: 0.7 }
+        });
+        confetti({
+          particleCount: 70,
+          angle: 120,
+          spread: 60,
+          origin: { x: 0.95, y: 0.7 }
+        });
+      }, 350);
+    } catch {}
   };
 
   const triggerDefeat = () => {
@@ -1600,6 +1629,7 @@ export const RedGateArenaPage = ({
           ============================================================ */}
       {isDefeated && (
         <div className="rs-defeat-modal-overlay">
+          <Cosmic3DBackground opacity={0.65} showGrid={true} showMonoliths={true} />
           <div className="rs-defeat-modal-card">
             <div className="rs-defeat-skull-glow">
               <AlertOctagon size={48} className="text-red-500 animate-bounce" />
@@ -1618,7 +1648,7 @@ export const RedGateArenaPage = ({
               </button>
               <button className="rs-btn-defeat-exit" onClick={onExitArena}>
                 <ArrowLeft size={16} />
-                <span>NEXT VISITOR</span>
+                <span>MAIN MENU</span>
               </button>
             </div>
           </div>
@@ -1630,6 +1660,7 @@ export const RedGateArenaPage = ({
           ============================================================ */}
       {isVictory && (
         <div className="rs-defeat-modal-overlay victory-mode">
+          <Cosmic3DBackground opacity={0.95} showGrid={true} showMonoliths={true} />
           <div className="rs-defeat-modal-card victory-card">
             <div className="rs-defeat-skull-glow victory-glow">
               <Award size={52} className="text-cyan-400 animate-pulse" />
