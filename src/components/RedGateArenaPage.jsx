@@ -450,13 +450,12 @@ export const RedGateArenaPage = ({
   }, [bossHp]);
 
   const [activeStream, setActiveStream] = useState(cameraStream);
-  useEffect(() => {
-    if (cameraStream) setActiveStream(cameraStream);
-  }, [cameraStream]);
+  const isRequestingCameraRef = useRef(false);
 
-  // Direct webcam enable handler in arena
+  // Direct webcam enable handler in arena (auto-reconnects if missing or dropped)
   const enableWebcamDirectly = async () => {
-    sound.playClick();
+    if (isRequestingCameraRef.current) return;
+    isRequestingCameraRef.current = true;
     setCvTrackingStatus('LOADING MODEL');
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -471,27 +470,46 @@ export const RedGateArenaPage = ({
         audio: false
       });
       setActiveStream(stream);
-      addLog('[CAMERA] 📹 Webcam connected! Initializing 21-landmark tracking...');
+      addLog('[CAMERA] 📹 Webcam connected! 21-landmark tracking live!');
     } catch (err) {
       console.warn('Direct webcam failure:', err);
       setCvTrackingStatus('CAMERA OFF');
       addLog('[CAMERA] Webcam unavailable. Keyboard controls [1-4, SPACE, A/D] active!');
+    } finally {
+      isRequestingCameraRef.current = false;
     }
   };
+
+  useEffect(() => {
+    if (cameraStream) {
+      const liveTracks = cameraStream.getVideoTracks?.()?.filter((t) => t.readyState === 'live');
+      if (liveTracks && liveTracks.length > 0) {
+        setActiveStream(cameraStream);
+      } else {
+        enableWebcamDirectly();
+      }
+    } else {
+      enableWebcamDirectly();
+    }
+  }, [cameraStream]);
 
   // Bind live camera stream to PIP and start Computer Vision Detection Engine
   useEffect(() => {
     if (!activeStream) {
-      setCvTrackingStatus('CAMERA OFF');
+      enableWebcamDirectly();
       return;
     }
 
-    if (!pipVideoRef.current) return;
+    const videoEl = pipVideoRef.current;
+    if (!videoEl) return;
 
-    pipVideoRef.current.srcObject = activeStream;
+    videoEl.srcObject = activeStream;
+
+    let isDisposed = false;
 
     const startEngine = () => {
-      pipVideoRef.current.play().catch(() => {});
+      if (isDisposed) return;
+      videoEl.play().catch(() => {});
 
       if (pipCanvasRef.current) {
         // Lock canvas to fixed 320x240 for instantaneous HUD clearing & rendering
@@ -503,7 +521,7 @@ export const RedGateArenaPage = ({
         }
 
         cvEngineRef.current = new ComputerVisionGestureEngine(
-          pipVideoRef.current,
+          videoEl,
           pipCanvasRef.current,
           (res) => {
             // Update confidence badge directly in DOM (zero React re-render thrashing!)
@@ -543,13 +561,27 @@ export const RedGateArenaPage = ({
       }
     };
 
-    if (pipVideoRef.current.readyState >= 1) {
+    if (videoEl.readyState >= 1) {
       startEngine();
     } else {
-      pipVideoRef.current.onloadedmetadata = startEngine;
+      videoEl.onloadedmetadata = startEngine;
+      videoEl.onloadeddata = startEngine;
+      videoEl.oncanplay = startEngine;
+      // Resilient fallback timer to guarantee startEngine triggers even if browser events were missed
+      const fallbackTimer = setTimeout(() => {
+        if (!isDisposed && !cvEngineRef.current) {
+          startEngine();
+        }
+      }, 350);
     }
 
     return () => {
+      isDisposed = true;
+      if (videoEl) {
+        videoEl.onloadedmetadata = null;
+        videoEl.onloadeddata = null;
+        videoEl.oncanplay = null;
+      }
       if (cvEngineRef.current) {
         cvEngineRef.current.stop();
         cvEngineRef.current = null;

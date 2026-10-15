@@ -33,6 +33,9 @@ export const CameraPermissionModal = ({ isOpen, onAccessGranted, onClose }) => {
         cvEngineRef.current.stop();
         cvEngineRef.current = null;
       }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
       if (!hasHandedOffStreamRef.current && streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
@@ -153,6 +156,9 @@ export const CameraPermissionModal = ({ isOpen, onAccessGranted, onClose }) => {
     if (cvEngineRef.current) {
       cvEngineRef.current.stop();
       cvEngineRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     if (onAccessGranted) {
       onAccessGranted({

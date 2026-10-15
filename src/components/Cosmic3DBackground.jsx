@@ -254,9 +254,11 @@ export const Cosmic3DBackground = ({ opacity = 1, showGrid = true, showMonoliths
       if (animId) cancelAnimationFrame(animId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
-      if (renderer.domElement && container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
+      try {
+        if (renderer.domElement) {
+          renderer.domElement.remove?.();
+        }
+      } catch {}
       renderer.dispose();
       starGeo.dispose();
       starMat.dispose();

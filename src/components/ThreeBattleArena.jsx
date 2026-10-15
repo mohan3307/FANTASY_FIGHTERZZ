@@ -1679,6 +1679,29 @@ const ThreeBattleArenaComponent = ({
             hGroup.rotation.set(0, Math.PI / 3.4, 0);
             hAnim.state = 'idle';
           }
+        } else if (hAnim.state === 'block') {
+          // --- CHARACTER-SPECIFIC COMBAT DEFENSIVE BLOCK & PARRY (Open Palm / Shield) ---
+          hAnim.time += delta;
+          const blockDur = 0.85;
+          const p = hAnim.time / blockDur;
+          if (p < 0.25) {
+            const f = Math.sin((p / 0.25) * (Math.PI / 2));
+            hGroup.position.x = -1.8 - f * 0.12;
+            hGroup.rotation.z = -0.05 * f;
+            if (shieldMeshRef.current) shieldMeshRef.current.material.opacity = 0.95;
+          } else if (p < 1.0) {
+            const f = (p - 0.25) / 0.75;
+            const easeBack = Math.sin(f * (Math.PI / 2));
+            hGroup.position.x = -1.92 + easeBack * 0.12;
+            hGroup.rotation.z = -0.05 * (1.0 - easeBack);
+            if (shieldMeshRef.current) shieldMeshRef.current.material.opacity = Math.max(0, 0.95 * (1.0 - easeBack));
+          } else {
+            hGroup.position.set(-1.8, isIronMan ? 0.22 : isStrange ? 0.32 : 0, 0.5);
+            hGroup.rotation.set(0, Math.PI / 3.4, 0);
+            hAnim.state = 'idle';
+            hAnim.time = 0;
+            if (shieldMeshRef.current) shieldMeshRef.current.material.opacity = 0;
+          }
         }
 
         // Natural Hit Recoil Elastic Spring Curve (smooth recovery)
@@ -2607,9 +2630,9 @@ const ThreeBattleArenaComponent = ({
       if (renderer.domElement) {
         renderer.domElement.removeEventListener('webglcontextlost', handleContextLost);
         renderer.domElement.removeEventListener('webglcontextrestored', handleContextRestored);
-        if (container.contains(renderer.domElement)) {
-          container.removeChild(renderer.domElement);
-        }
+        try {
+          renderer.domElement.remove?.();
+        } catch {}
       }
       renderer.dispose();
     };

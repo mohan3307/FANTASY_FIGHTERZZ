@@ -163,9 +163,11 @@ export const Character3DPreview = ({ character, isVillain = false, isPaused = fa
       container.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
-      if (renderer.domElement && container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
+      try {
+        if (renderer.domElement) {
+          renderer.domElement.remove?.();
+        }
+      } catch {}
       pedestalGeo.dispose();
       pedestalMat.dispose();
       ringGeo.dispose();

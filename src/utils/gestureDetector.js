@@ -201,11 +201,16 @@ export class ComputerVisionGestureEngine {
           this.processVideoFrame(safeTimestamp);
         }
       } else {
-        if (this.video && this.video.paused && this.video.srcObject) {
-          this.video.play().catch(() => {});
-        }
-        const hasLiveTracks = this.video?.srcObject?.getVideoTracks?.()?.some(t => t.readyState === 'live');
-        if (!hasLiveTracks && !this.video?.srcObject) {
+        if (this.video) {
+          if (this.video.paused && this.video.srcObject) {
+            this.video.play().catch(() => {});
+          }
+          const tracks = this.video.srcObject?.getVideoTracks?.();
+          const hasLiveTracks = tracks && tracks.some((t) => t.readyState === 'live');
+          if (!this.video.srcObject || (tracks && tracks.length > 0 && !hasLiveTracks)) {
+            this.updateStatus('CAMERA OFF');
+          }
+        } else {
           this.updateStatus('CAMERA OFF');
         }
       }
