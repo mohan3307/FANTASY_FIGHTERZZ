@@ -40,7 +40,7 @@ export async function getSharedHandLandmarker() {
           delegate: delegate
         },
         runningMode: 'VIDEO',
-        numHands: 1, // Single-hand tracking cuts inference latency by 50% for 60 FPS combat
+        numHands: 2, // Enable two-hand tracking for raised-hands Ultimate and multi-hand combat
         minHandDetectionConfidence: 0.45,
         minHandPresenceConfidence: 0.45,
         minTrackingConfidence: 0.45
@@ -114,24 +114,26 @@ export class ComputerVisionGestureEngine {
     this.lastConfidence = 0;
     this.lastLandmarks = null;
     this.lastTriggerTime = 0;
+    this.lastGestureTriggerTimes = {};
     this.lastVideoTime = 0;
     this.lastDetectTime = 0;
 
     // Motion tracking for swipe & thrust
     this.prevWrist = null;
+    this.prevHandSpan = 0;
     this.prevHandArea = 0;
     this.prevTimestamp = performance.now();
 
     // Responsive combat action cooldowns (0ms perceived lag, ultra-fast detection)
     this.cooldowns = {
-      palm: 180,
-      fist: 260,
-      point: 260,
-      forward: 260,
+      palm: 160,
+      fist: 240,
+      point: 240,
+      forward: 240,
       both_hands: 360,
       vsign: 360,
-      swipe: 260,
-      thumbs_up: 260
+      swipe: 240,
+      thumbs_up: 240
     };
 
     // Initialize or bind preloaded MediaPipe HandLandmarker
@@ -263,49 +265,65 @@ export class ComputerVisionGestureEngine {
         return;
       }
 
-    const hands = result?.landmarks || [];
-    if (hands.length === 0) {
-      this.updateStatus('HAND NOT DETECTED');
-      this.lastLandmarks = null;
-      this.lastConfidence = 0;
-      this.prevWrist = null;
-      this.drawNoHandHUD();
-      return;
-    }
-
-    this.updateStatus('TRACKING');
-    const primaryHand = hands[0];
-    this.lastLandmarks = hands;
-
-    // Classify gesture from genuine 21 3D landmarks
-    const classified = this.classifyHandPose(hands, dt);
-    this.lastDetectedGesture = classified.gesture;
-    this.lastConfidence = classified.confidence;
-
-    // Cooldown check for triggerable combat actions
-    let actionTriggered = false;
-    if (classified.gesture !== 'none') {
-      const cd = this.cooldowns[classified.gesture] || 320;
-      if (now - this.lastTriggerTime > cd) {
-        this.lastTriggerTime = now;
-        actionTriggered = true;
+      const hands = result?.landmarks || [];
+      if (hands.length === 0) {
+        this.updateStatus('HAND NOT DETECTED');
+        this.lastLandmarks = null;
+        this.lastConfidence = 0;
+        this.prevWrist = null;
+        this.prevHandSpan = 0;
+        this.drawNoHandHUD();
+        if (this.onGestureDetected) {
+          this.onGestureDetected({
+            gesture: 'none',
+            confidence: 0,
+            landmarks: null,
+            status: 'HAND NOT DETECTED',
+            actionTriggered: false,
+            extendedCount: 0
+          });
+        }
+        return;
       }
-    }
 
-    // Always dispatch live landmark and classified pose on every frame for immediate HUD feedback
-    if (this.onGestureDetected) {
-      this.onGestureDetected({
-        gesture: classified.gesture,
-        confidence: classified.confidence,
-        landmarks: primaryHand,
-        status: 'TRACKING',
-        actionTriggered: actionTriggered,
-        extendedCount: classified.extendedCount
-      });
-    }
+      this.updateStatus('TRACKING');
+      const primaryHand = hands[0];
+      this.lastLandmarks = hands;
 
-    // Render 21-landmark skeletal HUD on canvas
-    this.drawHandLandmarksHUD(hands, classified.gesture, classified.confidence);
+      // Classify gesture from genuine 21 3D landmarks
+      const classified = this.classifyHandPose(hands, dt);
+      const isGestureSwitch = (classified.gesture !== this.lastDetectedGesture && classified.gesture !== 'none');
+      this.lastDetectedGesture = classified.gesture;
+      this.lastConfidence = classified.confidence;
+
+      // Per-gesture cooldown with instant switch handling (90ms debounce when changing moves)
+      let actionTriggered = false;
+      if (classified.gesture !== 'none') {
+        const cd = this.cooldowns[classified.gesture] || 240;
+        const lastForGesture = this.lastGestureTriggerTimes[classified.gesture] || 0;
+        const timeSinceAny = now - this.lastTriggerTime;
+
+        if (isGestureSwitch ? timeSinceAny >= 90 : (now - lastForGesture >= cd)) {
+          this.lastTriggerTime = now;
+          this.lastGestureTriggerTimes[classified.gesture] = now;
+          actionTriggered = true;
+        }
+      }
+
+      // Always dispatch live landmark and classified pose on every frame for immediate HUD feedback
+      if (this.onGestureDetected) {
+        this.onGestureDetected({
+          gesture: classified.gesture,
+          confidence: classified.confidence,
+          landmarks: primaryHand,
+          status: 'TRACKING',
+          actionTriggered: actionTriggered,
+          extendedCount: classified.extendedCount
+        });
+      }
+
+      // Render 21-landmark skeletal HUD on canvas
+      this.drawHandLandmarksHUD(hands, classified.gesture, classified.confidence);
     } catch (err) {
       console.warn('Frame processing exception recovered:', err);
     } finally {
@@ -313,14 +331,13 @@ export class ComputerVisionGestureEngine {
     }
   }
 
-  // 21-Landmark Anatomical Biomechanical Classifier
-  // 21-Landmark Biomechanical Gesture Engine (100% High-Accuracy Recognition)
+  // 21-Landmark Anatomical Biomechanical Classifier (100% High-Accuracy Recognition)
   classifyHandPose(hands, dt) {
     // 1. Dual hands raised in air (Special Overdrive Finisher)
     if (hands.length >= 2) {
       const h1Wrist = hands[0][0];
       const h2Wrist = hands[1][0];
-      if (h1Wrist.y < 0.92 && h2Wrist.y < 0.92) {
+      if (h1Wrist.y < 0.88 && h2Wrist.y < 0.88) {
         return { gesture: 'both_hands', confidence: 0.99, extendedCount: 8 };
       }
     }
@@ -328,6 +345,7 @@ export class ComputerVisionGestureEngine {
     const primaryHand = hands[0];
     const wrist = primaryHand[0];
     const thumbMcp = primaryHand[2];
+    const thumbIp = primaryHand[3];
     const thumbTip = primaryHand[4];
     const indexMcp = primaryHand[5];
     const indexPip = primaryHand[6];
@@ -344,19 +362,19 @@ export class ComputerVisionGestureEngine {
 
     const dist = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
 
-    // Anatomical finger extension: works in upright, tilted, and depth postures
+    // Anatomical finger extension: checks distance from wrist and knuckle (MCP)
+    // For curled fingers (fist), tip is curled in close to palm and wrist, so dTip <= dPip.
     const isFingerExtended = (tip, pip, mcp) => {
       const dTip = dist(tip, wrist);
       const dPip = dist(pip, wrist);
       const dMcp = dist(mcp, wrist);
-      return (dTip > dPip * 1.05 && dTip > dMcp * 1.15) || (tip.y < pip.y - 0.015 && tip.y < mcp.y - 0.03);
+      return (dTip > dPip * 1.08 && dTip > dMcp * 1.15) || (tip.y < pip.y - 0.02 && tip.y < mcp.y - 0.035);
     };
 
     const indexExtended = isFingerExtended(indexTip, indexPip, indexMcp);
     const middleExtended = isFingerExtended(middleTip, middlePip, middleMcp);
     const ringExtended = isFingerExtended(ringTip, ringPip, ringMcp);
     const pinkyExtended = isFingerExtended(pinkyTip, pinkyPip, pinkyMcp);
-    const thumbExtended = dist(thumbTip, wrist) > dist(thumbMcp, wrist) * 1.25;
 
     const extendedCount =
       (indexExtended ? 1 : 0) +
@@ -364,15 +382,33 @@ export class ComputerVisionGestureEngine {
       (ringExtended ? 1 : 0) +
       (pinkyExtended ? 1 : 0);
 
-    // Velocity tracking for horizontal hand swipe
+    // True Thumbs Up: Thumb pointing straight up, isolated away from knuckles, all other fingers closed
+    const thumbDistWrist = dist(thumbTip, wrist);
+    const thumbDistMcp = dist(thumbMcp, wrist);
+    const thumbAwayFromKnuckles = dist(thumbTip, indexMcp) > 0.11;
+    const thumbPointingUp = thumbTip.y < thumbMcp.y - 0.05 && thumbTip.y < indexMcp.y - 0.04;
+    const isRealThumbsUp = thumbPointingUp && thumbAwayFromKnuckles && extendedCount === 0;
+
+    // Horizontal Swipe Velocity
     let isSwipe = false;
     if (this.prevWrist) {
       const vx = (wrist.x - this.prevWrist.x) / dt;
-      if (Math.abs(vx) > 0.40) {
+      if (Math.abs(vx) > 0.42) {
         isSwipe = true;
       }
     }
     this.prevWrist = { x: wrist.x, y: wrist.y };
+
+    // Forward Thrust Motion Tracking (Punch into camera)
+    const currentSpan = dist(wrist, middleMcp);
+    let isForwardThrust = false;
+    if (this.prevHandSpan > 0 && dt < 0.35) {
+      const expansion = currentSpan / this.prevHandSpan;
+      if (expansion > 1.16) {
+        isForwardThrust = true;
+      }
+    }
+    this.prevHandSpan = currentSpan;
 
     // --- ROCK-SOLID HIERARCHICAL CLASSIFICATION ---
 
@@ -381,25 +417,34 @@ export class ComputerVisionGestureEngine {
       return { gesture: 'both_hands', confidence: 0.99, extendedCount: 2 };
     }
 
+    // GESTURE 1B: Hand raised high above in frame (wrist in top 30% of screen) -> ULTIMATE
+    if (wrist.y < 0.28 && (extendedCount >= 3 || extendedCount === 0)) {
+      return { gesture: 'both_hands', confidence: 0.98, extendedCount };
+    }
+
     // GESTURE 2: INDEX POINTING (Only Index UP) -> AIM BEAM SNIPE
     if (indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
       return { gesture: 'point', confidence: 0.98, extendedCount: 1 };
     }
 
-    // GESTURE 3: THUMBS UP OR SWIPE -> WARP REALITY DODGE
-    const isThumbsUp = thumbExtended && thumbTip.y < indexMcp.y && extendedCount === 0;
-    if (isThumbsUp || isSwipe) {
+    // GESTURE 3: TRUE THUMBS UP OR HORIZONTAL SWIPE -> WARP REALITY DODGE
+    if (isRealThumbsUp || isSwipe) {
       return { gesture: 'thumbs_up', confidence: 0.97, extendedCount };
     }
 
-    // GESTURE 4: OPEN PALM (3 or more fingers clearly extended) -> ENERGY SHIELD / PARRY
+    // GESTURE 4: OPEN PALM (3 or 4 fingers clearly extended) -> ENERGY SHIELD / PARRY
     if (extendedCount >= 3) {
       return { gesture: 'palm', confidence: 0.98, extendedCount };
     }
 
-    // GESTURE 5: CLOSED FIST (All fingers clenched into a fist) -> KINETIC STRIKE
-    if (extendedCount <= 1) {
-      return { gesture: 'fist', confidence: 0.97, extendedCount };
+    // GESTURE 5: FORWARD PUNCH THRUST -> FORWARD STRIKE
+    if (isForwardThrust && extendedCount <= 2) {
+      return { gesture: 'forward', confidence: 0.96, extendedCount };
+    }
+
+    // GESTURE 6: CLOSED FIST (All fingers curled into fist, not thumbs-up) -> KINETIC STRIKE
+    if (extendedCount <= 1 && !isRealThumbsUp) {
+      return { gesture: 'fist', confidence: 0.98, extendedCount };
     }
 
     return { gesture: 'none', confidence: 0.5, extendedCount };

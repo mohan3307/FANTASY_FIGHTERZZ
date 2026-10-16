@@ -286,6 +286,26 @@ export const RedGateArenaPage = ({
   const bossHpRef = useRef(bossHp);
   useEffect(() => { bossHpRef.current = bossHp; }, [bossHp]);
 
+  const heroSuperEnergyRef = useRef(heroSuperEnergy);
+  useEffect(() => { heroSuperEnergyRef.current = heroSuperEnergy; }, [heroSuperEnergy]);
+
+  const incomingAttackWarningRef = useRef(incomingAttackWarning);
+  useEffect(() => { incomingAttackWarningRef.current = incomingAttackWarning; }, [incomingAttackWarning]);
+
+  const isBossStaggeredRef = useRef(isBossStaggered);
+  useEffect(() => { isBossStaggeredRef.current = isBossStaggered; }, [isBossStaggered]);
+
+  const comboCountRef = useRef(comboCount);
+  useEffect(() => { comboCountRef.current = comboCount; }, [comboCount]);
+
+  const weaponChargedRef = useRef(weaponCharged);
+  useEffect(() => { weaponChargedRef.current = weaponCharged; }, [weaponCharged]);
+
+  const bossPhaseRef = useRef(bossPhase);
+  useEffect(() => { bossPhaseRef.current = bossPhase; }, [bossPhase]);
+
+  const handleTriggerGestureRef = useRef(null);
+
   // Telemetry Debug Info (Direct DOM ref updates to avoid 60fps React re-renders)
   const [telemetry, setTelemetry] = useState({ fps: 60, aiState: 'APPROACH', distance: '3.8' });
   const lastTelemTimeRef = useRef(0);
@@ -556,8 +576,23 @@ export const RedGateArenaPage = ({
                   lastGestureTextRef.current = readyText;
                   setActiveGesture(readyText);
                 }
-              } else if (res.actionTriggered && !isVictoryRef.current && !isDefeatedRef.current) {
-                handleTriggerGesture(res.gesture, true);
+              } else if (!isVictoryRef.current && !isDefeatedRef.current) {
+                // If holding palm continuously, maintain shield brace display
+                if (res.gesture === 'palm') {
+                  const braceName = heroKit.parryBrace;
+                  if (lastGestureTextRef.current !== braceName) {
+                    lastGestureTextRef.current = braceName;
+                    setActiveGesture(braceName);
+                  }
+                }
+                if (res.actionTriggered) {
+                  handleTriggerGestureRef.current?.(res.gesture, true);
+                }
+              }
+            } else if (!res.gesture || res.gesture === 'none') {
+              if (lastGestureTextRef.current !== '' && lastGestureTextRef.current !== 'Standby (Show Hand)') {
+                lastGestureTextRef.current = 'Standby (Show Hand)';
+                setActiveGesture('Standby (Show Hand)');
               }
             }
           },
@@ -606,24 +641,24 @@ export const RedGateArenaPage = ({
   // [A] / [D] / [W] = Warp Dodge (Sideways)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (isVictory || isDefeated) return;
+      if (isVictoryRef.current || isDefeatedRef.current) return;
       if (introPhaseRef.current !== 'active') {
         if (['1', '2', '3', '4', ' ', 'Enter', 'e', 'E', 'f', 'F', 'r', 'R', 'a', 'A', 'd', 'D', 'w', 'W'].includes(e.key)) {
           setIntroPhase('active');
         }
       }
-      if (e.key === '1') handleTriggerGesture('palm', false);
-      if (e.key === '2') handleTriggerGesture('fist', false);
-      if (e.key === '3' || e.key.toLowerCase() === 'e') handleTriggerGesture('point', false);
-      if (e.key === ' ' || e.key.toLowerCase() === 'f') handleTriggerGesture('forward', false);
-      if (e.key === '4' || e.key.toLowerCase() === 'r') handleTriggerGesture('both_hands', false);
+      if (e.key === '1') handleTriggerGestureRef.current?.('palm', false);
+      if (e.key === '2') handleTriggerGestureRef.current?.('fist', false);
+      if (e.key === '3' || e.key.toLowerCase() === 'e') handleTriggerGestureRef.current?.('point', false);
+      if (e.key === ' ' || e.key.toLowerCase() === 'f') handleTriggerGestureRef.current?.('forward', false);
+      if (e.key === '4' || e.key.toLowerCase() === 'r') handleTriggerGestureRef.current?.('both_hands', false);
       if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'd' || e.key.toLowerCase() === 'w') {
-        handleTriggerGesture('swipe', false);
+        handleTriggerGestureRef.current?.('swipe', false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [introPhase, isVictory, isDefeated, heroSuperEnergy, incomingAttackWarning, isBossStaggered]);
+  }, []);
 
   // COMBAT GESTURE TRIGGER (Full 6 Hand Controls & Reaction Logic)
   const handleTriggerGesture = (gestureType, fromCV = false) => {
@@ -631,8 +666,8 @@ export const RedGateArenaPage = ({
       setIntroPhase('active');
     }
     const now = Date.now();
-    // Ultra-responsive combat cadence: instant 140ms parries, snappy 250ms strikes
-    const minCooldown = gestureType === 'palm' ? 140 : (gestureType === 'both_hands' || gestureType === 'vsign') ? 380 : 250;
+    // Ultra-responsive combat cadence: instant 120ms parries, snappy 200ms strikes
+    const minCooldown = gestureType === 'palm' ? 120 : (gestureType === 'both_hands' || gestureType === 'vsign') ? 350 : 200;
     if (now - lastAttackTimeRef.current < minCooldown) return;
     lastAttackTimeRef.current = now;
 
@@ -642,11 +677,17 @@ export const RedGateArenaPage = ({
       clearTimeout(gestureTimeoutRef.current);
     }
 
+    const currentIncomingWarning = incomingAttackWarningRef.current;
+    const currentSuperEnergy = heroSuperEnergyRef.current;
+    const currentBossStaggered = isBossStaggeredRef.current;
+    const currentWeaponCharged = weaponChargedRef.current;
+
     // 1. OPEN PALM // ENERGY SHIELD & PERFECT PARRY
     if (gestureType === 'palm') {
-      if (incomingAttackWarning) {
+      if (currentIncomingWarning) {
         // == PERFECT PARRY! ==
         setIncomingAttackWarning(false);
+        incomingAttackWarningRef.current = false;
         setIsHeroParrying(true);
         setActiveGesture(heroKit.parryDeflect);
         sound.playShieldBlock();
@@ -654,10 +695,14 @@ export const RedGateArenaPage = ({
 
         setBossStaggerHp((prev) => {
           const next = Math.max(0, prev - 700);
-          if (next === 0 && !isBossStaggered) triggerStaggerBreak();
+          if (next === 0 && !currentBossStaggered) triggerStaggerBreak();
           return next;
         });
-        setHeroSuperEnergy((prev) => Math.min(100, prev + 28));
+        setHeroSuperEnergy((prev) => {
+          const next = Math.min(100, prev + 28);
+          heroSuperEnergyRef.current = next;
+          return next;
+        });
         showBanner(`${heroKit.parryDeflect}! +28% SUPER ENERGY!`, 'parry');
         addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} 🛡️ ${heroKit.parryDeflect}! Deflected attack with 0 damage & gained +28% Energy!`);
 
@@ -672,14 +717,15 @@ export const RedGateArenaPage = ({
       gestureTimeoutRef.current = setTimeout(() => {
         setActiveGesture('Standby (Show Hand)');
         setLastGestureType(null);
-      }, 2400);
+      }, 2000);
     }
 
     // 2. CLOSED FIST // HEAVY KINETIC COMBO STRIKE
     else if (gestureType === 'fist') {
-      const isCounterHit = Boolean(incomingAttackWarning);
+      const isCounterHit = Boolean(currentIncomingWarning);
       if (isCounterHit) {
         setIncomingAttackWarning(false);
+        incomingAttackWarningRef.current = false;
         sound.playCounterHit();
         showBanner('⚡ COUNTER HIT! +75% CRUSH DMG!', 'counter');
         addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER HIT! ${villainKit.counterHitText}`);
@@ -692,9 +738,13 @@ export const RedGateArenaPage = ({
       setComboCount((prev) => {
         const next = prev + 1;
         currentComboStep = next;
+        comboCountRef.current = next;
         if (next > maxComboReached) setMaxComboReached(next);
         if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
-        comboTimerRef.current = setTimeout(() => setComboCount(0), 2800);
+        comboTimerRef.current = setTimeout(() => {
+          setComboCount(0);
+          comboCountRef.current = 0;
+        }, 2800);
         return next;
       });
 
@@ -703,27 +753,29 @@ export const RedGateArenaPage = ({
       }
 
       let baseDmg = Math.floor(Math.random() * 60) + 320;
-      if (weaponCharged) {
+      if (currentWeaponCharged) {
         baseDmg += 180;
         setWeaponCharged(false);
+        weaponChargedRef.current = false;
       }
       if (isCounterHit) {
         baseDmg = Math.round(baseDmg * 1.75); // Tekken-style Counter-Hit Crush multiplier
       }
-      const comboMult = 1 + Math.min(0.35, comboCount * 0.035);
-      if (isBossStaggered) baseDmg *= 1.85;
+      const comboMult = 1 + Math.min(0.35, comboCountRef.current * 0.035);
+      if (currentBossStaggered) baseDmg *= 1.85;
       const finalDmg = Math.round(baseDmg * comboMult);
 
       setTotalDamageDealt((prev) => prev + finalDmg);
 
       setBossHp((prev) => {
         const next = Math.max(0, prev - finalDmg);
+        bossHpRef.current = next;
         checkBossPhase(next);
         if (next === 0) triggerVictory();
         return next;
       });
 
-      if (!isBossStaggered) {
+      if (!currentBossStaggered) {
         setBossStaggerHp((prev) => {
           const next = Math.max(0, prev - (isCounterHit ? 600 : 350));
           if (next === 0) triggerStaggerBreak();
@@ -732,15 +784,16 @@ export const RedGateArenaPage = ({
       }
 
       setHeroSuperEnergy((prev) => {
-        const gain = isCounterHit ? 24 : isBossStaggered ? 18 : 12;
+        const gain = isCounterHit ? 24 : currentBossStaggered ? 18 : 12;
         const next = Math.min(100, prev + gain);
+        heroSuperEnergyRef.current = next;
         if (next === 100 && prev < 100) {
           showBanner(`⚡ ${heroKit.specialName} READY! (RAISE BOTH HANDS / 4)`, 'ready');
         }
         return next;
       });
 
-      triggerHitEffects(finalDmg, isCounterHit || isBossStaggered);
+      triggerHitEffects(finalDmg, isCounterHit || currentBossStaggered);
       setHeroActionTrigger({ type: 'fist', id: Date.now(), isCounterHit });
       addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${isCounterHit ? '⚡ Counter Strike' : heroKit.fistStrike} struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
 
@@ -752,9 +805,10 @@ export const RedGateArenaPage = ({
 
     // 3. INDEX POINTING // TARGETED AIM BEAM
     else if (gestureType === 'point') {
-      const isCounterHit = Boolean(incomingAttackWarning);
+      const isCounterHit = Boolean(currentIncomingWarning);
       if (isCounterHit) {
         setIncomingAttackWarning(false);
+        incomingAttackWarningRef.current = false;
         sound.playCounterHit();
         showBanner('⚡ COUNTER SNIPE! +75% CRUSH DMG!', 'counter');
         addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER SNIPE! ${villainKit.counterHitText}`);
@@ -764,14 +818,21 @@ export const RedGateArenaPage = ({
 
       setActiveGesture(isCounterHit ? '⚡ COUNTER SNIPE HIT!' : heroKit.aimBeam);
 
-      let baseDmg = weaponCharged ? 520 : 380;
-      setWeaponCharged(false);
+      let baseDmg = currentWeaponCharged ? 520 : 380;
+      if (currentWeaponCharged) {
+        setWeaponCharged(false);
+        weaponChargedRef.current = false;
+      }
       if (isCounterHit) {
         baseDmg = Math.round(baseDmg * 1.75);
+      }
+      if (currentBossStaggered) {
+        baseDmg = Math.round(baseDmg * 1.85);
       }
 
       setBossHp((prev) => {
         const next = Math.max(0, prev - baseDmg);
+        bossHpRef.current = next;
         checkBossPhase(next);
         if (next === 0) triggerVictory();
         return next;
@@ -792,9 +853,10 @@ export const RedGateArenaPage = ({
 
     // 4. QUICK FORWARD HAND MOVEMENT // KINETIC COMBO STRIKE
     else if (gestureType === 'forward') {
-      const isCounterHit = Boolean(incomingAttackWarning);
+      const isCounterHit = Boolean(currentIncomingWarning);
       if (isCounterHit) {
         setIncomingAttackWarning(false);
+        incomingAttackWarningRef.current = false;
         sound.playCounterHit();
         showBanner('⚡ COUNTER HIT! +75% CRUSH DMG!', 'counter');
         addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ⚡ COUNTER HIT! ${villainKit.counterHitText}`);
@@ -807,9 +869,13 @@ export const RedGateArenaPage = ({
       setComboCount((prev) => {
         const next = prev + 1;
         currentComboStep = next;
+        comboCountRef.current = next;
         if (next > maxComboReached) setMaxComboReached(next);
         if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
-        comboTimerRef.current = setTimeout(() => setComboCount(0), 2800);
+        comboTimerRef.current = setTimeout(() => {
+          setComboCount(0);
+          comboCountRef.current = 0;
+        }, 2800);
         return next;
       });
 
@@ -818,27 +884,29 @@ export const RedGateArenaPage = ({
       }
 
       let baseDmg = Math.floor(Math.random() * 60) + 290;
-      if (weaponCharged) {
+      if (currentWeaponCharged) {
         baseDmg += 170;
         setWeaponCharged(false);
+        weaponChargedRef.current = false;
       }
       if (isCounterHit) {
         baseDmg = Math.round(baseDmg * 1.75);
       }
-      const comboMult = 1 + Math.min(0.35, comboCount * 0.035);
-      if (isBossStaggered) baseDmg *= 1.85;
+      const comboMult = 1 + Math.min(0.35, comboCountRef.current * 0.035);
+      if (currentBossStaggered) baseDmg *= 1.85;
       const finalDmg = Math.round(baseDmg * comboMult);
 
       setTotalDamageDealt((prev) => prev + finalDmg);
 
       setBossHp((prev) => {
         const next = Math.max(0, prev - finalDmg);
+        bossHpRef.current = next;
         checkBossPhase(next);
         if (next === 0) triggerVictory();
         return next;
       });
 
-      if (!isBossStaggered) {
+      if (!currentBossStaggered) {
         setBossStaggerHp((prev) => {
           const next = Math.max(0, prev - (isCounterHit ? 600 : 350));
           if (next === 0) triggerStaggerBreak();
@@ -847,15 +915,16 @@ export const RedGateArenaPage = ({
       }
 
       setHeroSuperEnergy((prev) => {
-        const gain = isCounterHit ? 24 : isBossStaggered ? 18 : 12;
+        const gain = isCounterHit ? 24 : currentBossStaggered ? 18 : 12;
         const next = Math.min(100, prev + gain);
+        heroSuperEnergyRef.current = next;
         if (next === 100 && prev < 100) {
           showBanner(`⚡ ${heroKit.specialName} READY! (RAISE BOTH HANDS / 4)`, 'ready');
         }
         return next;
       });
 
-      triggerHitEffects(finalDmg, isCounterHit || isBossStaggered);
+      triggerHitEffects(finalDmg, isCounterHit || currentBossStaggered);
       setHeroActionTrigger({ type: 'forward', id: Date.now(), isCounterHit });
       addLog(`${fromCV ? '[CV VISION]' : '[INPUT]'} ${isCounterHit ? '⚡ Counter Strike' : heroKit.forwardStrike} struck ${selectedVillain?.name} for ${finalDmg.toLocaleString()} DMG!`);
 
@@ -867,23 +936,25 @@ export const RedGateArenaPage = ({
 
     // 5. BOTH HANDS RAISED // SPECIAL ABILITY OVERDRIVE
     else if (gestureType === 'both_hands' || gestureType === 'vsign') {
-      if (heroSuperEnergy < 100) {
+      if (currentSuperEnergy < 100) {
         sound.playHover();
-        showBanner(`⚠️ SPECIAL CHARGING: ${heroSuperEnergy}% / 100%`, 'warning');
-        addLog(`⚠️ Super Gauge at ${heroSuperEnergy}%. Land Strikes or Parries to reach 100%!`);
+        showBanner(`⚠️ SPECIAL CHARGING: ${currentSuperEnergy}% / 100%`, 'warning');
+        addLog(`⚠️ Super Gauge at ${currentSuperEnergy}%. Land Strikes or Parries to reach 100%!`);
         return;
       }
 
       setHeroSuperEnergy(0);
+      heroSuperEnergyRef.current = 0;
       setActiveGesture(heroKit.specialGesture);
 
       let ultDmg = Math.floor(Math.random() * 300) + 2200;
-      if (isBossStaggered) ultDmg = Math.round(ultDmg * 1.85);
+      if (currentBossStaggered) ultDmg = Math.round(ultDmg * 1.85);
 
       setTotalDamageDealt((prev) => prev + ultDmg);
 
       setBossHp((prev) => {
         const next = Math.max(0, prev - ultDmg);
+        bossHpRef.current = next;
         checkBossPhase(next);
         if (next === 0) triggerVictory();
         return next;
@@ -907,9 +978,14 @@ export const RedGateArenaPage = ({
       sound.playHover();
       setHeroActionTrigger({ type: 'swipe', id: Date.now() });
 
-      if (incomingAttackWarning) {
+      if (currentIncomingWarning) {
         setIncomingAttackWarning(false);
-        setHeroSuperEnergy((prev) => Math.min(100, prev + 14));
+        incomingAttackWarningRef.current = false;
+        setHeroSuperEnergy((prev) => {
+          const next = Math.min(100, prev + 14);
+          heroSuperEnergyRef.current = next;
+          return next;
+        });
         showBanner('🌀 PERFECT DODGE! +14% ENERGY!', 'dodge');
       }
 
@@ -921,6 +997,9 @@ export const RedGateArenaPage = ({
       }, 1200);
     }
   };
+
+  // Keep ref synchronized on every render
+  handleTriggerGestureRef.current = handleTriggerGesture;
 
   // Trigger Boss Stagger Break Window (4.2s Stun & 1.85x Damage)
   const triggerStaggerBreak = () => {
