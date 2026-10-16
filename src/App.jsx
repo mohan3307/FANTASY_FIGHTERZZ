@@ -30,6 +30,36 @@ import { preloadFighterModels } from './components/ThreeFighter3DModels';
 import { preloadHandLandmarker } from './utils/gestureDetector';
 import { sound } from './utils/audio';
 
+class CombatErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.warn('Combat arena gracefully recovered from runtime glitch:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '40px', textAlign: 'center', color: '#fff', background: '#02050e', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h2>⚡ REALITY ANOMALY RECOVERED</h2>
+          <p style={{ color: '#94a3b8', margin: '16px 0' }}>The battle matrix encountered a temporary rendering interruption.</p>
+          <button
+            onClick={() => { this.setState({ hasError: false }); if (this.props.onRecover) this.props.onRecover(); }}
+            style={{ padding: '12px 28px', background: '#00f3ff', color: '#050818', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            RETURN TO MENU
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function App() {
   // Preload character 3D models and AI Vision model in background for instant camera & 0ms gesture response
   useEffect(() => {
@@ -450,15 +480,18 @@ export function App() {
       )}
 
       {currentPage === 'red-gate-battle' && (
-        <RedGateArenaPage
-          selectedHero={selectedHero}
-          selectedVillain={selectedVillain}
-          cameraStream={cameraStream}
-          isSimulatedCamera={isSimulatedCamera}
-          onExitArena={() => navigateWithWarp('home', 'MAIN MENU')}
-          onViewLeaderboard={() => navigateWithWarp('leaderboard', 'LEADERBOARD')}
-          playerName={playerName}
-        />
+        <CombatErrorBoundary onRecover={() => navigateWithWarp('home', 'MAIN MENU')}>
+          <RedGateArenaPage
+            selectedHero={selectedHero}
+            selectedVillain={selectedVillain}
+            cameraStream={cameraStream}
+            isSimulatedCamera={isSimulatedCamera}
+            onExitArena={() => navigateWithWarp('home', 'MAIN MENU')}
+            onViewLeaderboard={() => navigateWithWarp('leaderboard', 'LEADERBOARD')}
+            playerName={playerName}
+            bgMode={homeBgMode}
+          />
+        </CombatErrorBoundary>
       )}
 
       {currentPage === 'leaderboard' && (

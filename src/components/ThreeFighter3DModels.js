@@ -900,19 +900,29 @@ export function createArticulated3DFighter(character, isVillain = false) {
       rig.baseModelPos = clonedModel.position.clone();
       rig.baseModelRot = clonedModel.rotation.clone();
 
-      // Extract all Mixamo bones into rig and sanitize names for AnimationMixer binding
+      // Extract all bones into rig and index names safely without mangling original GLTF bone names
       const bones = {};
       clonedModel.traverse((node) => {
         if (node.isBone) {
           const rawName = node.name;
-          const cleanName = rawName.replace(/:/g, '').replace(/_\d+$/, '');
-          node.name = cleanName; // Sync node name so AnimationMixer tracks match!
+          // Only clean colons or path slashes if present (reserved in Three.js PropertyBinding)
+          // DO NOT strip numerical bone identifiers (_02, _066, etc.) as authentic GLTF animation tracks target them!
+          const cleanName = rawName.replace(/[:\/]/g, '');
+          if (rawName.includes(':') || rawName.includes('/')) {
+            node.name = cleanName;
+          }
           bones[cleanName] = node;
           bones[cleanName.toLowerCase()] = node;
           bones[cleanName.replace(/^mixamorig/i, '')] = node;
           bones[cleanName.replace(/^mixamorig/i, '').toLowerCase()] = node;
           bones[rawName] = node;
           bones[rawName.toLowerCase()] = node;
+          // Also index stripped suffix in lookup map so getBone('pelvis') finds pelvis_02 if needed
+          const strippedSuffix = cleanName.replace(/_\d+$/, '');
+          bones[strippedSuffix] = node;
+          bones[strippedSuffix.toLowerCase()] = node;
+          bones[strippedSuffix.replace(/^mixamorig/i, '')] = node;
+          bones[strippedSuffix.replace(/^mixamorig/i, '').toLowerCase()] = node;
         }
       });
       rig.bones = bones;
@@ -929,24 +939,24 @@ export function createArticulated3DFighter(character, isVillain = false) {
         );
       };
 
-      // Bone mappings
-      rig.pelvisJoint = getBone('Hips') || clonedModel;
-      rig.spineJoint = getBone('Spine1') || getBone('Spine') || rig.pelvisJoint;
-      rig.chestJoint = getBone('Spine2') || rig.spineJoint;
-      rig.neckJoint = getBone('Neck') || rig.chestJoint;
-      rig.headJoint = getBone('Head') || rig.neckJoint;
-      rig.leftShoulder = getBone('LeftShoulder') || rig.chestJoint;
-      rig.rightShoulder = getBone('RightShoulder') || rig.chestJoint;
-      rig.leftArm = getBone('LeftArm') || rig.leftShoulder;
-      rig.rightArm = getBone('RightArm') || rig.rightShoulder;
-      rig.leftElbow = getBone('LeftForeArm') || rig.leftArm;
-      rig.rightElbow = getBone('RightForeArm') || rig.rightArm;
-      rig.leftWrist = getBone('LeftHand') || rig.leftElbow;
-      rig.rightWrist = getBone('RightHand') || rig.rightElbow;
-      rig.leftLegJoint = getBone('LeftUpLeg') || rig.pelvisJoint;
-      rig.rightLegJoint = getBone('RightUpLeg') || rig.pelvisJoint;
-      rig.leftKnee = getBone('LeftLeg') || rig.leftLegJoint;
-      rig.rightKnee = getBone('RightLeg') || rig.rightLegJoint;
+      // Bone mappings with multi-rig fallbacks (Mixamo, Unreal, Fortnite, humanoid)
+      rig.pelvisJoint = getBone('Hips') || getBone('pelvis') || clonedModel;
+      rig.spineJoint = getBone('Spine1') || getBone('Spine') || getBone('spine_01') || rig.pelvisJoint;
+      rig.chestJoint = getBone('Spine2') || getBone('spine_02') || rig.spineJoint;
+      rig.neckJoint = getBone('Neck') || getBone('neck_01') || rig.chestJoint;
+      rig.headJoint = getBone('Head') || getBone('head') || rig.neckJoint;
+      rig.leftShoulder = getBone('LeftShoulder') || getBone('clavicle_l') || rig.chestJoint;
+      rig.rightShoulder = getBone('RightShoulder') || getBone('clavicle_r') || rig.chestJoint;
+      rig.leftArm = getBone('LeftArm') || getBone('upperarm_l') || rig.leftShoulder;
+      rig.rightArm = getBone('RightArm') || getBone('upperarm_r') || rig.rightShoulder;
+      rig.leftElbow = getBone('LeftForeArm') || getBone('lowerarm_l') || rig.leftArm;
+      rig.rightElbow = getBone('RightForeArm') || getBone('lowerarm_r') || rig.rightArm;
+      rig.leftWrist = getBone('LeftHand') || getBone('hand_l') || rig.leftElbow;
+      rig.rightWrist = getBone('RightHand') || getBone('hand_r') || rig.rightElbow;
+      rig.leftLegJoint = getBone('LeftUpLeg') || getBone('thigh_l') || rig.pelvisJoint;
+      rig.rightLegJoint = getBone('RightUpLeg') || getBone('thigh_r') || rig.pelvisJoint;
+      rig.leftKnee = getBone('LeftLeg') || getBone('calf_l') || rig.leftLegJoint;
+      rig.rightKnee = getBone('RightLeg') || getBone('calf_r') || rig.rightLegJoint;
 
       // Apply tailored dual-tone character PBR materials & enable dynamic shadows
       clonedModel.traverse((child) => {
@@ -1010,12 +1020,78 @@ export function createArticulated3DFighter(character, isVillain = false) {
       rig.mixer = mixer;
       const actions = {};
 
+      // Build index of all valid node names & UUIDs in clonedModel hierarchy to eliminate missing-node warnings
+      const existingNodes = new Set();
+      clonedModel.traverse((node) => {
+        if (node.name) {
+          existingNodes.add(node.name);
+          const slashIdx = node.name.lastIndexOf('/');
+          if (slashIdx !== -1) {
+            existingNodes.add(node.name.substring(slashIdx + 1));
+          }
+        }
+        if (node.uuid) existingNodes.add(node.uuid);
+      });
+      clonedModel.traverse((node) => {
+        if (node.isSkinnedMesh && node.skeleton && node.skeleton.bones) {
+          node.skeleton.bones.forEach((b) => {
+            if (b.name) existingNodes.add(b.name);
+            if (b.uuid) existingNodes.add(b.uuid);
+          });
+        }
+      });
+
+      // Filter clip tracks to ONLY include tracks that target existing nodes in clonedModel
+      // This completely silences "THREE.PropertyBinding: No target node found for track" console warnings!
+      const trackValidityCache = new Map();
+      const isTrackValid = (track) => {
+        if (!track || !track.name) return false;
+        if (trackValidityCache.has(track.name)) {
+          return trackValidityCache.get(track.name);
+        }
+
+        let isValid = false;
+        try {
+          let nodeName = '';
+          if (THREE.PropertyBinding && typeof THREE.PropertyBinding.parseTrackName === 'function') {
+            const parsed = THREE.PropertyBinding.parseTrackName(track.name);
+            nodeName = parsed.nodeName;
+          } else {
+            const dotIdx = track.name.indexOf('.');
+            nodeName = dotIdx > 0 ? track.name.substring(0, dotIdx) : track.name;
+          }
+
+          if (nodeName === undefined || nodeName === '' || nodeName === '.' || nodeName === -1 || nodeName === clonedModel.name || nodeName === clonedModel.uuid) {
+            isValid = true;
+          } else if (existingNodes.has(nodeName)) {
+            isValid = true;
+          } else if (THREE.PropertyBinding && typeof THREE.PropertyBinding.findNode === 'function') {
+            isValid = !!THREE.PropertyBinding.findNode(clonedModel, nodeName);
+          }
+        } catch {
+          isValid = false;
+        }
+
+        trackValidityCache.set(track.name, isValid);
+        return isValid;
+      };
+
+      const filterValidClipTracks = (clip) => {
+        if (!clip || !clip.tracks || clip.tracks.length === 0) return clip;
+        const validTracks = clip.tracks.filter(isTrackValid);
+        if (validTracks.length === clip.tracks.length) return clip;
+        if (validTracks.length === 0) return null;
+        return new THREE.AnimationClip(clip.name, clip.duration, validTracks);
+      };
+
       if (cachedGltf.animations && cachedGltf.animations.length > 0) {
         cachedGltf.animations.forEach((clip) => {
           // Strictly reject empty, 0-duration dummy tracks or camera calibrations
           if (!clip || clip.duration < 0.05 || !clip.tracks || clip.tracks.length < 5) return;
-          const action = mixer.clipAction(clip);
-          const lowerName = clip.name.toLowerCase();
+          const cleanClip = filterValidClipTracks(clip);
+          if (!cleanClip || !cleanClip.tracks || cleanClip.tracks.length === 0) return;
+          const action = mixer.clipAction(cleanClip);
+          const lowerName = cleanClip.name.toLowerCase();
           actions[lowerName] = action;
           if (lowerName.includes('idle') && !actions['idle']) {
             actions['idle'] = action;
@@ -1033,8 +1109,10 @@ export function createArticulated3DFighter(character, isVillain = false) {
       if (bones['hips'] || bones['mixamorighips']) {
         const synthClips = buildSynthesizedMixamoClips(config?.id || '');
         synthClips.forEach((clip) => {
-          const action = mixer.clipAction(clip);
-          const cName = clip.name.toLowerCase();
+          const cleanClip = filterValidClipTracks(clip);
+          if (!cleanClip || !cleanClip.tracks || cleanClip.tracks.length === 0) return;
+          const action = mixer.clipAction(cleanClip);
+          const cName = cleanClip.name.toLowerCase();
           if (!actions[cName] || config?.id === 'spiderman' || config?.id === 'web-ninja') {
             actions[cName] = action;
           }

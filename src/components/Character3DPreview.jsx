@@ -132,15 +132,18 @@ export const Character3DPreview = ({ character, isVillain = false, isPaused = fa
     resizeObserver.observe(container);
 
     // 6. Smooth Turntable & Kinematic Render Loop
-    let clock = new THREE.Clock();
+    let lastClockTime = performance.now();
+    const clockStartTime = performance.now();
     let animId;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
       if (isPausedRef.current) return;
 
-      const delta = Math.min(clock.getDelta(), 0.05);
-      const elapsed = clock.getElapsedTime();
+      const now = performance.now();
+      const delta = Math.min((now - lastClockTime) / 1000, 0.05);
+      lastClockTime = now;
+      const elapsed = (now - clockStartTime) / 1000;
 
       // Subtle turntable rotation when not dragging
       if (!isDragging && characterGroupRef.current) {
@@ -217,7 +220,12 @@ export const Character3DPreview = ({ character, isVillain = false, isPaused = fa
   }, [character, isVillain]);
 
   return (
-    <div className="rs-3d-character-preview-container" ref={mountRef}>
+    <div className="rs-3d-character-preview-container">
+      <div
+        ref={mountRef}
+        className="rs-3d-canvas-mount"
+        style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}
+      />
       {!isModelLoaded && (
         <div className="rs-preview-loading-hologram">
           <div

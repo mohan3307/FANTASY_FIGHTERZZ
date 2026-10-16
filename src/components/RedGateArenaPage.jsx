@@ -21,6 +21,7 @@ import {
 import { ComputerVisionGestureEngine } from '../utils/gestureDetector';
 import { ThreeBattleArena } from './ThreeBattleArena';
 import { Cosmic3DBackground } from './Cosmic3DBackground';
+import { PortalParticles } from './PortalParticles';
 import { sound } from '../utils/audio';
 import { saveToLeaderboard } from './LeaderboardPage';
 import confetti from 'canvas-confetti';
@@ -210,7 +211,8 @@ export const RedGateArenaPage = ({
   isSimulatedCamera,
   onExitArena,
   onViewLeaderboard,
-  playerName = 'Hero_001'
+  playerName = 'Hero_001',
+  bgMode = 'heroes'
 }) => {
   // Intro Sequence Phases: 'city-pan' -> 'hero-entrance' -> 'boss-entrance' -> 'cinematic-banner' -> 'countdown' -> 'active'
   const [introPhase, setIntroPhase] = useState('city-pan');
@@ -218,14 +220,14 @@ export const RedGateArenaPage = ({
   const [expoMode, setExpoMode] = useState(false); // Standard 99s round
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
 
-  // NEW DEEP FIGHTING GAME STATS
+  // BALANCED FIGHTING GAME STATS (Villain HP tuned to 8,000 HP)
   const maxHeroHp = 3500;
-  const maxBossHp = 250000;
-  const maxBossStagger = 30000;
+  const maxBossHp = 8000;
+  const maxBossStagger = 2000;
 
-  const [bossHp, setBossHp] = useState(250000);
-  const [bossHpGhost, setBossHpGhost] = useState(250000);
-  const [bossStaggerHp, setBossStaggerHp] = useState(30000);
+  const [bossHp, setBossHp] = useState(8000);
+  const [bossHpGhost, setBossHpGhost] = useState(8000);
+  const [bossStaggerHp, setBossStaggerHp] = useState(2000);
   const [isBossStaggered, setIsBossStaggered] = useState(false);
   const [bossPhase, setBossPhase] = useState(1); // 1 = Normal, 2 = Enraged (<=60%), 3 = Overdrive (<=25%)
 
@@ -285,13 +287,16 @@ export const RedGateArenaPage = ({
   useEffect(() => { bossHpRef.current = bossHp; }, [bossHp]);
 
   // Telemetry Debug Info (Direct DOM ref updates to avoid 60fps React re-renders)
-  const [telemetry] = useState({ fps: 60, aiState: 'APPROACH', distance: '3.8' });
-  const telemFpsRef = useRef(null);
-  const telemAiRef = useRef(null);
+  const [telemetry, setTelemetry] = useState({ fps: 60, aiState: 'APPROACH', distance: '3.8' });
+  const lastTelemTimeRef = useRef(0);
+  const lastConfUpdateRef = useRef(0);
 
   const handleTelemetryUpdate = (t) => {
-    if (telemFpsRef.current) telemFpsRef.current.textContent = `${t.fps} FPS // 60HZ`;
-    if (telemAiRef.current) telemAiRef.current.textContent = `AI FSM: ${t.aiState}`;
+    const now = Date.now();
+    if (now - lastTelemTimeRef.current > 400) {
+      lastTelemTimeRef.current = now;
+      setTelemetry(t);
+    }
   };
 
   const pipVideoRef = useRef(null);
@@ -524,10 +529,12 @@ export const RedGateArenaPage = ({
           videoEl,
           pipCanvasRef.current,
           (res) => {
-            // Update confidence badge directly in DOM (zero React re-render thrashing!)
+            // Update confidence badge safely throttled without DOM collision
             const confPercent = Math.round(res.confidence * 100);
-            if (confBadgeRef.current) {
-              confBadgeRef.current.textContent = `${confPercent}% CONF`;
+            const nowTime = Date.now();
+            if (nowTime - lastConfUpdateRef.current > 400) {
+              lastConfUpdateRef.current = nowTime;
+              setCvConfidence(confPercent);
             }
 
             // Instant live feedback on current gesture
@@ -535,10 +542,11 @@ export const RedGateArenaPage = ({
               const GESTURE_NAME_MAP = {
                 palm: '🖐️ OPEN PALM (SHIELD)',
                 fist: '✊ CLOSED FIST (STRIKE)',
-                point: '☝️ POINTING (AIM BEAM)',
-                forward: '🥊 FORWARD PUNCH (COMBO)',
-                both_hands: '🙌 BOTH HANDS (ULTIMATE)',
-                vsign: '🙌 BOTH HANDS (ULTIMATE)',
+                point: '☝️ POINT 1 FINGER (BEAM)',
+                forward: '👊 FORWARD PUNCH (COMBO)',
+                both_hands: '✌️ PEACE / BOTH HANDS (ULTIMATE)',
+                vsign: '✌️ PEACE / BOTH HANDS (ULTIMATE)',
+                thumbs_up: '👍 THUMBS UP (WARP DODGE)',
                 swipe: '👈👉 SWIPE (WARP DODGE)'
               };
 
@@ -623,8 +631,9 @@ export const RedGateArenaPage = ({
       setIntroPhase('active');
     }
     const now = Date.now();
-    // Deliberate fighting game cadence: prevents animation clipping, makes fighting smooth & readable
-    if (now - lastAttackTimeRef.current < 650) return;
+    // Ultra-responsive combat cadence: instant 140ms parries, snappy 250ms strikes
+    const minCooldown = gestureType === 'palm' ? 140 : (gestureType === 'both_hands' || gestureType === 'vsign') ? 380 : 250;
+    if (now - lastAttackTimeRef.current < minCooldown) return;
     lastAttackTimeRef.current = now;
 
     setLastGestureType(gestureType);
@@ -644,7 +653,7 @@ export const RedGateArenaPage = ({
         setHeroActionTrigger({ type: 'palm', id: Date.now() });
 
         setBossStaggerHp((prev) => {
-          const next = Math.max(0, prev - 9500);
+          const next = Math.max(0, prev - 700);
           if (next === 0 && !isBossStaggered) triggerStaggerBreak();
           return next;
         });
@@ -693,9 +702,9 @@ export const RedGateArenaPage = ({
         showBanner(heroKit.comboFinisher, 'combo');
       }
 
-      let baseDmg = Math.floor(Math.random() * 800) + 3800;
+      let baseDmg = Math.floor(Math.random() * 60) + 320;
       if (weaponCharged) {
-        baseDmg += 2600;
+        baseDmg += 180;
         setWeaponCharged(false);
       }
       if (isCounterHit) {
@@ -716,7 +725,7 @@ export const RedGateArenaPage = ({
 
       if (!isBossStaggered) {
         setBossStaggerHp((prev) => {
-          const next = Math.max(0, prev - (isCounterHit ? 7500 : 4800));
+          const next = Math.max(0, prev - (isCounterHit ? 600 : 350));
           if (next === 0) triggerStaggerBreak();
           return next;
         });
@@ -755,7 +764,7 @@ export const RedGateArenaPage = ({
 
       setActiveGesture(isCounterHit ? '⚡ COUNTER SNIPE HIT!' : heroKit.aimBeam);
 
-      let baseDmg = weaponCharged ? 6500 : 4200;
+      let baseDmg = weaponCharged ? 520 : 380;
       setWeaponCharged(false);
       if (isCounterHit) {
         baseDmg = Math.round(baseDmg * 1.75);
@@ -808,9 +817,9 @@ export const RedGateArenaPage = ({
         showBanner(heroKit.comboFinisher, 'combo');
       }
 
-      let baseDmg = Math.floor(Math.random() * 800) + 3200;
+      let baseDmg = Math.floor(Math.random() * 60) + 290;
       if (weaponCharged) {
-        baseDmg += 2400;
+        baseDmg += 170;
         setWeaponCharged(false);
       }
       if (isCounterHit) {
@@ -831,7 +840,7 @@ export const RedGateArenaPage = ({
 
       if (!isBossStaggered) {
         setBossStaggerHp((prev) => {
-          const next = Math.max(0, prev - (isCounterHit ? 7500 : 4800));
+          const next = Math.max(0, prev - (isCounterHit ? 600 : 350));
           if (next === 0) triggerStaggerBreak();
           return next;
         });
@@ -868,7 +877,7 @@ export const RedGateArenaPage = ({
       setHeroSuperEnergy(0);
       setActiveGesture(heroKit.specialGesture);
 
-      let ultDmg = Math.floor(Math.random() * 6000) + 42000;
+      let ultDmg = Math.floor(Math.random() * 300) + 2200;
       if (isBossStaggered) ultDmg = Math.round(ultDmg * 1.85);
 
       setTotalDamageDealt((prev) => prev + ultDmg);
@@ -892,9 +901,9 @@ export const RedGateArenaPage = ({
       }, 2000);
     }
 
-    // 6. SIDEWAYS HAND MOVEMENT // WARP DODGE
-    else if (gestureType === 'swipe') {
-      setActiveGesture(heroKit.dodgeGesture);
+    // 6. SIDEWAYS HAND MOVEMENT OR THUMBS UP // WARP DODGE
+    else if (gestureType === 'swipe' || gestureType === 'thumbs_up') {
+      setActiveGesture(heroKit.dodgeGesture || '🌀 WARP REALITY DODGE');
       sound.playHover();
       setHeroActionTrigger({ type: 'swipe', id: Date.now() });
 
@@ -961,13 +970,13 @@ export const RedGateArenaPage = ({
       showBanner(`⚡ MID-AIR CLASH! COUNTER STRIKE!`, 'parry');
       setHeroSuperEnergy((prev) => Math.min(100, prev + 25));
       setBossHp((prev) => {
-        const next = Math.max(0, prev - 4500);
+        const next = Math.max(0, prev - 360);
         checkBossPhase(next);
         if (next === 0) triggerVictory();
         return next;
       });
-      triggerHitEffects(4500, true);
-      addLog(`⚡ COUNTER CLASH! ${selectedHero?.name} intercepted ${selectedVillain?.name}'s attack in mid-air for 4,500 DMG!`);
+      triggerHitEffects(360, true);
+      addLog(`⚡ COUNTER CLASH! ${selectedHero?.name} intercepted ${selectedVillain?.name}'s attack in mid-air for 360 DMG!`);
       return;
     }
 
@@ -975,9 +984,9 @@ export const RedGateArenaPage = ({
     if (now - lastHeroDamageTimeRef.current < 1100) return; // Invulnerability frames (iframes)
     lastHeroDamageTimeRef.current = now;
 
-    // Balanced damage so hero can survive 70+ hits with 3,500 HP
-    const baseEnemyDmg = bossPhase === 3 ? 55 : bossPhase === 2 ? 42 : 32;
-    const dmg = baseEnemyDmg + Math.floor(Math.random() * 12);
+    // Balanced damage so hero comfortably survives without premature game over
+    const baseEnemyDmg = bossPhase === 3 ? 35 : bossPhase === 2 ? 26 : 18;
+    const dmg = baseEnemyDmg + Math.floor(Math.random() * 8);
 
     setHeroHp((prev) => {
       const next = Math.max(0, prev - dmg);
@@ -1122,18 +1131,13 @@ export const RedGateArenaPage = ({
 
   return (
     <div className={`rs-redgate-arena-screen phase-${introPhase}`}>
-      {/* 1. Dimensional Portal Moving Background (Stays seamlessly active throughout entire duel) */}
-      <video
-        className="rs-redgate-portal-video-bg"
-        autoPlay
-        loop
-        muted
-        playsInline
-        src="/assets/red_gate_portal.mp4"
+      {/* 1. New Custom 4K Battle Arena Background (No characters, clean aesthetic) */}
+      <img
+        src="/assets/final_fight_arena_4k.jpg"
+        alt="Final Fight 4K Arena Background"
+        className="rs-stage-background-img rs-stage-bg-4k rs-arena-normal-bg"
       />
-
-      <div className="rs-redgate-blood-fog"></div>
-      <div className="rs-redgate-vignette-overlay"></div>
+      <div className="rs-stage-vignette-overlay"></div>
 
       {/* 2. 3D WebGL BATTLE ARENA (Fighters, Cyber City, Portals & VFX) */}
       <ThreeBattleArena
@@ -1351,11 +1355,11 @@ export const RedGateArenaPage = ({
       <div className="rs-hud-telemetry-panel">
         <div className="rs-telem-row">
           <span className="rs-telem-dot green"></span>
-          <span ref={telemFpsRef} className="rs-telem-text">{telemetry.fps} FPS // 60HZ</span>
+          <span className="rs-telem-text">{telemetry.fps} FPS // 60HZ</span>
         </div>
         <div className="rs-telem-row">
           <Cpu size={11} className="text-cyan-400" />
-          <span ref={telemAiRef} className="rs-telem-text">AI FSM: {telemetry.aiState}</span>
+          <span className="rs-telem-text">AI FSM: {telemetry.aiState}</span>
         </div>
         <div className="rs-telem-row">
           <Activity size={11} className="text-violet-400" />
@@ -1512,7 +1516,6 @@ export const RedGateArenaPage = ({
           </div>
           {cvTrackingStatus === 'TRACKING' ? (
             <span
-              ref={confBadgeRef}
               className="rs-cv-conf-badge"
               style={{ color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.4)' }}
             >
